@@ -1,0 +1,1581 @@
+
+ 
+1. Setting the Context
+This is a reference handbook for service providers, posted at Primary Health Centers 
+(PHCs), Community Health Centres (CHCs) and tertiary care hospitals (DH), who are 
+engaged in providing care and support services to the adolescents and young people. The 
+target audience for this reference handbook include following cadres of service providers:
+• Doctors
+• Nurses, and Auxiliary Nurse Midwives (ANMs)
+• Counsellors.
+This handbook aims at sensitising and equipping service providers with the perspectives, 
+adequate knowledge and skills required to provide stigma-free, non-judgemental and 
+comprehensive sexual and reproductive health services to young people.
+
+1.1 Who are Adolescents, Youth and Young People?
+While there is no strict definition for the term ‘youth’, most UN documents use the age-
+group of 15-24 years to refer to youth. WHO defines ‘Adolescents’ as individuals in the 10-
+19 years’ age group and ‘Youth’ as the 15-24 years’ age group. While ‘Young People’ covers 
+the age range 10-24 years. In this handbook, the age specific categories have been defined as 
+follows:
+Adolescence 10-19 years
+Early Adolescence 10 to 14 years
+Late Adolescene 15 to 19 years
+Youth 15 to 24 years
+Young People 10 to 24 years
+Youth are defined as those aged 15 to 29 in the national youth policy (2014). This age-group 
+constitutes 27.5% of India’s population 24-Oct-2014.
+1.2 Policy Landscape in India
+India is proudly known as a young country as its population comprises of a large number 
+of young people. Recognizing the importance of protecting and supporting health and 
+well-being of its young population, the Government of India is committed to strengthening 
+its programmes and systems for adolescents. This is visible through the Governments 
+commitment towards the Adolescent Reproductive and Sexual Health Strategy 
+(ARSH) launched in 2005 and, subsequently, through the National Adolescent Health Programme (Rashtriya Kishor Swasthya Karyakram or RKSK) launched in 2014. Under 
+the ARSH program , in 2006 under the RCH II strategy Government of India established 
+Adolescent Reproductive Sexual Health (ARSH) Clinic to provide counselling on sexual 
+& reproductive health issues to the adolescent population. Further, since 2014, under the 
+National Adolescent Health Programme (NAHP), the Government of India has established 
+Adolescent Friendly Health Clinics to address clinical and counselling services on diverse 
+adolescent health issues ranging from Sexual and Reproductive Health (SRH) to Nutrition, 
+Substance abuse, Injuries and Violence, Non Communicable Diseases and Mental Health. 
+As of 2020, 8099 AFHCs1 are active and functional. In the state of Uttar Pradesh, only 0.4% 
+adolescents were aware of the existence and relevance of AFHCs. According to a study 
+conducted by Population Council 2 awareness on AFHCs remains limited and varies across 
+states.This low awareness when combined with the critical deficiency in infrastructure 
+(7381 facilities for 253 million youth) points towards the urgent need to fill the gap in 
+service delivery, for all young people. Even though youth is in general the healthiest 
+period of life, there are evidences that show that differences of mortality amongst youth 
+are striking in different countries. In more developed regions, Northern Africa, Eastern 
+Asia and Western Asia only 1 per cent or less of 15-year olds do not survive to their 25th 
+birthday. Concurrently, the odds of dying during youth are almost twice as high in South 
+Asia.
+This handbook has been written with the objective of training and sensitizing the service 
+providers on youth friendly service delivery across the public health system. It is not just 
+limited to RKSK counsellors as we recognise that there is a need to increase the medical 
+service provider base by mainstreaming youth-friendliness in the system.
+1.3 SRH Status of Youth in India
+Following evidence on youth health indicators points towards the urgent need to address 
+service delivery for improving the SRH status of youth.
+• 35.4% of the women (20-24 years) reported being married before the age of 18.
+• 8% of adolescents aged between 15 – 19 years have started child bearing. Of these 5% 
+had already experienced a live birth and 3% were pregnant with their first child. 
+• Unmet need of contraception for women in the age group 20 – 24 years was 22% or 
+more than one in five couples.
+• Among men in the 20 – 24 age-groups the knowledge of contraceptives is also nearly 
+universal, but usage is low with less than 20% of married or sexually active men using 
+any modern contraceptive. Only 63% of young men knew that a condom was an 
+effective contraceptive.  
+• There is higher risk of maternal deaths in the younger age groups, between 13 and  
+19 years4. 
+• 63 per cent of all suicide deaths reported in India were in the 15-39 age group. Suicide 
+ranked first in India as the cause of death compared to its third rank globally in this 
+age group, it said.5 There was an increase of 40 per cent in the number of suicide deaths 
+between 1990 and 2016, with an estimated 2,30,314 deaths in 2016 indicating that 
+“disproportionately high suicide deaths in India are a public health crisis”.
+• The factors because of which youth are not able to access services is that they are not 
+allowed to take decisions to access health services independently and they are allowed 
+freedom of movement. According to NFHS-4: 
+• Only 29% and 40% of women in the age group of 15-19 years and 20-24 years’ age 
+group are allowed to go to health facility alone. 
+•  Only 36% of married women without a living child are allowed to visit a health 
+facility alone. 
+• Only 61% and 69% of currently married women aged 15-19 and 20-24 years make 
+decisions about their own health care alone, or jointly with their husbands, while 
+one fourth 39% and 31% respectively in these age groups do not have any say in 
+decisions about their own health care (NFHS-4). 
+Why is it Difficult for Young People to Access SRH Information and 
+Services? 
+Very few youg people are able to access SRH information and services. Some of the 
+simultaneous challenges that make it difficult for young people to access the quality SRH 
+services are listed below6: 
+1. Social norms:  Prevalent social norms that deem conversation on SRH a ‘taboo’ and 
+discourage information seeking around the same.7 As a result, there is fear of getting 
+recognised by family and community members amongst youth when seeking SRH 
+services. 
+2. Viewed as ‘minors’ and inexperienced:  Owing to their social position/status 
+adoloscents and young people are viewed as ‘minors’ and are discouraged to visit 
+the health facilities alone. Youth are often viewed as inexperienced and as lacking the 
+knowledge and skills required to make healthy decisions or choices.8
+3. Lack of information:  Lack of access to timely, accurate and comprehensive information 
+on youth-friendly SRH services especially for youth who have dropped out of 
+schools.
+4. Attitude of the providers: Provider attitudes are oftentimes uninformed, judgmental 
+and disrespectful discouraging youth from seeking SRH services.11 Additional barriers 
+such as stressing upon parental/guardian consent discourage unmarried youth from 
+approaching the service providers. 
+
+5. Health facility characteristics:  Lack of privacy and confidentiality and unfriendly 
+environment in health facilities and non-availability of a range of SRH services, further 
+discourages young people from approaching these facilities.
+6. Legal barriers: On one hand, there are no legal restrictions for a young person to be 
+provided with contraceptive services, however, the Prevention of Children from Sexual 
+Offences (POCSO) Act, 2012 is a law which seeks to protect children (any person below 
+the age of eighteen) from sexual abuse. A provision in the law on mandatory reporting 
+however, makes it difficult to access SRH services by women below the age of eighteen 
+as the law views any form of sexual encounter (even if consensual) as violence. Hence, 
+service providers are mandated to file a medico-legal case if a young person below 18 
+seeks any SRH service like delivery, contracdeption, abortion or HIV testing. Though 
+many adolescents are not aware about POCSO Act if there are encounter medico-
+legal situation while availing services, it result into  compromise to their privacy and 
+confidentiality, and severely discourages young people to seek services.
+7. Lack of affordability:  Since many young people do not like to go to public health 
+facilities due to issues such as privacy and confidentiality, there could be lack of 
+affordability due to high cost at private facilities. On the other hand, the services in 
+private facilities are often costly. A majority of the youth, whether school going or out-
+of-school, married or unmarried lack financial independence and/or capacity to procure 
+health services especially from high cost private facilities.
+As individual practitioners, awareness of the context in which a young client is located 
+can change the way you approach him or her. A more sensitive, empathetic and rights-
+based approach towards the client will likely improve provider - client interaction, client 
+compliance and health outcomes. The handbook consists of good practices for the services 
+providers to overcome legal challenges in service provision. 
+2. Mainstreaming Youth Friendly Health  
+Services
+While a lot of SRH information 
+is available on the internet/
+unreliable sources of 
+information, young people often 
+run into more misinformation 
+than easy to understand facts. 
+Although health service centers 
+and providers continue to 
+be source for accurate and 
+comprehensive sexual and 
+reproductive health information 
+for young people, however, 
+they are often embarrassed to 
+discuss sexual health issues 
+and are scared of being judged 
+and labelled if they raise these 
+concerns. This is why young 
+clients are highly intimidated in approaching a health facility, leading to low health seeking 
+behaviour across genders. To change this and mainstream youth friendly, it is important 
+that all persons at the facility including the administrative and OPD staff, nurses and 
+doctors ensure a safe, welcoming and non judgemental environment for young people 
+who want to access health information and services.
+2.1 Youth-Friendly Services: Some Key Principles
+In order for a health service to be ‘Youth-friendly’, it must incorporate some essential 
+elements at
+• the provider level,
+• the services level, and 
+• the facility level.
+2.1.1 The Provider
+It is important that all health service providers (including doctor, a nurse, a counselor or an 
+ANM in charge of a primary healthcare facility) have required competencies for providing 
+youth friendly health services. 
+ 
+• “Youth”, is not a single category, and includes diverse cross-sections of youth belonging 
+to multiple and overlapping social categories and backgrounds Eg. educated/ 
+uneducated, married/ unmarried; having low / high socio-economic status; migrant/ 
+non-migrants; tribal, dalit; trans youth, youth living with HIV etc. Thus, providers must 
+listen attentively to the client’s case, and ask pertinent questions to understand the 
+circumstances the client is bound by. 
+• Simple practice like addressing them by their name, communicating in a sensitive, non-
+judgmental and non- threatening tone will go a long way in building trust and rapport 
+with the client. 
+The below principles directly align with and reinforce the principles of ethical medical practice  
+familiar to all health service providers.
+1. Autonomy and Informed Consent
+• Youth, just like anybody else, have the right to acquire correct information and 
+make informed decisions about their own bodies. The provider has the ethical 
+responsibility to uphold the youth client’s autonomy, by explaining diagnosis 
+and treatment in non-medical language, so that young people can decide for their 
+own health. Remember, no law prohibits the provision of medically accurate 
+and comprehensive SRH information to youth with the intent of advancing their 
+awareness and wellbeing.
+• Providers should not assume that they can share any details (e.g. what service 
+did the young person come for, the problem they have, the sexual history, the 
+results of tests if done, the treatment chosen by them, etc.) with their parents, 
+spouse, and/or other family members. Revealing sensitive information to family 
+members can severely compromise the situation of young people, and could 
+result in stigma, and even severe physical and emotional violence, and in some 
+cases, marital problems.
+• It is important to maintain a balance between the provision of SRH service 
+and the requirements of Protection of Children from Sexual Offences (POCSO) 
+Act, 2012 which is for protection of minors from sexual offences. The service 
+provider should be mindful of fullfiling the requirements of the POCSO Act 
+and, if the client is a mature minor, the provider may ask the client to suggest a 
+trusted adult of their preference, in place of the legal/natural guardian. This is 
+recommended, especially because the perpetrator of sexual offence could be a 
+family member.
+For instance: 
+If a 19-year-old young woman has approached you for information related to 
+abortion, the responses from you that show or indicate openness is:  Do not worry. You have done the right thing by approaching me. The 
+decision to have an abortion is entirely yours. I will ensure that this 
+remains confidential.  If there is anything that is bothering you, please do 
+not hesitate to share with me.
+
+
+
+2. Privacy and Confidentiality
+• Young people seeking SRH services often fear the risk of peers and elders finding 
+out. Such fear is reasonable, because the taboo attached to reproductive health 
+issues health is so significant that it could result in the young person’s social 
+stigmatisation and eventual social exclusion. 
+• Therefore, it is important that service providers and facility staff maintain 
+privacy during the consultation, do not reveal the identity of clients while 
+sharing medical records for official purposes, or discussing medical history with 
+colleagues, support staff or even friends. 
+• There may be situations where a family member or neighbour asks a provider 
+to reveal why the young person came to them for services. In such cases, the 
+providers should not reveal the actual service sought by the young person and 
+can tactfully give a response or refusing to give details. 
+For instance: 
+If a young married woman has approached you for an emergency contraceptive pill 
+and there are other clients present there, how will you talk to her?
+You could request the other clients to wait outside  saying that you have 
+a report to complete. You could then speak to the young woman after 
+everyone has left. 
+
+3. Non-judgmental attitude
+• Any sign of judgment around masturbation, bodily changes, unplanned 
+pregnancy, abortion etc. will inhibit the young person from truthfully revealing 
+their problem or query, impede service provision and ultimately, the client’s 
+good health and well-being. 
+For instance: 
+If a young woman talks to you about her irregular menstrual cycle, then what would 
+be the appropriate sensitive and respectful response? 
+This is common when girls are growing up. There is no need to worry. 
+First, could you tell me a bit about about your diet? Do you eat three 
+proper meals a day? 
+
+
+4. Provider attitudes and practices
+• When young people visit the health facility, for their reproductive health-related 
+issues, it is appropriate to equip them with evidence-based and comprehensive 
+health information that will help them to make informed decisions beneficial to 
+their health and wellbeing.
+Remember:  Denying access to quality SRH information and services can lead to 
+adverse health outcomes of the young client, and also, in doing so, the provider is in 
+violation of the principle of ‘truthfulness’ and, ‘doing no harm’.
+
+2.1.2 Essential Package of Services
+As mentioned earlier, ‘youth’ is a time when critical milestones such as physical, mental 
+and emotional maturation, sexual activity, marriage and pregnancy are commonly 
+navigated. It is important that young people are ensured respectful and dignified SRH 
+services. Thus the following package of services are essential for ensuring their good health 
+and well-being. 
+
+Integrated 
+Counseling 
+Services: 
+Provide comprehensive and integrated counseling on a full range 
+of issues such as puberty, menarche, nightfall, sexual attraction, 
+masturbation, violence especially gender based violence and intimate 
+partner violence, conception, contraception, abortion and STIs/RTIs, 
+and safe sex practices.
+If the young client is seeking a pregnancy test, provide information 
+on pregnancy testing, as well as contraception and abortion towards 
+maximising, clients’ autonomy  and choice . 
+Youth clients seeking SRH services approach health facilities, with great 
+nervousness. They are unlikely to honestly share concerns at once. Exercise 
+patience, and probe sufficiently so that the actual problem of the client can be 
+understood. 
+
+Menstrual 
+Health and 
+Hygiene 
+Management:
+Create awareness about menstruation and menstrual hygiene. 
+• Inform them on where they can access and use sanitary pads or 
+other methods of sanitary protection, and how to dispose them. 
+• Tell them that puberty is the time of growth spurt, body changes 
+and onset of menarche is a normal physiological change, and is also 
+transformation in the lives of adolescent girls.
+• Address various myths and misconceptions around menstrual 
+taboos, that restrict their movement, education, other activities and 
+health during menstruation.
+• Provide treatment for irregular period or menstrual problems.
+
+Provision of 
+Contraception:
+ Provide the full range of contraceptives offered by the Family Planning 
+programme (eg. condoms, EC, Oral pills, injectables etc.) irrespective 
+of thei r marital status.  
+This  shoul d also include pre-marital counselling for girls and boys. 
+Age shoul d not be a restriction to provide low dose combined 
+contracepti ve pills to adolescents.12
+Emphasis s hould be placed on encouraging male participation where 
+contraceptive uptake is concerned. 
+
+Safe Abortion 
+Services:
+Ensure that young women are able avail safe abortion (upto 20 
+weeks of gestation) under circumstances mentioned in the Medical 
+Termination of Pregnancy (MTP) Act. They should also get post 
+abortion care, contraceptive services and referral services on priority 
+irrespective of their marita l status. 
+• Young cl ients’ must have access to an appropriate abortion method 
+as per their eligibility and choice of method (medical abortion pills, 
+vacuum aspiration). 
+• For women 18 or above, the woman herself can give consent and 
+providers should not insist on signatures of their family members 
+as per MTP Act. 
+• In case of girl below 18, written consent must be obtained from a 
+guardian. A guardian can be any person who is major and consents to take her care for abortion care related procedure. In case of a 
+minor the provider should inform the police as per the requirements 
+of the Protection of Children from Sexual Offences Act (POCSO), 
+2012. In such cases mandates under the POCSO Act must not delay 
+or impede the client’s access to safe abortion services.
+
+Maternal 
+Health-related 
+Services:
+ All facilities should offer maternal health services in a non-
+judgemental manner, to young teenage girls and women, irrespective 
+of marital status. Respectful along with evidence based maternity care 
+should be provided to young mothers, and they should be provided a 
+proper counseling on contraceptive methods to delay next pregnancy. 
+
+RTIs/STIs 
+Management 
+Services:
+Since RTIs/STIs are often under-reported especially in women, screen 
+women for high risk and possible symptoms when they seek care. 
+• Integrate screening for STI/RTI into routine clinical practice, 
+especially SRH and HIV related services, 
+• Provide treatment if available or 
+• Have close referral links to a clinic where such services are 
+provided.
+
+Diagnosis and 
+management 
+of other SRH 
+issues:
+Young people might need other SRH services such as early detection 
+of pregnancy, menstrual distrubances, or hirsutism (which could 
+be linked to polycystic ovarian disease). Diagnosis and appropriate 
+management of these conditions are an essential component of youth-
+friendly services. 
+
+Care for 
+Survivors of 
+Violence:
+Cases of violence including rape, domestic violence, intimate partner 
+violence and child sexual abuse are usually undisclosed. Instances 
+of violence can be physical, mental, emotional and sexual in nature, 
+and it is important that all providers are sensitive to these issues, 
+and are oriented on the law (PWDVA, POCSO, The Criminal Law 
+(Amendment) Act 2013) and associated guidelines on ‘Strengthening 
+Health Sector Response to Violence’13.
+Providers shoul d be able to: 
+• detect signs of violence based on clients’ history, and undertake 
+screening procedures for those clients who display these signs. 
+• Remember that the first step is to offer medical aid/services. Mandatory 
+reporting is the second step, after informing the client and connecting 
+them to a support NGO. 
+• Establish referral linkages with government and non-government/
+support institutions who can facilitate redressal for victims of 
+violence.
+
+Interconnection 
+of SRH and 
+mental health:
+Mental health problems remain a widely unaddressed issue at large. 
+They could be linked to various social barriers, educational attainment, 
+personal relations, or health issues such as unwanted pregnancy, or 
+postpartum depression. Providers should be competent to: 
+• Identify mental health needs and its interconnectedness with SRH 
+issues. 
+• Identify the symptoms and make proper referrals to specialists for 
+advanced care for medication or therapy.   
+
+2.1.3 The Facility
+All facilities which provide RMNCHA health services should should be youth-friendly. 
+Some of the considerations that experts have found useful for developing youth-friendly 
+atmosphere in a facility are as follows: 
+
+• Visual and Auditory 
+Privacy:
+Ensure visual and 
+auditory privacy 
+of the client so that 
+youth feel safe 
+and comfortable to 
+consult the doctor 
+and procure relevant 
+services. For ensuring 
+visual and auditory 
+privacy include 
+following
+1. Curtains in the 
+examination area; 
+close the door of 
+the OPD while client consultaion. In case of a consultation of a female client 
+by a male provider, it is essential to have a female chaperone in the room. 
+2. Unless otherwise requested by the client, keep other persons out of the room 
+during examination;
+3. To the extent possible, ensure other people in the OPD are not over-hearing 
+the conversations with the client;
+4. Install condom boxes in non-crowded sections of the clinic or health facility, 
+and in locations where they can go discreetly.
+• Availability of female attendant:
+1. As far as possible, it should be ensured that a female client is seen by a female 
+provider and a male client is seen by a male provider. 
+2. During the consultation and examination of a young woman by a male 
+provider, ensure that a female attendant is available. This should be ensured 
+even for interactions between female clients and male lab technicians, X ray 
+technicians, OT assistants etc. 
+• Facility Environment:
+1. Install signages for various services, so that young people can easily navigate 
+the facility. 
+
+2. Train the support staff like the people at registrarion counter, cleaner staff etc., 
+they should be assisting young people in navigating the facility and maintain 
+confidentiality.
+• IEC Material:
+Display IEC material in the waiting area and the provider’s room that is useful to 
+young people’s SRH needs, and helps destigmatize young people’s need to seek 
+SRH services such as contraception, abortion, mental health etc. 
+• Stocking of commodities and other supplies, for example:
+1. Ensure availability ofthe different types of contraceptive methods, e.g. 
+condoms, oral contraceptive pills, EC pills, Injectable contraceptive (Antara),
+2. Pregnancy test kits
+3. STI and HIV testing kits 
+4. Medical Abortion pills 
+5. Pamphlets / brochures/ IEC material for young people n various topics 
+• Youth Feedback and Engagement:  
+Organise a mechanism to get feedback from the young people on their experience 
+of services, or willingness to receive services. It can function as a sub-group of the 
+Rogi Kalyan Samiti or be drawn from the Village Health Nutrition and Sanitation 
+Committees. 
+Feedback may be written on a piece of paper anonymously or a feedback form 
+may be developed and dropped in the feedback box. Feedback box can be opened 
+periodically and facility in-charge may address all the concerns (if any).
+The forum can serve the following purposes, among others:
+1. Provide inputs about the range and nature of services available as well as 
+generate feedback on the effectiveness of the services being provided. 
+2. Provide feedback from the young people who did not visit the facility despite 
+having a need. 
+3. Conduct a periodic assessment/audit of the facility based on a simple 
+checklist.
+
+3. Good Practices for Youth Friendly Service 
+Provision 
+In this section some situations on youth friendly service provisioning and facility readiness 
+in providing youth friendly services will be discussed. The situations are presented in the 
+form of case studies followed by discussions. These are common situations wich you may 
+come across while dealing with SRH issues of young people
+SRH NEEDS OF 
+YOUNG WOMAN  
+Case Study 1: 
+Assessing Rinku’s 
+Immediate and Long-
+Term Needs
+Rinku is 16 years old 
+and works in a garment 
+factory in a nearby town, 
+20 kms away. In the last 
+couple of weeks, she has 
+been experiencing pain 
+in her vagina and having 
+foul smell discharge and 
+itching while urinating. She comes to the District Hospital and is directed to a female 
+gynecologist. 
+The provider counsels Rinku in a private room, and Rinku explains that she is 
+experiencing some discomfort in her genitals whilst urinating. The provider asks 
+her if she is sexually active. Rinku says that she is in an intimate relationship but has 
+never engaged in sexual intercourse. The provider then explains to Rinku that she 
+would have to examine Rinku’s genitals, and obtains Rinku’s consent for the same. 
+After the examination, the provider assures Rinku that there is nothing to worry 
+about, and that she is just experiencing a mild fungal infection in the vagina, that is 
+causing the foul smelling discharge and pain during urination. She writes down a 
+prescription for a vaginal cream, and hands it to Rinku. Rinku thanks the doctor and 
+leaves.
+Important Observations from the Case
+1. Rinku is young and therefore it could have been difficult for her to access the clinic.
+2. Rinku clearly states that she has a partner with whom she gets intimate. Thus she 
+would require comprehensive and integrated counselling on safe sex, contraception and 
+abortion. 
+
+What did the gynecologist get right?
+1. The gynecologist counselled the client in private.
+2. The gynecologist does not enquire about ‘marital status’ but specifically asks if the client 
+is ‘sexually active’. This is a good practice as it is common for young people to engage in 
+sex irrespective of their marital status!
+3. The gynecologist does not display any signs of judgment throughout the counseling, 
+thereby normalising SRH seeking. 
+Did Rinku receive comprehensive SRH counselling and services?
+While recording client history, be attentive to the clients’ immediate as well as long-term 
+SRH needs/concerns. In this case, Rinku mentions that she has a partner with whom she 
+gets intimate. Therefore, alongside STI counselling, the gynecologist should have also 
+provided counselling on contraceptive options, unwanted pregnancy and other issues as 
+needed. Integrated counselling and service provision optimises clients’ time in the facility, 
+and reduces the burden on young people - who face severe barriers in making multiple 
+visits to the clinic, due the restriction of their mobility and financial constraints. 
+
+When Dealing 
+Young Woman and 
+Issues on Gender 
+Preference 
+Case Study 2: What 
+are Laxmi’s Needs?
+Laxmi is 20 years old 
+and has been married 
+for around 3 years. She 
+has 2 daughters and she 
+lives with her husband, 
+children and mother-in-
+law in the city. One day, 
+Laxmi realises that she 
+has missed her period 
+for 2 consecutive months, and purchases a pregnancy testing kit. The pregnancy test 
+result confirms that Laxmi is pregnant. Thus, Laxmi accompanied by her mother-in-
+law visits the nearby district hospital, to consult a gynecologist. 
+Laxmi does not want another child but she knows that her mother-in-law is waiting 
+for a son in the family. The doctor asks the two of them to take a seat, and listens 
+silently to the details provided by Laxmi’s mother-in-law. The doctor asks Laxmi 
+as to how she would like to proceed. Laxmi tells the doctor that she wants to know 
+if she is pregnant or not. The doctor examines Laxmi and confirms that Laxmi is 
+2 months pregnant. Laxmi’s mother-in-law is overjoyed and asks the doctor what 
+are the chances of a male fetus. The doctor says that she will be unable to predict 
+the same, and also informs the mother-in-law that sex determination is illegal. The 
+doctor also congratulates Laxmi and requests the nurse prepare Laxmi’s antenatal 
+schedule.
+Important Observation from the Case
+1. In the span of 3 years, Laxmi had already given birth to 2 girls without adequate spacing . 
+Therefore, a third child at this stage poses significant risk and may adversely impact 
+health of both pregnant woman and fetus. 
+2. Moreover, In India, ‘male preference’ is a social norm that manifests in families applying 
+undue pressure on women to conceive a male child. Even in Laxmi’s case, 2 girl children 
+and the lack of spacing can be indicative of undue pressure from the family.
+3. Therefore, Laxmi and her husband may be in need of counselling on contraception 
+and abortion. It is important to counsel on discrimination and violence at home due to 
+gender preference and moreover, due to the desire for a son in the family, she may not 
+be able to negotiate for contraception use with her husband.
+What did the doctor do right?
+1. The doctor listened attentively. Attentiveness and eye-contact while taking history, 
+helps build client’s trust and promotes honesty.
+2. The doctor specifically asked Laxmi how she would like to proceed, and not the mother-
+in-law. 
+3. The doctor denies fetal sex-determination, which is as per the requirements of Pre 
+Conception Pre Natal Diagnostic Techniques (PCPNDT) Act, 1994. PCPNDT Act 
+renders sex determination illegal and penalises medical service providers offering sex 
+selective diagnostic techniques and selective abortion services. 
+
+Did the doctor uphold the principles of youth friendly health service delivery?
+1. No. The doctor violated the principles of ‘privacy’, ‘confidentiality’ and ‘autonomy’.
+2. Since the doctor counselled the client in the presence of her mother-in-law, the client 
+did not get a chance to decide the course of her pregnancy herself. Within the family 
+structure, mother-in-laws carry more authority than their daughter-in-laws. For 
+instance, the mother-in-law spoke on behalf of Laxmi twice, even though Laxmi was the 
+client.  
+3. The doctor assumes that Laxmi would want to bear a child. Thus, she does not counsel 
+Laxmi about the options available, including the option of terminating the pregnancy, 
+contraceptive counseling with her husband for long-term family planning. In doing this, 
+the doctor has limited Laxmi’s choice and her autonomy to make decision.
+How could the doctor have provided comprehensive counselling services?
+1. A provider should always counsel the client in private . The spouse/family member/
+friend can be present initially, but should be requested to step out. The stigma attached 
+to SRH is so high that clients are honest only when privacy and confidentiality  is 
+guaranteed. 
+2. Ideally, the provider should have asked the mother-in-law to step out, disclosed the test 
+results to Laxmi in private, obtained her informed consent OR given Laxmi the chance 
+to decide if she wants to continue the pregnancy or not. Depending on her choice, the 
+doctor should have supported Laxmi if she wants to not disclose the information to her 
+mother-in-law and husband.
+3. Even in the case of a minor, the client should be counselled separately, because they are 
+likely to withhold information in the presence of the guardian.
+4. The provider should have informed Laxmi of the possibility of terminating the 
+pregnancy, on grounds of ‘contraceptive failure’ or ‘causing harm to the pregnant 
+person’s mental health’. Therefore, while recording the history of the client, be attentive 
+to the clients’ multiple SRH needs/concerns. 
+5. The provider should have also counselled Laxmi on how to deal with family pressure. 
+If the provider suspects/client inform about gender based violence based on gender 
+preference at home, he/she she should connect her to support and care services for 
+ensuring that she receives sustained support in addressing the matter. At every stage, 
+inform the client of the comprehensive list of services available to them, to maximise 
+clients’ choice and autonomy .  
+
+Young People and 
+Contraceptive 
+Counseling 
+Case Study 3: 
+Contraceptives 
+Counselling is for 
+Everyone
+Rajesh and Seema, 20 and 
+19 years old respectively, 
+are from neighboring 
+villages. They are both 
+studying in college and 
+have their classes only 
+on Sundays. They work 
+in the same garment factory on weekdays in a nearby town. They have known each 
+other for the last 3 years and have been in a romantic relationship for the last 2 years. 
+Since both of them have elder siblings as well as family responsibility, they cannot 
+think of getting married for the next 2-3 years. However, both of them get intimate 
+occasionally. 
+They come to the district hospital which is far from their village but close to their 
+factory to seek contraceptive services. The privacy was maintained during the 
+consultation, there were no other clients in the room. The service provider begins 
+with asking Seema her name, age and the problem. When Seema tells the provider 
+that she wants to use contraception, the service provider immediately asks if they are 
+married. Rajesh and Seema look at each other and Rajesh responds, “no, but we will 
+get married next month.” The service provider says that they can come back next 
+month and she will provide them oral contraceptive pills as that would be a good 
+option for her to avoid pregnancy.
+Important Observations from the Case
+1. Rajesh and Seema have an intimate relationship and they cannot marry each other due 
+to the family situation at home. 
+2. Both of them come together to the facility which is far from their village to seek 
+contraception so that nobody recognises them. Upon enquiry, they lie that they will get 
+married next month and are still denied services. 
+What did the provider do right?
+1. The provider ensured that the privacy is maintained. No other client was allowed to 
+enter the room during the consultation.  
+What did the provider not do right?
+1. The provider did not give them information on all available reversible contraceptive 
+options, and allowed them to decide which one they wanted. She straightaway jumped 
+to advising oral pills. She should have offered them contraception options and ensured 
+that they leave with at least one contraceptive. 
+2. The service provider asked them their marital status. As highlighted previously, marital 
+status is not a qualifier to receive the services and the providers should refrain from 
+asking the marital status. Provider cannot impose their opinion on their clients and need 
+to be non-judgmental towards it. 
+3. The provider did not provide them any contraceptives and asked them to come back 
+after they were married. 
+Is it okay to provide contraceptive counselling to unmarried youth? 
+1. Yes, it is okay. 
+2. Young people have a right to be in a consensual sexual relationship and seek healthcare 
+services as an adult at the age of 18 and above, irrespective of marital status. They do 
+not require guardian consent and can take independent decisions. The service provider 
+should not delay or deny them services on any grounds. They should offer them 
+proper counselling on contraception and help them choose from the available basket of 
+contraceptive choices.
+What additional steps could the provider have taken?
+1. The provider should have taken a history of last unprotected contact and ise of 
+contraceptoves. If needed, the provider could have offered emergency contraceptive 
+pills. 
+2. The provider needs to ensure a sensitive and non-judgmental attitude towards 
+premarital sex. This can be communicated through words, body language as well as 
+facial expression.
+3. The provider can ask if they are sexually active to record sexual history. Inform them 
+that an accurate record will enable them to provide better services and that their sexual 
+history will remain confidential. 
+4. The provider can enable them to make an informed decision on contraception usage. 
+This can be done by providing counseling on each method and introducing the basket 
+of choices.   25
+Young People and 
+Fertility Choices 
+
+Case Study 4: Rubina 
+is the Authority of 
+Her own Fertility 
+Outcomes
+Rubina is 19 years old and 
+resides in a slum dwelling 
+with her parents. She 
+runs a general store with 
+her father. Rubina has a 
+boyfriend who lives close 
+to her house. 
+Rubina has missed her period in the last two months and she visits a female doctor 
+for a pregnancy test with a friend. The doctor was accompanied by the nurse in the 
+consultation room. There were no other patients in the room. The service provider 
+asks Rubina if she had had sex with someone. Rubina says that she had had sex with 
+her boyfriend 2 months back. After testing, the provider confirms that Rubina is 9 
+weeks pregnant. Rubina begins to feel very scared of the consequences of her parents 
+getting to know about the pregnancy. 
+The service provider tells 
+Rubina that she should 
+have thought of her 
+parents earlier and now 
+she should not complain. 
+Rubina asks the provider 
+about abortion and the 
+provider says that she 
+will only be able to do it 
+if she brings her mother 
+along. Rubina leaves 
+the consultation room 
+unsatisfactorily and is 
+approached by the nurse 
+who was there in the 
+consultation room. 
+The nurse tells Rubina that she can do abortion for her without the guardian’s 
+consent. She will charge 15,000 (INR). The nurse gives her the contact number to get 
+in touch. When Rubina asks when and where she has to come, the nurse says that 
+she will call Rubina to her house.
+ 
+Important Observations from the Case
+1. Rubina’s age is more than 18 years and she considered it important to visit a doctor after 
+missing her period. Rubina was accompanied by her friend to the provider. Her friend’s 
+support was an enabler for her to access the services. 
+2. The doctor undertakes a pregnancy test and informs Rubina to come with her mother 
+for the abortion. Since she is unmarried, there are high chances that parental consent 
+would be a barrier for her to access abortion. 
+3. While the intention of the nurse was to provide abortion services to Rubina, she also 
+breached her right to confidentiality by offering to do it outside the facility. She also 
+overcharges Rubina and in accordance to MTP Act only providers approved by the 
+Act can provide abortion services and an unapproved provider can be penalised for 
+terminating a pregnancy. 
+What did the doctor do right?
+1. The doctor informed Rubina that she is 9 weeks pregnant. 
+2. The doctor took Rubina’s sexual history.
+3. The doctor ensured privacy during the consultation as there were no other patients in 
+the room. 
+Is it okay to provide her abortion services without the guardian consent? 
+1. Yes, according to the Medical Termination of Pregnancy (MTP) Act, if the woman’s 
+age is above 18 years, only her consent is needed. The consent of gaurdian/parents not 
+required. It is more important to ensure that they have access to safe abortion services 
+irrespective of the marital status. There was no need for the doctor to ask Rubina to 
+bring her mother.
+2. Denying abortion services may encourage unsafe aborions as woman may seek abortion 
+services from an illegal and unsafe, back street abortion provider like in this case.
+Was the doctor right in delaying the procedure? 
+1. The doctor delayed the abortion procedure. Since abortion is a time-sensitive matter, 
+it is highly unadvisable to delay the procedure. Moreover, Rubina was confident and 
+decisive about what she wanted, there was no reason to delay the procedure. 
+Was the action of the nurse correct? 
+1. The nurse advised Rubina to opt for abortion services outside the facility. Along with 
+ensuring privacy, the doctor and the support staff need to ensure confidentiality of the 
+client too. 
+2. The nurse offered to provide services at her home at an overcharged rate. It is illegal 
+and unethical to take advantage of Rubina’s vulnerability by offering to provide services 
+at a higher rate. 
+How can one ensure confidentiality? 
+1. The providers should not disclose the case history to anyone outside the facility. The 
+verbal communication and the written records should remain within the professional 
+boundaries of the facilities and should not be discussed outside. 
+2. All the support staff should be trained in maintaining the confidentiality norms and 
+protocols. 
+What additional steps could the doctor have taken?
+1. The doctor could have accepted Rubina’s decision to terminate the pregnancy as she 
+is not doing anything illegal. She is an adult and her independent decision is the only 
+prerequisite to provide the services. The doctor is bound to provide her services by 
+maintaining privacy and confidentiality as per her request. 
+2. The doctor can provide quality abortion services using methods in accordance with the 
+MoHFW14 guidelines. 
+3. The doctor can ensure that the nurses and support staff are trained in your facility 
+on following protocols and maintaining rights including right to privacy and 
+confidentiality of the clients. They must follow ethical practice and be duty-bound to 
+maintain confidentiality in such cases.
+
+Young Woman and 
+Menstrual Health 
+Issues 
+
+Case Study 5: Hema’s 
+Search to Get Answer 
+for Her Menstrual 
+Cycle
+Hema is 16 years old. It 
+has been 2 years since 
+she started menstruating. 
+Her menstrual cycle is not 
+very regular. Her cycle is 
+disturbed and she bleeds 
+every 1.5 to 2 months. 
+Sometimes the bleeding is only for 2 days and sometimes there is spotting for 7-8 
+days. When she tells this to her mother, she says that it is very common and it will 
+get regular. However, she continues to feel worried and decides to visit the female 
+doctor in the PHC with her elder sister. 
+The doctor asks her about her menstrual cycle, prescribes a medicine and tells her 
+to visit again after her next cycle. When Hema asked the doctor why her cycle was 
+disturbed, the doctor also says that it is very common and there is nothing to worry 
+about. The session lasted only for 2 minutes. 
+Hema was not satisfied with the response as she didn’t understand the reason for 
+her irregular cycle and how the medication would regularise her cycle. She however, 
+decides to take the medication prescribed and make the visit next month. 
+
+Important Observations from the Case
+1. Hema feels worried about irregular menstrual flow and when she communicates it to 
+her mother, she does not receive a satisfactory response. 
+2. Hema convinces her sister to visit the doctor. The doctor gives only 2 minutes of time to 
+her, prescribes medicine and schedules a follow-up visit. 
+What did the doctor do right?
+1. The doctor took a note of Hema’s irregular menstrual cycle. 
+2. The doctor prescribes a medicine and suggests a follow-up visit.
+What was not right and what additional steps could the doctor have taken?
+1. The doctor rushed the consultation and did not properly counsel Hema. She did not 
+understand what concerns Hema had, and did not provide an answer to Hema’s 
+question about why she was having an irregular cycle. Based on Hema’s existing 
+knowledge, the provider could also have counseled her on hormonal changes, 
+physiology of menstruation, and nutritious diet. 
+2. The doctor could have encouraged the client to ask questions. As young people are 
+curious to ask questions related to their bodies, it is the doctor’s duty to ensure that they 
+provide comprehensive information to them. 
+3. The doctor did not give sufficient counselling on menstrual issues and menstrual 
+hygiene, and she did not ask Hema if she had any further questions. This would have 
+led to Hema being more satisfied with the consultation, and she would have come back 
+for follow-up visits. 
+
+
+Enabling Young People to Decide About Services 
+Case Study 6: Who’s Right to Decide?
+Aradhana is 25 years old and lives with her husband and father-in-law in Gwalior. 
+Aradhana and her husband have completed one year of marriage. Aradhana works 
+in a bank and enjoys her work. Last month Aradhana missed her period and when 
+she did a pregnancy test at home, the result was positive. 
+As it was an unwanted pregnancy, she feels that she is not prepared for it yet and 
+wants to focus on her professional life. Aradhana visits a female doctor in a private 
+clinic. She is accompanied by a colleague. She tells the doctor that undertook a 
+pregnancy test and feels unprepared for it. 
+The doctor repeated the pregnancy test, and found it as positive. The doctor 
+congratulates her for her first pregnancy. Aradhana explains to her that she is not 
+ready yet. The doctor tries to cheer her up and says that she should think of her 
+family’s happiness also. If she aborts her pregnancy, she may not be able to conceive 
+again and become a mother. She tells Aradhana that it is better not to have this 
+abortion, and if she still wants, she should come back with her husband for his 
+consent.
+Important Observations from the Case
+1. Aradhana is certain about her decision to not have a child from this pregnancy. Since 
+she visits the facility with her friend, she has her friend’s support. 
+2. The doctor believes that since this is Aradhana’s first pregnancy, she should continue it. 
+In the counseling, she says that if Aradhana aborts, she may not be able to get pregnant 
+again. 
+What did the doctor do right?
+1. The doctor undertook Aradhana’s pregnancy test immediately. 
+2. The doctor’s attitude towards Aradhana was respectful and she listened to her concern.
+What did the doctor not do right?
+1. The doctor forced/ coerced Aradhana to involve her husband. 
+• According to the Medical Termination of Pregnancy (MTP) Act, it is Aradhana’s legal 
+right to get safe abortion as per her decision. It is a pregnant woman’s independent 
+decision to terminate the pregnancy. Service providers must acknowledge her decision 
+and provide the services accordingly. It is the service provider’s duty to support her in 
+this and abide by the principle of Justice.  
+• Should the doctor be concerned about what the family would like or respect 
+Aradhana’s decision?   
+ 
+Neither the doctor, nor Aradhana are under no legal obligation to consult her husband 
+or family members for termination of pregnancy if she does not wish to. The provider 
+may counsel her husband if needed, but only after seeking her consent. It is the 
+woman’s right to decide whether to continue the pregnancy or undergo termination of 
+a pregnancy and make a choice on the abortion procedure she wants to undergo and 
+postabortion contraception she wants to use.  
+2. The doctor provided inaccurate information.
+• It is incorrect to say that if a pregnancy is aborted, a woman will not get pregnant 
+again. If the abortion is provided hygienically using saf technique, there are almost 
+no chances of woman developing infertility.  
+ 
+It is a common myth that abortion leads to infertility. Research has shown that it 
+is unsafe abortion that may lead to developing an infection and an infection can 
+cause tubal infertility. If abortion is done using safe technique (medical abortion or 
+manual vacuum aspiration), and by a skilled provider, it cannot lead to infertility. It is 
+mandatory for the doctors to have accurate information and not propagate myths. For 
+comprehensive pre-abortion counselling, MoHFW guidelines can be followed.15 
+What additional steps could the doctor have taken?
+1. Without any delay, the doctor could have acknowledged Aradhana’s decision and 
+affirmed her right by starting with counselling on the procedure.
+2. The doctor could have provided her proper counselling and help her decde whether she 
+wanted to continue r terminate the pregnancy, and based on that, if Aaradhana decided 
+to terminate, the doctor should have helped her access comprehensive abortion care 
+services. 
+Key messages
+1. For a client above 18 years, she is entitled to take her independent decision to abort. 
+The MTP Act affirms the same. The doctor should not insist on consent from a parent or 
+guardian or spouse.
+2. Safe abortion does not lead lead to infertility. The doctors should refrain from 
+propagating this myth. 
+3. The service provider should enable a client to access comprehensive abortion care 
+(CAC) services, if they chose to do so. 
+
+Adolescents And SRH Issues 
+Case Study 7: Experiencing Nightfall
+Sohail is 14 years old. He lives in a town in Jhansi. He and his friends come back 
+from school together in the afternoon. One day Sohail tells his friends that he has 
+been waking up in the morning with wet underwear. He sometimes also feels 
+pressure in his penis and the urge to rub his penis. Two of his friends begin to make 
+fun of him and start saying, “you have grown up.” Sohail is confused and does not 
+get an answer to his question. He feels disgusted and thinks that something is wrong 
+with him. One day Sohail secretly asks one of his other friends to visit a doctor with 
+him. They had heard about a counselor in CHC and decided to make a visit there. 
+He meets the male counselor there. Privacy was maintained during the consultation. 
+He tells Sohail that what he is having is wet dreams. It is a very normal phenomenon 
+and that the white fluid is semen which gets discharged from his body. When Sohail 
+asks the counselor why this is happening, the counselor says that this is because he 
+watches adult films. If he avoids watching adult films, he will not get wet dreams. 
+Sohail feels shy to ask anything further and returns back.
+Important Observations from the Case
+1. Sohail is having wet dreams and he feels confused, curious as well as disgusted with 
+it. Even when he attempts to confide in his friends, they do not provide him the correct 
+information. 
+2. Sohail manages to visit the counselor in CHC with a friend and the counselor explains 
+to him that there is nothing wrong with his body. However, the provider’s suggestion of 
+avoiding watching adult films did not encourage Sohail to ask any further questions. 
+What did the counselor do right?
+1. The counselor maintained the privacy norms during the consultation. 
+2. The counselor explained to Sohail that having wet dreams is normal which makes him 
+feel relaxed. 
+3. The counselor also provides him with correct information about the white fluid (semen) 
+which encourages Sohail to ask the next question. 
+What did the counselor not do right?
+1. The counselor provided inaccurate information.  
+ 
+It is a myth that pornographic films cause wet dreams. The provider should ensure 
+that they have accurate information so that they do not end up propagating myths. 
+The fact about wet dreams is that it is common for adolescent boys to have wet dreams  
+as they grow up. This happens because sometimes semen comes out of the body at 
+night, during sleep. It is also called Nocturnal Emission, or Night Fall. Nocturnal 
+Emission is not necessarily accompanied by sexual feelings or sexual dreams. These 
+start happening around puberty and some boys get quite embarrassed or frightened by 
+this. Masturbation leads to a reduction of nocturnal emission. Nocturnal Emission is a 
+normal occurrence.
+2. Wet dreams are not signs of an illness and do not lead to weakness.  Because semen 
+is produced continuously in the body, it does not lead to exhaustion of semen. Semen 
+cannot be stored in the body at the rate at which it is produced and therefore, it comes 
+out of the body involuntarily during sleep in puberty.
+What additional steps could the counselor have taken?
+1. The counselor should have provided comprehensive information and created a safe 
+space to tell him about masturbation. 
+2. The counsellor should have taken verbal feedback to ensure that all his questions were 
+answered and he had an overall positive experience. 
+
+Adolescents and 
+Body Image Issues 
+Case Study 8: Arshi 
+Goes for Counselling 
+for Experiencing 
+Bullying
+Arshi is 17 years old and 
+studies in a co-ed private 
+school in Bhopal. She is 
+an average performing 
+student in her class. 
+Since a few years, she has 
+become very conscious 
+of her body. Everyone in her class teases her for having big breasts. She feels 
+embarrassed and uncomfortable in sharing this with anyone. 
+Arshi begins to limit herself from making friends also. She remains aloof and finds 
+it hard to concentrate in class. One day, a school teacher discovers that the students 
+have been bullying her. The school teacher requests her to bring her mother to 
+school. 
+The school teacher informs her mother that the students have been teasing her 
+because of her breast size. She tells her mother to take her to a doctor. Arshi develops 
+extreme fear after witnessing this conversation between them. She begins to blame 
+herself for the situation, 
+resulting in poor mental 
+health. Following her 
+teacher’s advice, her 
+mother takes her to 
+a female doctor in a 
+government paediatric 
+hospital. 
+The doctor gives 
+2 minutes of time 
+attentively. Her mother is 
+there with her throughout 
+the session. She explains 
+to her mother that there is 
+nothing wrong with her, 
+it’s completely normal to 
+experience an increase 
+in the breast size during adolescence. The doctor tells Arshi a few exercises that can 
+help in reducing the breast size. Arshi returns back home with intensified pressure of 
+reducing her breast size.
+Important Observations from the Case
+1. Arshi is being bullied and body shamed by her peers because her breast size is 
+increasing. Due to shame attached to women’s breasts in society, Arshi is unable to 
+confide in anyone to discuss her problem and feels the pressure of reducing the breast 
+size. The medical service provider attempts to normalise the increase in breast size as 
+part of the development stage. 
+2. Arshi’s mother and school teacher show concern for her but their intervention does 
+not improve Arshi’s mental health situation and she feels the pressure of reducing the 
+breast size.
+What did the provider do right?
+1. During the session, the doctor communicates that it is normal to have big breasts. 
+2. The provider is attentive during the session. 
+What did the doctor not do right?
+1. The doctor missed the opportunity to have a private and confidential discussion with 
+Arshi in her mother’s absence. If the doctor had maintained privacy, it probably would 
+have helped the doctor in getting a comprehensive understanding of Arshi’s mental 
+health needs. 
+2. The doctor did not probe to understand any signs of deteriorating mental health. The 
+doctor must ask probing questions in the session. For example, “How do you feel now 
+that you are in adolescence and your body is going through physical changes?”, “what 
+makes you uncomfortable if your breast size is increasing?”, “has anyone ever teased 
+you for it?”, “have you confided into anyone when you were teased?” Many experiences 
+related to bodily changes and bullying impact mental and emotional wellbeing of a 
+person. Unlike physical health, mental health symptoms are not always visible. Being 
+attentive to issues of overall mental health and wellbeing of the young people can help 
+providers in identifying the symptoms.  
+ 
+The doctor can refer the clients to the correct department for mental health screening 
+tests, if they are not trained in undertaking screening tests and providing therapy or 
+medication. Non-specialists should remember that prolonged experiences of harassment 
+and bullying are drivers of adverse mental health outcomes and impact the overall well-
+being of a person with symptoms that manifest in various forms for example, lower self-
+confidence, feeling lonely, aloof and depressed. 
+3. The doctor did not help Arshi understand the biological factors responsible for the 
+increase in breast size. The doctor could have provided information about the size of 
+breasts, she should have told that Estrogen and progesterone hormones are primarily 
+responsible for the development of breasts. This information about hormonal changes 
+during adolescence would also have helped Arshi understand her body better. 
+4. Doctor did not provide enough time to Arshi.  She was given only 2 minutes of time. 
+Arshi also does not feel better after the session. It is important to ensure that the 
+provider provides enough time to the client and take feedback at the end of the session. 
+
+
+Right Age for Women 
+to Have Autonomy 
+Case Study 9: 
+Affirming Kajal’s 
+Autonomy
+Kajal is a 24-year-old 
+woman working as a clerk 
+in the Indian Railways. 
+She has been married for 
+2 years and her husband 
+travels frequently on the 
+job. She is not interested 
+in having children any 
+time soon. So Kajal visits 
+the nearby PHC for 
+contraceptive counselling. 
+There she is directed to a separate room where the ANM greets her and closes the 
+door behind the client. 
+  35
+The ANM then asks Kajal how she can help her. Kajal gives the ANM details about 
+her background and informs her that she is seeking contraceptive counselling. The 
+ANM points out that Kajal is already 24, and that the longer Kajal waits, she is 
+bound to develop complications during child-birth. The ANM asks Kajal why she 
+doesn’t want to have any children. Kajal explains that she and her husband have 
+decided that they would like to focus on their respective careers and think about 
+having children only when their financial situation improves.
+The ANM advises Kajal that 25 is an ideal age for first delivery, and that by 
+30 a woman’s reproductive capabilities begin to decline. Kajal looks worried 
+but continues to ask for contraceptive counselling. Thus, the ANM gives Kajal 
+information about condoms, emergency contraception and non-hormonal oral 
+contraceptive pills (Centchroman) but also asks Kajal to consider not delaying her 
+pregnancy further.
+Important Observations from the Case
+1. Kajal is clear that she does not want to have children any time soon.
+2. The provider’s repeated warnings and her provision of only short acting contraception 
+is indicative of provider bias.
+What did the provider do right?
+The ANM upheld Kajal’s privacy  by closing the door behind her so that Kajal could 
+comfortably share all details assured of confidentiality .
+What information should the ANM provide on the right time to have a child?
+1. There is no fixed or right age to have a child. It depends on when the couple is ready to 
+plan and become parents. Economic factors, professional careers, individual preference 
+are some of the factors that are important for family planning.
+2. Biologically, each woman’s individual’s body and sexual and and reproductive fertility 
+is unique and different from another individual’s. Women are able to have children 
+from post-menarche through their menopause. As long as women are ovulating, they 
+can conceive and have a child unless they have been diagnosed with a condition. 
+3. Moreover, a woman’s fertility is not the only factor responsible for pregnancy. Sperm 
+count of the male partner is also a factor. 
+4. Not all women desire to become mothers. If a woman does not want to have children, 
+her right should be respected by the service providers and she should be provided 
+contraceptives to manage her fertility.  
+
+Do you think that the ANM respected Kajal’s autonomy?
+By propagating inaccurate and highly generalised information on women’s age of fertility, 
+the ANM is placing unwarrented pressure on the client to influence her decision around 
+pregnancy and childbirth, not respecting that Kajal was financially unprepared to bear a 
+child. If Kajal, threatened by the potential decline of ability to conceive and her fertility 
+were to bear a child, she may be unable to access the resources necessary to support the 
+health, growth and well-being of the child leading to adverse health outcomes of the 
+newborn. Thus, the ANM is violating Kajal’s right to make autonomous choice to delay 
+child birth, as well as not acting in the best interest of the client.
+How can the ANM provide the method of contraception according to Kajal’s need?
+The ANM should have asked if and when she wants to have children in future? Depending 
+on her short-term/ long-term need, the ANM should have provided comprehensive 
+information on long-acting and reversible contraceptives like condoms, emergency 
+contraception, different types of oral contraception, injectables, IUCDs etc. and left it to 
+the client to make a decision as to which contraceptive would best respond to her needs. 
+Instead of withholding comprehensive information on the full range of contraception 
+including emergency contraception, the ANM has limited the client’s choice, and invading 
+their autonomy.
+
+Discussion on Masturbation 
+Case Study 10: Samar’s Privacy is Paramount
+Samar is 16 years old and masturbates regularly. When he reveals this to close 
+friends, they tell him that masturbating will lead to decline in his ‘masculinity’ 
+(‘mardaangi ’). 
+Samar is anxious and approaches the PHC. At the OPD, he is directed to the nurse 
+in charge of providing youth friendly health services. Samar walks into a large room 
+where two nurses are seated. He walks up to one of them, and she asks him to draw 
+a curtain that separates her from the adjacent provider, and then asks him to tell her 
+what the issue is. Samar is conscious because there are many clients, old and young, 
+are within earshot and consulting other doctors simultaneously. So Samar tells 
+her that he is undergoing a lot of pressure and stress. The nurse asks him what the 
+reason behind the stress is. Samar says in a low tone, ‘exams and friends’.
+The nurse counsels Samar on peer pressure and advises him that he should feel no 
+compulsion to do anything that he is not comfortable with. She asks him if there is 
+anything in particular that his friends have been taunting him about. Samar says 
+that his friends make fun of him saying that he touches his ‘private parts’. The nurse 
+immediately warns Samar that it is easy to get addicted to masturbation and hands 
+Samar a prescription for a muscle relaxant and asks him to leave. 
+Important Observations from the Case
+1. Samar is hesitant and ashamed to talk openly about his actual concern - masturbation. 
+2. The nurse is not the same sex as Samar, and this could further prevent Samar from 
+talking about masturbation.
+3. Samar fears judgment from both the nurse, as well as the clients within earshot.
+What did the nurse do right?
+The nurse counselled Samar on peer pressure and reassured him that he need not do 
+anything that he is not comfortable doing.
+Do you think Samar received the information he was looking for? Do you think Samar 
+will ever consult the nurse again?
+No, Samar did not receive comprehensive and non-judgemental counselling on safe sexual 
+health practices for the following reasons.
+1. The first and foremost duty of providers is to promote SRH health seeking behaviours 
+by normalising all SRH concerns including sexual health related concerns.
+As mentioned earlier, SRH seeking behaviours among youth, especially adolescents, 
+is very low. Most clients seeking SRH services are embarrassed to talk about the issue, 
+due to the stigma attached to SRH issues. Hence, in the initial moments, it is common 
+for the client seeking an SRH service to be vague and less descriptive. However, it is 
+the provider’s duty to patiently probe and draw out the specific issue that the client 
+seeks to redress. In Samar’s case, the nurse demonstrates both judgment and discomfort 
+by hurriedly prescribing a muscle-relaxant upon learning that Samar was seeking 
+information on masturbation’. 
+2. Providers themselves must be equipped with evidence-based knowledge on sexual 
+health and reproductive health issues, and must be comfortable with facilitating honest 
+and open dialogue on the full range of SRH issues including sexual health concerns such 
+as masturbation and STIs. 
+Masturbation is not addictive unless and until one becomes dependent on it for deriving 
+stress relief. However, one does not masturbate only to relieve themselves from stress. 
+Masturbation is more commonly, a healthy and safe way for all youth to derive pleasure, 
+as well as explore their sexuality. In this case, the provider neither probes into the cause 
+or frequency of masturbation. Instead, provider bias and stigma leads to the transaction 
+of misinformation and false panic. Masturbation is a healthy and safe way for all youth to 
+explore their sexuality and derive pleasure, as long as it is undertaken
+• in private, or
+• in front of a partner, after having obtained their consent. 
+• does not replace healthier coping mechanisms for stress management    
+
+
+Consent for Medical Examination 
+Case Study 11: Sharon can Consent to a Medical Examination
+Sharon is a 15-year-old girl who has been sexually abused by her father 3 days 
+ago. Sharon’s mother and aunt are refusing to believe Sharon, and are saying that 
+incident may have occurred in her dreams. Confused and scared, Sharon confides 
+to a teacher from school, who in keeping with the POCSO Act of 2012, reports the 
+incident to the nearby police station as well as accompanies Sharon to the district 
+hospital, for a medical examination. 
+Sharon and the teacher are directed to the CHC where a male doctor invites them 
+to his cabin. He shuts the door, asks them to take a seat and enquires as to what the 
+problem is. Sharon sits in silence and does not speak. The teacher explains to the 
+doctor the details regarding Sharon’s case, and requests the doctor to undertake a 
+thorough medical examination. 
+The doctor says that medical examination cannot be undertaken without obtaining 
+the consent of Sharon’s natural guardian, her mother. He asks Sharon to return with 
+her mother.As providers, it is important to normalise sexual health and provide evidence-based 
+information towards promoting the health and well-being of youth.
+Important Observations from the Case
+1. Medical examination presents a critical opportunity to treat the client in case of 
+sustained cuts, bruises, infections and/or injuries. It is also an opportunity to gather 
+evidence of sexual assault.
+2. Neither Sharon’s mother nor aunt are ready to believe Sharon or support her. Thus they 
+are unlikely to accompany her to the hospital.
+3. Sharon is at risk of being dissuaded or emotionally manipulated by her mother and 
+aunt, once she returns home. This could result in her medical examination being 
+delayed indefinitely, which is a setback to securing her health, wellbeing and Rights.
+What did the service provider do right?
+The provider ensures Sharon’s privacy by counselling her in a separate room and ensuring 
+that there was visual and auditory privacy. He ensured that the door is shut and that 
+another truted female (her teacher) is with her.  
+Did the service provider adhere to the guidelines of the POCSO Act of 2012?
+No, the provider did not provide appropriate services. 
+As per the POCSO Act of 201216, a female victim of Child Sexual Abuse can only be 
+examined by a female service provider. Therefore, the provider should have referred this 
+case to a qualified female colleague. 
+As per the guidelines, the provider should obtain the informed consent of the survivor 
+between the ages of 12 and 18 and no one else. The guidelines have been drafted to 
+privilege the autonomy of the survivor  over paternalistic agency of the provider/parent/
+guardian. Therefore, both ethically and legally, important things to remember while taking 
+informed consent are as follows: 
+• Sharon’s consent must be sought at each and every stage: 
+• Before undertaking the medical examination, before collection of sample for 
+medical/forensic evaluation and
+• Before filing a medico-legal case and providing information to the police.ice.
+• If the medical procedure or modalities use too much technical language, then it must 
+be revised to a language that the survivor/victim understands and must incorporate 
+comprehensive explanation of procedure of examination, evidence collection from 
+body/genitals and treatment modalities. 
+What is the role of the providers in case client reports consensual sexual activity before 
+the age of 18?
+If the provider gets a client who reports to have had consensual sexual activity before 18 
+and needs abortion or HIV testing, the provider must ensure taking the following steps:
+1. The provider cannot deny services and must focus on provision of services.
+2. The provider is mandated to file a medico-legal case as per the POCSO Act, even if it 
+is consensual sexual activity. The law fails to respect the sexual autonomy of young 
+people by having the mandatory reporting clause because the reporting results in 
+compromising their confidentiality. Since it is a huge legal barrier, the role of providers 
+becomes more crucial here to protect the sexual autonomy of young people. The 
+providers can support the client by  building their own network with human rights 
+lawyers and activists who are trained in providing legal and emotional support in such 
+cases. The providers can put the client in touch with the trained lawyers and activists, 
+be non-judgemental towards the client and remember the clause of ‘doing no harm’.
+
+Young Woman And Postpartum Contraception 
+Case Study 12: What’s the Client’s Need!
+Sahiba is a 27-year-old mother of 1 male child and is currently 8 months pregnant. 
+She is visiting the PHC for her antenatal check up, and is directed to an ANM. Once 
+the ANM concludes Sahiba’s physical examination, the ANM encourages Sahiba to 
+start thinking about postpartum contraception by explaining the health benefits of 
+postpartum contraception. Sahiba asks the ANM about the contraceptive options 
+that would be available to her 
+The ANM gives Sahiba comprehensive information on the health benefits and 
+procedure of insertion of PPIUCD. Sahiba is reluctant and says that she would prefer 
+to try some short-term options. The ANM again warns Sahiba that since she would 
+have just given birth to a child and that she would have to ensure at least 2-3 years of 
+gap so that her own health can be restored. 
+She even emphasises that the PPIUCD is immediately reversible and does not 
+impede lactation. Sahiba is still hesitant to choose the PPIUCD, as she is scared of 
+inserting something in her uterus, and asks the ANM for information regarding 
+some other short acting options. The ANM says, “Why? Are you thinking of bringing 
+more children into this world? Aren’t 2 enough?” Then, she once again emphasises 
+that the PPIUCD is the best and safest postpartum method, and urges Sahiba to think 
+about it. She also assures Sahiba that her mother-in-law will never find out about the 
+PPIUCD insertion.
+Important Observations from the Case
+1. The woman is clearly uncomfortable with the IUD option and is repeatedly asking the 
+provider for other options.
+2. The ANM is ignoring the woman’s discomfort and promoting a single contraceptive 
+option, thereby violating the principles of autonomy and truthfulness. 
+What did the ANM do right?
+1. The ANM initiated an important discussion around postpartum contraception with 
+Sahiba, thereby enabling Sahiba to think about the same.
+2. The provider gave comprehensive information on PPIUCD to Sahiba.
+3. The provider informed Sahiba about the importance of spacing in between child birth.  
+What did the ANM not do right?
+1. The ANM did not offer the different contraceptive options to Sahiba and straight away 
+suggested PPIUCD. 
+2. The ANM breached Sahiba’s autonomy. She urged Sahiba to choose PPIUCD without 
+telling her about other contraceptive choices. 
+3. The ANM did not provide full counselling and the need for postpartum contraception 
+to woman, e.g. the risk of fertility is as early as 4 weeks after delivery, and that the LAM 
+is 98% effective if exclusive breastfeeding is used and all orher conditions are fulfilled. 
+4. Even if the client chooses to bear a third child, the provider cannot humiliate the woman 
+for it. The ANM’s accusatory and judgmental tone is a form of obstetric violence and 
+will directly lead to client withdrawal. Sahiba may not return for antenatal check-ups, or 
+withdraw from contraceptive services altogether. 
+What are the different contraceptive choices the ANM could have told her about?
+National Family Planning Program offers a wide range of reversible contraceptives for 
+postpartum period, e.g. (a) Centchroman (Chhayaa), (b) Injectable contraceptive MPA or 
+Antara (can be taken 6 weeks after delivery), (c) Condoms (male partner), (d) Lactational 
+amenorrhea method, or LAM, and (e ) PPIUCD. Some women may want to start an IUD 
+after 6 weeks of delivery. Many women may not be willing to have PPIUCD inserted at the 
+time of delivery amd may instead want to use one of the other methods. The ANM should 
+have told her about all these choices of letting woman decide what she wanted, instead of 
+assuming what was in her interest.
+
+
+Young People 
+and Need for HIV 
+Counseling, Testing 
+and Treatement 
+Case Study 13: 
+Sunil’s Entitlement to 
+Treatment
+Sunil is 19 years old, 
+unmarried young boy 
+and lives in a village. He 
+is studying in college. 
+He volunteers his time 
+at an NGO where he 
+educates people on safe 
+sex and HIV prevention. 
+ Sunil visits the male service provider once for his HIV testing. The service provider 
+inquires “why do you need HIV testing?” Sunil says that he had had unprotected sex 
+with his partner a few days ago. The service provider further asks if he is married 
+to his partner. Sunil says that he has a male partner and they are not married. The 
+service provider in a polite manner responds “Sunil, how do you have sex with a 
+man? I want to know”. 
+Sunil gets embarrassed and asks if he can get his test done. The provider then 
+responds, “Sunil, I want to talk to you as my own child. I’m telling you so that you 
+can learn early in life and develop interest for girls. If someone gets to know about 
+it, it will bring shame to your family. And your families will be ostracized from 
+society.” After saying this, the provider gets him tested and tells him to visit again 
+the next day to collect the report. 
+
+Important Observations from the Case
+1. Sunil is a confident and affirmative young boy who visited independently to seek HIV 
+testing services. 
+2. In the initial part of the session, the service provider assumed that Sunil is in a 
+heterosexual relationship. Whereas, Sunil responded affirmatively and disclosed his 
+same-sex sexual relationship. The service provider invaded his privacy by asking how 
+he has sex with a man. Even though the provider used a polite tone in the counseling 
+session but also advised him to develop interest in girls. 
+What did the provider do right?
+1. The provider addressed Sunil by his name in an attempt to build trust. 
+2. The provider provided HIV testing services to him and attempted to take his sexual 
+history.
+What did the provider not do right?
+1. The provider asked the client why they needed a sexual health service. It is the right of 
+a young person to access sexual health services, and the reason for HIV testing is not 
+important to receive the services. 
+2. The provider asked the marital status of the client. This was perhaps to understand the 
+sexual history of the client. 
+Is it necessary to ask the marital status from all the clients? 
+1. Can the provider instead ask if they are sexually active or not? Unmarried youth who 
+are sexually active feel uncomfortable in disclosing their sexual history. Marital status should not be a qualifier to receive the services and the providers should ask the sexual 
+history of the client with a non-judgmental tone and empathetic body language. 
+2. The provider communicated the societal value judgment to Sunil on his relationship 
+with a man. The service provider did not treat Sunil as an individual who can make 
+decisions for himself or feel attracted to men. 
+What should the provider do if a client disclosed that they are gay?
+1. They should understand that people have diverse sexual desires and sexual practices. 
+Not everyone in our society feels attracted to people of opposite sex. It is highly 
+recommended that they do not advise clients to feel attraction towards opposite sex as it 
+is against the principle of rights-based access to healthcare. 
+2. The provider can affirm the client’s right to choice. If the client discloses that they are 
+gay or lesbian, tell them that there is nothing wrong in it. They should acknowledge the 
+courage it took to disclose this information.
+3. Provider should counsel them on the need for having some tests regularly such as 
+VDRL, HIV and other tests if needed. 
+4. They should reassure the clients that they would protect their confidentiality. 
+How should providers ask about the sexual history? 
+1. The provider can begin by telling the client that to provide them good care, they need to 
+know the sexual history. Ask politely “Can I know if you are sexually active?” Further 
+probes can be, “do you have a male partner/ female partner?”, “do you use protection 
+while having sex?”, “when did you last have unprotected sex?” 
+What additional steps could the provider have taken?
+1. The provider could have done sexual health counseling with comfort, ease and 
+calmness. Sexual health counseling includes discussion on safe and unsafe sexual 
+practices. The provider should be comfortable in talking about anal sex and multiple 
+other sexual practices. Condom use in anal sex is an important part of the safe sex 
+counseling that can be stressed upon.
+2. Young clients can be extremely scared and in a vulnerable situation if they have had 
+unsafe sex, it is important to make them feel comfortable during the session. 
+
+4. Clarifying Myths And Misconceptions 
+In this section prevailing myths and misconceptions among adolesents and young people 
+are discussed. It is important that service providers should address the myths on SRH 
+issues prevelant among this population group. They should not ridicule clients while 
+probing the myths and misconceptions, instead they should have a nonjudgmental 
+attitude, should discuss the views and questions of clients and should dispel them through 
+evidences or scientific explanations.
+
+1. On an average, adolescent development begins right from the age of 
+10, young people begin to enter into puberty and experience physical, 
+mental and emotional transformation. Between the ages of 10 and 15, 
+adolescents experience menarche or their first nightfall, and around the 
+same time it is commonplace for them to begin to experience pressure 
+of getting married. 
+At this critical juncture, their lack of knowledge when combined with 
+their diminished personal autonomy renders them vulnerable to 
+sexual exploitation and adverse SRH outcomes. To deny them relevant 
+information on SRH is to deny their diverse needs and realities. Thus, 
+it is imperative for adolescents and youth to have access to evidence 
+based and medically accurate information around their bodies and 
+sexuality, so that they are equipped to take informed decisions that 
+safeguard their health and wellbeing.
+
+2. Emergency contraceptive pills are not dangerous to a woman’s 
+health and have no known serious medical complications. There is 
+no evidence that if a woman uses ECPs multiple times, it causes any 
+health risks. They can cause minor side effects, such as menstrual 
+irregularities and nausea, which typically last only a short time. This is 
+because the dose of hormone is very small, and there is only one dose 
+involved. These effects are not medically harmful. 
+Women should feel free to use the emergency contraceptive pill 
+whenever they think it’s necessary18. Each woman should decide for 
+herself whether they are acceptable for her
+
+3. No, giving ECPs in advance does not discourage regular contraceptive 
+use, and it is essential so that women can start ECP as early as possible, 
+but definitely within 72 hours of unprotected intercourse. Studies of 
+women given ECPs in advance report these findings20:
+• Women who had ECPs on hand took them sooner after having 
+unprotected sex than women who had to seek out ECPs. Progestin-
+only ECPs are more likely to be effective when taken sooner.
+• Women given ECPs ahead of time were more likely to use them 
+when needed than women who had to go to a provider to get ECPs.
+• Women continued to use other contraceptive methods as they did 
+before obtaining ECPs in advance.
+• Women did not have unprotected sex more often.
+Additionally, ECPs help a woman avoid pregnancy after:
+• Any unprotected sex, including sexual coercion and rape and 
+• Mistakes or failures in using contraception, such as:
+• Condom was used incorrectly, slipped, or broke, 
+• Centchroman missed by > 7 days 
+• Woman has missed her MPA injection by more than 4 weeks 
+after scheduled date and has unprotected sex
+• Fertility awareness method not used correctly (failed to abstain 
+or use another method during fertile days),
+• Man failed to withdraw before ejaculation,
+• Woman had unprotected sex after missing 3 or more combined 
+oral contraceptive pills or after starting a new pill pack 3 or more 
+days late, 
+• IUD has come out
+
+4. Taking ECPs is simple, and medical supervision is not needed. The 
+label and instructions are easy to understand. In India, ECPs are 
+approved for over-the-counter sales by chemists without a prescription.  
+
+5. • On average, LNG ECPs reduce pregnancy by 59 to 95% for each 
+individual act of intercourse; UPA ECPs reduce pregnancy by 
+85% and have been found to be comparatively more effective than 
+LNG. The precise efficacy of ECPs depends mostly on the woman’s 
+cycle day when ECPs are taken and how soon they are taken after 
+unprotected sex. There is no evidence to suggest that ECPs become 
+less effective when used repeatedly. Repeat use of ECPs is classified 
+as Level 1 in the World Health Organization’s Medical Eligibility 
+Criteria.21 
+• Moreover, although ECP can be used more than once in the same 
+cycle, women who need continuous protection should be advised to 
+use a regular contraceptive method since ECPs are not as effective 
+as regular contraceptive methods.
+
+6. • Emergency contraception plays an undeniably important role in the 
+following scenarios:
+• When one is unable to negotiate safe and protected sex
+• In case of contraceptive failure.
+• When one has limited or no access to other contraceptive options. 
+Remember, it can be upto 95% effective if used within 24 hours, while 
+its effectiveness declines with time. Therefore, if it is easily available, 
+wide availability and access is essential to advance one’s control 
+over their own fertility outcomes. Comprehensive counselling on 
+how emergency contraception does not prevent sexually transmitted 
+infections (STIs) can deter unsafe sexual intercourse. 
+Irresponsible behaviour bears no connection to the availability of a 
+commodity, instead could be a result of lack of accurate information 
+and inappropriate shaping of gender related attitudes.
+
+7. • ECPS are safe for adolescents. A study of ECP use among girls 13 
+to 16 years old found it safe, and all of the study participants were 
+able to use ECPs correctly. Also, access to ECPs does not influence 
+sexual behavior
+
+8. • Spousal/partner consent delays and deters a client’s access 
+to contraception. Most importantly, conditional access to 
+contraception is in direct violation of the medical principle of client 
+autonomy that guarantees clients the right to choose whether, when 
+and which (contraceptive method) to uptake.
+• In many parts of India, a prevalent misconception is that 
+contraception encourages adultery, owing to which males often 
+restrict their female partners or wives from accessing contraception. 
+Similarly, sometimes men avoid using condoms, as they are under 
+the misconception that condoms will diminish their masculinity24. 
+Under such circumstances, if providers insist that woman brings 
+her husband/ partner for consent to use contraception, it will only 
+serve as an additional barrier for a woman’s access to their SRHR. 
+
+9. • If abortion is done using safe technique (medical abortion or 
+manual vacuum aspiration), and by a skilled provider, it cannot 
+lead to infertility. 
+• Induced abortions by using medical abortion (MA) drugs (Tab 
+mifepristone and misoprostol) doesn’t affect future fertility.25,26 
+• Usually a safe surgical method of abortion (such as vacuum 
+aspiration) will not affect future fertility of the woman. However, 
+if proper infection prevetion procedures are not observed, there 
+is a very small risk of infertility27 if a woman develops a uterine 
+infection and it is not treated promptly which can spread and lead 
+to pelvic inflammatory disease (PID). 
+• Infact, getting unsafe abortions may lead to developing an infection 
+and the infection may cause tubal infertility. 
+• When surgical abortion is done using D&C technique, very rarely, 
+there can be a risk of uterine scarring due to deep curettage (known 
+as Asherman syndrome), resulting into infertility. However, please 
+note that D&C is not a recommended technique of abortion.Adolescents might particularly need ECPs because of high rates of forced sex, stigma about 
+obtaining contraceptives, limited ability to plan for sex, and errors in using contraceptives.  
+
+10. • The need for abortion can arise at any point in a woman’s 
+reproductive lifespan. It is in difficult circumstances that women 
+decide to abort pregnancy. Reasons for abortion can be the 
+following: 
+• Unmet need of contraception resulting in unintended and 
+unwanted pregnancy, 
+• Sexual violence or coercion from partner, 
+• Failure of contraception resulting in unintended and unwanted 
+pregnancy
+• Lack of autonomy for women to use a contraceptive of their 
+choice 
+• Change in circumstances of a pregnant woman’s life, for 
+example divorce or death of the husband/ partner,
+• Detected foetal anomaly 
+• Trained service providers should be sensitive to these issues and 
+shuld not deny providing comprehensive abortion care to women 
+as per MTP Act, since continuation of pregnancy or denial of 
+services can result to adverse health outcomes. 
+
+11.• Medical abortion method has been approved by WHO as a 
+safe, effective and acceptable method of abortion
+The Indian 
+government has approved this method in its national guidelines 
+indicating mifepristone and misoprostol may be provided upto 
+the 63rd day of gestation period.29 It is a non-invasive method 
+of abortion and women can use the pills as per instructions by 
+themselves. 
+The risk of serious complicaitons after medical aboriton is extremely 
+low, are very rare - the chances of incomplete abortion needing 
+treatment is only 2-3%
+
+12. • Transgenders do not have a mental disorder. Because the 
+mainstream society only recognises two genders, men and 
+women, transgender persons are stigmatised in society.
+• When a child is born, a doctor typically assigns the sex ‘female’ 
+or ‘male’ on the basis of genitals. However, gender-specific 
+stereotypes related to one’s behaviour traits, roles, responsibilities, 
+clothing and accessories are not inherited, but taught to us by 
+society. Growing up, some people may choose to follow these 
+norms/stereotypes, while others may challenge the same. People 
+around us challenge and break gender norms and stereotypes all 
+the time and gender norms and stereotypes keep changing too. 
+• A transgender person is someone who rejects their gender 
+assigned at birth, and makes a conscious decision to identify 
+with an alternate gender of their choice. Transgender is an 
+umbrella term for people who do not identify with the gender 
+assigned to them at birth.  According to the Census of India, 
+2011 there is a population of 4.9 lakh transgender persons in the 
+country. This was the first Census which included an official 
+counting of transgender people in the country. This counting only 
+included transgender women (assigned gender male at birth) and 
+not, transgender men (assigned gender female at birth).
+• The Constitution of India guarantees citizens the right to make 
+such decisions around their own bodies (personal autonomy) and 
+expression, and the NALSA Judgment31 protects transpersons 
+from discrimination and violence.
+• In 2020, WHO also removed gender nonconformity (behavior or 
+gender expression by an individual that does not match masculine 
+or feminine gender norms) from the category of “disorder”. 
+• It is important to ensure that the transgender community is not 
+excluded from their access to quality healthcare, education and 
+livelihood opportunities. Discrimination and violence pushes 
+them to margins. It is important to build a society that upholds 
+their right to equality. 
+
+13. Irregular periods occur due to hormonal changes in the body. It 
+cannot simply be assumed that a late or irregular period is due to 
+pregnancy. Irregular periods are common during adolescence. 
+
+14. • Some providers believe that women should have children before 
+30 since their fertility may decline after that age, and to avoid 
+complications. 
+• Biologically the fact is that each woman’s body and fertility is 
+unique and different from another individual’s. Women are able 
+to have children from post-menarche through their menopause. 
+As long as women are ovulating, they can conceive and have a 
+child unless they have been diagnosed with a condition. 
+• It is important to remember that there is no fixed or right age to 
+have a child. It depends on when the couple is ready to plan and 
+become parents. Economic factors, professional careers, individual 
+preference are some of the factors that are important for family 
+planning. 
+• Moreover, a woman’s fertility is not the only factor responsible for 
+pregnancy. Sperm count of the male partner is also a factor. 
+• Not all women desire to become mothers in their twenties. 
+Providers should help individuals and couples to have children 
+when they are ready for it, and should provide contraceptives to 
+manage their fertility. 
+• If a woman does not want to have biological children, her right 
+should be respected by the service providers. Except biological 
+reproduction, adoption and assisted reproductive technology are 
+also methods of having children. 
+
+15. Several studies have shown that women who wear conservative 
+clothing like salwar-kameez or sarees also experience violence. 
+Clothes are not the reason for sexual violence. It is the patriarchal 
+society and thinking that gives some men the thought that they have 
+the license to abuse women. Therefore, this idea that women invite 
+violence through their clothes needs to be challenged. It is important 
+to stress the need for consent in any sexual relationship rather than 
+blame women.   
+
+16.• No, masturbation does not lead to blindness or impotency. 
+Neither does it lead to a loss of sperms because they are being 
+regularly produced by the body. 
+• Masturbation is a natural and completely safe and secure method 
+of obtaining sexual pleasure through stimulation of one’s own 
+sexual organs. It is nothing to be ashamed about. All of us have 
+sexual needs and this is a common way of fulfilling them. Only if 
+it starts interfering with our day-to-day functioning in any way 
+then a counsellor or medical practitioner may be referred to.
+
+17. Entering the kitchen during menstruation wil not harm anybody. As 
+long as general hygiene measures are followed, menstruating women 
+can prepare and handle food just like any other day. 

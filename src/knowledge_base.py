@@ -38,6 +38,11 @@ class KnowledgeBase:
         
         self.llm_prompts = json.load(open(os.path.join(os.environ["APP_PATH"], os.environ["DATA_PATH"], "llm_prompt.json")))
 
+        self.client = chromadb.PersistentClient(
+            path=self.persist_directory, settings=Settings(anonymized_telemetry=False)
+        )
+
+
     def answer_query(
         self,
         user_conv_db: UserConvDB,
@@ -60,23 +65,20 @@ class KnowledgeBase:
             query_type = "small-talk"
             return (gpt_output, citations, query_type)
         
-
-        client = chromadb.PersistentClient(
-            path=self.persist_directory, settings=Settings(anonymized_telemetry=False)
-        )
-
-        collection = client.get_collection(
+        self.collection = self.client.get_collection(
             name=self.config["PROJECT_NAME"], embedding_function=self.embedding_fn
         )
-        collection_count = collection.count()
+        
+        collection_count = self.collection.count()
         print('collection ids count: ', collection_count)
 
         db_row = user_conv_db.get_from_message_id(msg_id)
         query = db_row["message_english"]
+        query_source = db_row["message_source_lang"]
         if not query.endswith("?"):
             query += "?"
 
-        relevant_chunks = collection.query(
+        relevant_chunks = self.collection.query(
             query_texts=[query],
             n_results=3, 
         )
@@ -134,7 +136,10 @@ class KnowledgeBase:
             The most recent conversations are here:\n\n\
             {conversation_string}\n\
             You are asked the following query:\n\n\
-            "{query}"\n\n\
+            Original query (in Hindi/Hinglish): {query_source}\n\n\
+            Transalted query in English: {query}\n\n\
+            Please return the answer in english only.\n\n\
+            \n\n\
 
         """
 
@@ -210,6 +215,150 @@ class KnowledgeBase:
                 timestamp=datetime.now(),
             )
             return (gpt_output, citations, query_type)
+        
+    def answer_query_text(
+        self,
+        query_src: str,
+        query: str,
+        logger: LoggingDatabase,
+    ) -> tuple[str, str]:
+        """answer the user's query using the knowledge base and chat history
+        Args:
+            query (str): the query
+            llm (OpenAI): any foundational model
+            database (Any): the database
+            db_id (str): the database id of the row with the query
+        Returns:
+            tuple[str, str]: the response and the citations
+        """
+
+        if self.config["API_ACTIVATED"] is False:
+            gpt_output = "API not activated"
+            citations = "NA-API"
+            query_type = "small-talk"
+            return (gpt_output, citations, query_type)
+        
+
+        self.collection = self.client.get_collection(
+            name=self.config["PROJECT_NAME"], embedding_function=self.embedding_fn
+        )
+        collection_count = self.collection.count()
+        print('collection ids count: ', collection_count)
+
+        relevant_chunks = self.collection.query(
+            query_texts=query,
+            n_results=3,  # take the top 3 most relevant chunks, think of a better way to do this later
+        )
+        citations: str = "\n".join(
+            [metadata["source"] for metadata in relevant_chunks["metadatas"][0]]
+        )
+
+        relevant_chunks_string = ""
+        relevant_update_chunks_string = ""
+
+        chunk1 = 0
+        chunk2 = 0
+        for chunk, chunk_text in enumerate(relevant_chunks["documents"][0]):
+            if relevant_chunks["metadatas"][0][chunk]["source"].strip() == "KB Updated":
+                relevant_update_chunks_string += (
+                    f"Chunk #{chunk2 + 1}\n{chunk_text}\n\n"
+                )
+                chunk2 += 1
+            else:
+                relevant_chunks_string += f"Chunk #{chunk1 + 1}\n{chunk_text}\n\n"
+                chunk1 += 1
+
+        logger.add_log(
+            sender_id="bot",
+            receiver_id="bot",
+            message_id=None,
+            action_type="get_citations",
+            details={"query": query, "citations": citations},
+            timestamp=datetime.now(),
+        )
+
+        # take all non empty conversations 
+        # all_conversations = database.get_rows_with_user_id(db_row['user_id'], db_row['user_type'])
+        # conversation_string = "\n".join(
+        #     [
+        #         row["query"] + "\n" + row["response"]
+        #         for row in all_conversations
+        #         if row["response"]
+        #     ][-5:]
+        # )
+
+        system_prompt = self.llm_prompts["answer_query"]
+        query_prompt = f"""
+            The following knowledge base have been provided to you as reference:\n\n\
+            Raw documents are as follows:\n\
+            {relevant_chunks_string}\n\n\
+            New documents are as follows:\n\
+            {relevant_update_chunks_string}\n\n\
+            You are asked the following query:\n\n\
+            Original query (in Hindi): {query_src}\n\n\
+            Transalted query in English: {query}\n\n\
+            Please return the answer in english only.\n\n\
+            \n\n\
+
+        """
+
+        prompt = [{"role": "system", "content": system_prompt}]
+        prompt.append({"role": "user", "content": query_prompt})
+        gpt_output = get_llm_response(prompt)
+        logger.add_log(
+            sender_id="bot",
+            receiver_id="bot",
+            message_id=None,
+            action_type="gpt4",
+            details={
+                "system_prompt": system_prompt,
+                "query_prompt": query_prompt,
+                "gpt_output": gpt_output,
+            },
+            timestamp=datetime.now(),
+        )
+        print(gpt_output.strip())
+        gpt_output = gpt_output.strip()
+        
+        try:
+            # Try to parse the JSON string without escaping
+            json_output = json.loads(gpt_output)
+        except json.JSONDecodeError:
+            # If an error is raised, try to escape the string and parse it again
+            try:
+                json_output = json.loads(gpt_output.encode('unicode_escape').decode())
+            except json.JSONDecodeError:
+                print("The string could not be parsed as JSON.")
+                return gpt_output, citations, "error", relevant_chunks
+        
+        bot_response = json_output["response"]
+        query_type = json_output["query_type"]
+
+        # print('bot response: ', bot_response, 'query type: ', query_type)
+
+        if len(bot_response) < 700:
+            return (bot_response, citations, query_type, relevant_chunks)
+        else:
+            system_prompt = f"""Please summarise the given answer in 700 characters or less. Only return the summarized answer and nothing else.\n"""
+            
+            query_prompt = f"""You are given the following response: {bot_response}"""
+            prompt = [{"role": "system", "content": system_prompt}]
+            prompt.append({"role": "user", "content": query_prompt})
+
+            gpt_output = get_llm_response(prompt)
+            logger.add_log(
+                sender_id="bot",
+                receiver_id="bot",
+                message_id=None,
+                action_type="gpt4",
+                details={
+                    "system_prompt": system_prompt,
+                    "query_prompt": query_prompt,
+                    "gpt_output": gpt_output,
+                },
+                timestamp=datetime.now(),
+            )
+            return (gpt_output, citations, query_type, relevant_chunks)
 
     def generate_correction(
         self,
@@ -371,7 +520,7 @@ class KnowledgeBase:
         print("metadatas: ", metadatas)
 
         print("texts: ", self.texts)
-        collection.add(
+        self.collection.add(
             ids=[str(index + collection_count) for index in range(len(self.texts))],
             metadatas=[{"source": source} for source in self.sources],
             documents=self.texts,
@@ -390,8 +539,10 @@ class KnowledgeBase:
         return
 
     def create_embeddings(self):
-        if os.path.exists(self.persist_directory):
-            shutil.rmtree(self.persist_directory)
+
+        # if os.path.exists(self.persist_directory):
+        #     shutil.rmtree(self.persist_directory)
+            
         self.client = chromadb.PersistentClient(
             path=self.persist_directory, settings=Settings(anonymized_telemetry=False)
         )
