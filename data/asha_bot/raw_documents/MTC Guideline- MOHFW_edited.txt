@@ -1,0 +1,104 @@
+Operational Guidelines  
+on Facility Based Management of Children 
+with Severe ACute MAlnutrition
+Abbreviations
+AHS Annual Health Survey
+AWW Anganwadi worker
+ASHA Accredited Social Health Activist
+CHC Community Health Centre
+F-IMNCI Facility Based i ntegrated Management of newborn and Childhood i llnesses 
+FRU First r eferral unit
+HIV Human i mmunodeficiency virus
+HFA Height-for-age
+IV intravenous
+IU international unit
+mcg micrograms
+MUAC Mid-upper Arm Circumference
+NACO national AiDS Control organisation
+NG nasogastric
+NRC nutrition r ehabilitation Centre
+NFHS national Family Health Survey
+OPD outpatient Department
+ORS oral rehydration Solution
+PHC Primary Health Centre
+RCH reproductive and Child Health
+ReSoMal rehydration solution for malnourished children
+ SAM Severe Acute Malnutrition
+SD Standard DeviationAbbreviationsSRS Sample r egistration System
+SST Supplementary Suckling technique
+TOT training of trainers
+VHND village Health and nutrition Day
+ WFA Weight-for-age
+ WFH Weight-for-height
+WFL Weight –for- length
+WHO World Health organizationcOntEnts
+
+Sec tion2 clinical proTocols
+1.  Screening for SAM in the community
+Active and early case finding is an important determinant of case fatality rate, programme coverage and the 
+programme impact . c ommunity mobilization is crucial for active and early case-finding.
+to reduce the barriers to access, reduce case fatality and improve programme impact, screening must take place 
+in the community and before the onset of medical complications. Active case finding should be done in the community by the AnM and AWW and aided by the ASHA of the village. it is important to supplement active 
+case-finding with community sensitization which would lead to self-referral.
+Frontline community workers (AWW, ASHA, AnM) can identify children with SAM by using simple coloured 
+plastic strips that are designed to measure mid upper arm circumference (MUA c). they should also be able to 
+recognise nutritional oedema of the feet, which is another sign of this condition. Regular growth monitoring at the Anganwadi centre or during Village Health and nutrition Day is an opportunity for active case finding. 
+once identified, these children with SAM need further assessment to determine if they require referral to health 
+facility and facility based care or whether they can be managed at community level with visits as outpatients to 
+a health centre or facility.Besides active case finding in the community (through regular growth monitoring at AWc or during VHnD) all 
+possible contact opportunities with children should be exploited including home visits, immunisation outreach 
+sessions, visit to sub centres and all levels of health facilities. Assessing the nutrition status of all sick children 
+presenting to health facility should be emphasized and wherever possible, included in physical examination 
+guidelines/formats.the weight for height/length charts for identifying children with SD scores <- 3SD are attached as annexure 9 
+and 10. 
+Community --> (MU AC<115 or oedema)
+with medical complications --> Inpa tient care of 
+children with SAM 
+and  medical 
+complications --> Follow up --> Identify and ref er 
+children with SA M
+
+
+
+Case identification
+Active screening  at village level by AWW/ASHA through house to house 
+visit with MU AC tape f or all children (6 – 59 months) and look ing
+ for presence/absence of bilateral pitting edema. 
+Passiv e screening  during Growth Monitoring/V illage Health and Nutrition Days
+ (VHND) using MU AC for all children (6–59 months) and look ing f or presence/  
+absence of bilateral pitting edema.  
+
+
+Admission criteria
+Criteria for admission for inpatient treatment:
+1. Children 6-59 months
+Any of the following: 
+- MUAC <115mm with or without any grade of oedema 
+- WFH < -3 SD with or without any grade of oedema 
+- Bilateral pitting oedema +/++ (children with oedema +++ always need inpatient care)
+WITH Any of the following complications:
+- Anorexia (Loss of appetite)
+- Fever (39 degree c ) or Hypothermia (<35 c ) 
+- Persistent vomiting
+- Severe dehydration based on history and clinical examinationnot alert, very weak, apathetic, unconscious, convulsions
+- Hypoglycemia
+- Severe Anemia (severe palmar pallor)
+- Severe pneumonia
+- extensive superficial infection requiring iM medications
+- Any other general sign that a clinician thinks requires admission for further assessment or care 
+in addition to above criteria if the caregiver is unable to take care of the child at home, the child should be 
+admitted.
+
+2. Infants < 6 months:
+- infant is too weak or feeble to suckle effectively (independently of his/her weight-for-length). 
+or
+- WfL (weight-for-length) <–3SD (in infants >45 cm) 
+or
+- Visible severe wasting in infants <45 cm 
+or
+- Presence of oedema both feet 
+
+3. Other reasons for inpatient enrolment 
+- Readmission: child previously discharged from in-patient care but meets admission criteria again.
+- Return after default: child who returns after default (away from in-patient care for 2 consecutive days) and 
+meets the admission criteria.  
