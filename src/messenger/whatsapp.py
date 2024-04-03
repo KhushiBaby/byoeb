@@ -767,7 +767,7 @@ class WhatsappMessenger(BaseMessenger):
         }
 
         if reply_to_msg_id is not None:
-            payload["context"]: {"message_id": reply_to_msg_id}
+            payload["context"] = {"message_id": reply_to_msg_id}
         
         headers = {
             "Authorization": "Bearer " + os.environ["WHATSAPP_TOKEN"].strip(),
