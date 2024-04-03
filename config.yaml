@@ -34,7 +34,7 @@ COSMOS_DB_NAME: llm-bot-database
 COSMOS_DB_COLLECTION: conversation_science_bot
 COSMOS_LONGTERM_COLLECTION: science-bot_users
 COSMOS_LOGGING_COLLECTION: logs_science_bot
-AZURE_BLOB_CONTAINER_NAME: swaasthya-bot-audio-storage
+AZURE_BLOB_CONTAINER_NAME: asha-bot
 
 #NEW_DB
 COSMOS_USER_COLLECTION: users
