@@ -999,7 +999,7 @@ class WhatsappResponder(BaseResponder):
             with open(download_file_path, "wb") as download_file:
                 download_file.write(blob_client.download_blob().readall())
             
-            audio_msg_id = self.messenger.send_audio(audio_file, expert_row_lt['whatsapp_id'], message_id)
+            audio_msg_id = self.messenger.send_audio(download_file_path, expert_row_lt['whatsapp_id'], message_id)
 
         else:
             audio_msg_id = None

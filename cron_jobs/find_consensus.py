@@ -68,8 +68,8 @@ for index, row in tqdm(df.iterrows()):
 
     query_prompt = f'''
     Please find the consensus for the following input:
-    Query: {row["message_english"]}
-    Experts' Responses: [{", ".join(expert_responses)}]
+    question: {row["message_english"]}
+    ANM_answers: [{", ".join(expert_responses)}]
     Share the output in a json format {{"answer": "xxx", "explanation": "xxx", "voting": "xxx"}}, do not include anything else.
     '''
 

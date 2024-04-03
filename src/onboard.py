@@ -32,9 +32,7 @@ def onboard_template(config: dict, logger: LoggingDatabase, data_row: dict) -> N
 def onboard_wa_helper(
     config: dict,
     logger: LoggingDatabase,
-    to_number: str,
-    role: str,
-    lang: str,
+    user_row: dict,
 ) -> None:
     messenger = WhatsappMessenger(config, logger)
     welcome_messages = json.load(
@@ -52,14 +50,14 @@ def onboard_wa_helper(
             os.path.join(os.environ['APP_PATH'], os.environ['DATA_PATH'],"/onboarding/suggestion_questions.json"),
         )
     )
-
-    if role in config["USERS"]:
+    lang = user_row['user_language']
+    if user_row['user_type'] in config["USERS"]:
         for message in welcome_messages["users"][lang]:
-            messenger.send_message(to_number, message)
+            messenger.send_message(user_row['whatsapp_id'], message)
         audio_file = os.path.join(os.environ['APP_PATH'], os.environ['DATA_PATH'],f"onboarding/welcome_messages_users_{lang}.aac")
-        messenger.send_audio(audio_file, to_number)
+        messenger.send_audio(audio_file, user_row['whatsapp_id'])
         messenger.send_language_poll(
-            to_number,
+            user_row['whatsapp_id'],
             language_prompts[lang],
             language_prompts[lang + "_title"],
         )
@@ -69,14 +67,14 @@ def onboard_wa_helper(
             suggestion_questions[lang]["list_title"],
         )
 
-        messenger.send_suggestions(to_number, title, list_title, questions)
+        messenger.send_suggestions(user_row['whatsapp_id'], title, list_title, questions)
         return
 
-    if role in config["EXPERTS"]:
+    if user_row['user_type'] in config["EXPERTS"]:
         for message in welcome_messages["experts"][lang]:
-            messenger.send_message(to_number, message)
+            messenger.send_message(user_row['whatsapp_id'], message)
         audio_file = os.path.join(os.environ['APP_PATH'], os.environ['DATA_PATH'],f"onboarding/welcome_messages_experts_{lang}.aac")
-        messenger.send_audio(audio_file, to_number)
+        messenger.send_audio(audio_file, user_row['whatsapp_id'])
         return
 
     return
