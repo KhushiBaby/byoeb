@@ -42,12 +42,12 @@ def onboard_wa_helper(
     )
     language_prompts = json.load(
         open(
-            os.path.join(os.environ['APP_PATH'], os.environ['DATA_PATH'],"/onboarding/language_prompts.json"),
+            os.path.join(os.environ['APP_PATH'], os.environ['DATA_PATH'],"onboarding/language_prompts.json"),
         )
     )
     suggestion_questions = json.load(
         open(
-            os.path.join(os.environ['APP_PATH'], os.environ['DATA_PATH'],"/onboarding/suggestion_questions.json"),
+            os.path.join(os.environ['APP_PATH'], os.environ['DATA_PATH'],"onboarding/suggestion_questions.json"),
         )
     )
     lang = user_row['user_language']
