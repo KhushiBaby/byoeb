@@ -12,8 +12,6 @@ from openai import OpenAI, AzureOpenAI
 
 
 def get_llm_response(prompt):
-    openai.api_base = os.environ["OPENAI_API_ENDPOINT"].strip()
-    openai.api_type = os.environ["OPENAI_API_TYPE"].strip()
     openai.api_key = os.environ["OPENAI_API_KEY"].strip()
     openai.api_version = os.environ["OPENAI_API_VERSION"].strip()
 

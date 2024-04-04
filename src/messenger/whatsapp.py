@@ -209,9 +209,9 @@ class WhatsappMessenger(BaseMessenger):
                             "rows": [
                                 {"id": "LANG_ENG", "title": "English"},
                                 {"id": "LANG_HIN", "title": "हिंदी"},
-                                {"id": "LANG_KNA", "title": "ಕನ್ನಡ"},
-                                {"id": "LANG_TAM", "title": "தமிழ்"},
-                                {"id": "LANG_TEL", "title": "తెలుగు"},
+                                # {"id": "LANG_KNA", "title": "ಕನ್ನಡ"},
+                                # {"id": "LANG_TAM", "title": "தமிழ்"},
+                                # {"id": "LANG_TEL", "title": "తెలుగు"},
                             ],
                         }
                     ],
@@ -627,6 +627,7 @@ class WhatsappMessenger(BaseMessenger):
         gpt_output = knowledge_base.generate_correction(database, db_id, self.logger)
         gpt_output = gpt_output.strip('"')
 
+        
         source_language = row_lt[row["user_type"] + "_language"]
 
         if row["query_message_type"] == "audio":

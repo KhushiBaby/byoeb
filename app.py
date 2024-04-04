@@ -60,7 +60,7 @@ def index():
 def webhook():
     body = request.json
     # adding request to queue
-    print("Adding message to queue, ", body)
+    # print("Adding message to queue, ", body)
     queue_client.send_message(json.dumps(body))
     return "OK", 200
 
@@ -161,9 +161,8 @@ def process_queue():
             messages = queue_client.receive_messages(messages_per_page=1, visibility_timeout=5)
             for message in messages:
                 try:
-                    print("Message received", message.content)
+                    # print("Message received", message.content)
                     body = json.loads(message.content)
-                    print("Processing new message")
                     responder.response(body)
                     queue_client.delete_message(message)
                 except Exception as e:

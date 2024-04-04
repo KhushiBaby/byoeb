@@ -15,11 +15,12 @@ from conversation_database import (
     LoggingDatabase,
 )
 from database import UserDB, UserConvDB, BotConvDB, ExpertConvDB, UserRelationDB
-from messenger.whatsapp import WhatsappMessenger
+from messenger import WhatsappMessenger
 import utils
 from utils import remove_extra_voice_files
 from onboard import onboard_wa_helper
-from responder.base import BaseResponder
+from responder import BaseResponder
+from utils import get_llm_response
 
 
 class WhatsappResponder(BaseResponder):
@@ -283,6 +284,9 @@ class WhatsappResponder(BaseResponder):
 
         print("GPT output: ", gpt_output)
 
+        if gpt_output.strip().startswith("I do not know the answer to your question"):
+            gpt_output = "I do not know the answer to your question. I will check and get back to you in a few hours."
+
         if msg_type == "text" or msg_type == "interactive":
             audio_msg_id = None
             gpt_output_source = self.azure_translate.translate_text(
@@ -321,9 +325,8 @@ class WhatsappResponder(BaseResponder):
             audio_msg_id = self.messenger.send_audio(
                 audio_output_file, row_lt['whatsapp_id'], msg_id
             )
+            print(msg_id)
             utils.remove_extra_voice_files(audio_input_file, audio_output_file)
-
-        print("GPT output: ", gpt_output)
 
         self.user_conv_db.add_query_type(
             message_id=msg_id,
@@ -344,7 +347,8 @@ class WhatsappResponder(BaseResponder):
             transaction_message_id=msg_id,
         )
 
-
+        if not gpt_output.strip().startswith("I do not know the answer to your question"):
+            self.user_conv_db.mark_resolved(msg_id)
 
         row_query = self.user_conv_db.get_from_db_id(db_id)
             
@@ -362,7 +366,9 @@ class WhatsappResponder(BaseResponder):
             print("Sending suggestions")
             self.send_suggestions(row_lt, row_query, gpt_output)
 
-        
+        if self.config['ESCALATE_MULTIPLE'] and query_type != "small-talk" and gpt_output.strip().startswith("I do not know the answer to your question"):
+            print("Escalating query")
+            self.escalate_query_multiple(row_query)
 
         return
 
@@ -818,6 +824,8 @@ class WhatsappResponder(BaseResponder):
             self.messenger.send_message(
                 msg_object["from"], "Thank you for the response.", msg_object["id"]
             )
+            row_query = self.user_conv_db.get_from_message_id(poll["transaction_message_id"])
+            self.find_consensus(row_query)
             return
             
 
@@ -980,7 +988,7 @@ class WhatsappResponder(BaseResponder):
 
         query = query_row["message_source_lang"]
 
-        message = f"*Query*: {query}"
+        message = f"*Asha query*: {query}"
 
         message_id = self.messenger.send_message(
             expert_row_lt['whatsapp_id'], message, None
@@ -988,7 +996,6 @@ class WhatsappResponder(BaseResponder):
 
         if query_row["message_type"] == "audio":
             audio_file = query_row["audio_blob_path"]
-            
             
             connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING").strip()
             blob_service_client = BlobServiceClient.from_connection_string(connect_str)
@@ -1017,3 +1024,141 @@ class WhatsappResponder(BaseResponder):
             message_timestamp=datetime.now(),
             transaction_message_id=query_row["message_id"],
         )
+
+    def escalate_query_multiple(self, query_row):
+
+        previous_polls = self.bot_conv_db.find_all_with_transaction_id(query_row["message_id"], "consensus_poll")
+
+        if len(previous_polls) >= self.config['MAX_ESCALATION_EXPERTS']:
+            print("Max escalation experts reached")
+            user_row_lt = self.user_db.get_from_user_id(query_row["user_id"])
+            text = "Sorry, the bot was unable to answer your query."
+            text_translated = self.azure_translate.translate_text(
+                text, "en", user_row_lt['user_language'], self.logger
+            )
+
+            self.messenger.send_message(
+                user_row_lt['whatsapp_id'], text_translated, query_row["message_id"]
+            )
+            self.user_conv_db.mark_resolved(query_row["message_id"])
+            return
+
+        experts = self.user_db.get_random_expert(self.category_to_expert[query_row["query_type"]], self.config['NUM_ESCALATE_EXPERTS'])
+        
+        for expert in experts:
+            self.send_query_expert(expert, query_row)
+
+    def find_consensus(self, query_row):
+
+        
+        consensus_prompt_path = os.path.join(os.environ['APP_PATH'], os.environ['DATA_PATH'], "consensus_prompt.txt")
+
+        with open(consensus_prompt_path, "r") as f:
+            consensus_prompt = f.read()
+
+        transaction_message_id = query_row["message_id"]
+        all_expert_responses = self.expert_conv_db.get_from_transaction_message_id(transaction_message_id, "consensus_response")
+        print(len(all_expert_responses))
+        
+        expert_responses = {}
+        expert_response_db_ids = []
+
+        for response in all_expert_responses:
+            if expert_responses.get(response['message_id'], None) is None:
+                expert_responses[response['message_id']] = response['message']
+            else:
+                expert_responses[response['message_id']] += f" {response['message']}"
+            expert_response_db_ids.append(response['message_id'])
+
+        expert_responses = list(expert_responses.values())
+        if len(expert_responses) < self.config['MIN_CONSENSUS_RESPONSES']:
+            print("Not enough expert responses")
+            return
+
+
+
+        prompt = [
+            {"role": "system", "content": str(consensus_prompt)},
+        ]
+
+        query_prompt = f'''
+        Please find the consensus for the following input:
+        question: {query_row["message_english"]}
+        ANM_answers: [{", ".join(expert_responses)}]
+        Share the output in a json format {{"answer": "xxx", "explanation": "xxx", "voting": "xxx"}}, do not include anything else.
+        '''
+
+        prompt.append({"role": "user", "content": str(query_prompt)})
+        response = get_llm_response(prompt)
+
+        print(response)
+        response = json.loads(response)
+        if response['answer'] == 'Consensus not reached.':
+            return
+        
+        answer = response['answer']
+        user_row_lt = self.user_db.get_from_user_id(query_row["user_id"])
+
+        
+        if query_row["message_type"] == "audio":
+            corrected_audio_loc = "corrected_audio.wav"
+            remove_extra_voice_files(
+                corrected_audio_loc, corrected_audio_loc[:-3] + ".aac"
+            )
+            answer_source = self.azure_translate.text_translate_speech(
+                answer, user_row_lt['user_language'] + "-IN", corrected_audio_loc, self.logger
+            )
+
+            updated_msg_id = self.messenger.send_message(
+                user_row_lt['whatsapp_id'],
+                answer_source,
+                query_row["message_id"],
+            )
+
+            subprocess.run(
+                [
+                    "ffmpeg",
+                    "-i",
+                    corrected_audio_loc,
+                    "-codec:a",
+                    "aac",
+                    corrected_audio_loc[:-3] + ".aac",
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            updated_audio_msg_id = self.messenger.send_audio(
+                corrected_audio_loc[:-3] + ".aac",
+                user_row_lt['whatsapp_id'],
+                query_row["message_id"]
+            )
+            remove_extra_voice_files(
+                corrected_audio_loc, corrected_audio_loc[:-3] + ".aac"
+            )
+        else:
+            answer_source = self.azure_translate.translate_text(
+                answer, "en", user_row_lt['user_language'], self.logger
+            )
+            updated_msg_id = self.messenger.send_message(
+                user_row_lt['whatsapp_id'],
+                answer_source,
+                query_row["message_id"],
+            )
+            updated_audio_msg_id = None
+        
+        self.bot_conv_db.insert_row(
+            receiver_id=user_row_lt['user_id'],
+            message_type="query_consensus_response",
+            message_id=updated_msg_id,
+            audio_message_id=updated_audio_msg_id,
+            message_source_lang=answer_source,
+            message_language=user_row_lt['user_language'],
+            message_english=answer,
+            reply_id=query_row["message_id"],
+            citations=f"expert_consensus: {', '.join(expert_response_db_ids)}",
+            message_timestamp=datetime.now(),
+            transaction_message_id=query_row["message_id"],
+        )
+
+        self.user_conv_db.mark_resolved(query_row["message_id"])
+        print("Marking resolved", query_row["message_id"])

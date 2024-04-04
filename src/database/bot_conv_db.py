@@ -57,6 +57,7 @@ class BotConvDB(BaseDB):
             bot_conv = self.collection.find({'$and': [{'transaction_message_id': transaction_message_id}, {'message_type': message_type}]})
         else:
             bot_conv = self.collection.find({'transaction_message_id': transaction_message_id})
+        bot_conv = list(bot_conv)
         return bot_conv
     
     def find_with_receiver_id(self, receiver_id, message_type=None):

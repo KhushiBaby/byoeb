@@ -52,12 +52,7 @@ for i, row in tqdm(df.iterrows()):
     # print(row['message_id'], row['message_english'])
     try:
     # get x numbers of experts randomly
-        experts = userdb.get_random_expert(category_to_expert[df.loc[i, "query_type"]], NUM_EXPERTS)
-
-        # print(experts)
-        
-        for expert in experts:
-            responder.send_query_expert(expert, row)
+        responder.escalate_query_multiple(row)    
     except Exception as e:
         print(e)
 
