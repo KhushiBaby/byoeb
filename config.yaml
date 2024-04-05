@@ -36,9 +36,7 @@ SUGGESTION_QUESTIONS:
   - 'What kind of services do Asha provide?'
 
 COSMOS_DB_NAME: llm-bot-database
-COSMOS_DB_COLLECTION: conversation_science_bot
-COSMOS_LONGTERM_COLLECTION: science-bot_users
-COSMOS_LOGGING_COLLECTION: logs_science_bot
+COSMOS_LOGGING_COLLECTION: logs
 AZURE_BLOB_CONTAINER_NAME: asha-bot
 
 #NEW_DB

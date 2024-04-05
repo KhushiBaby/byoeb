@@ -2,32 +2,36 @@ from conversation_database import LoggingDatabase
 import json
 import os
 from azure_language_tools import translator
-from messenger.whatsapp import WhatsappMessenger
+from messenger import WhatsappMessenger
 
 
-def onboard_template(config: dict, logger: LoggingDatabase, data_row: dict) -> None:
+def onboard_template(config: dict, logger: LoggingDatabase, data_row: dict, messenger: WhatsappMessenger) -> None:
     print("Onboarding template")
 
-    messenger = WhatsappMessenger(config, logger)
 
-    for user in config['USERS']:
-        if data_row.get(user+'_whatsapp_id', None) is not None:
-            lang = data_row.get(user+'_language', 'en')
-            messenger.send_template(
-                data_row[user+'_whatsapp_id'],
-                'onboard_user',
-                lang,
-            )
+    user_type = data_row.get('user_type', None)
+
+    if user_type == 'Asha':
+        lang = data_row.get('user_language', 'hi')
+        messenger.send_template(
+            data_row['whatsapp_id'],
+            'asha_onboarding',
+            lang,
+        )
+
+    elif user_type == 'ANM':
+        lang = data_row.get('user_language', 'hi')
+        messenger.send_template(
+            data_row['whatsapp_id'],
+            'anm_onboarding',
+            lang,
+        )
+
+    else:
+        print("Invalid user type")
+        
+    return
     
-    for expert in config['EXPERTS']:
-        if data_row.get(expert+'_whatsapp_id', None) is not None:
-            lang = data_row.get(expert+'_language', 'en')
-            messenger.send_template(
-                data_row[expert+'_whatsapp_id'],
-                'onboard_expert',
-                lang,
-            )
-
 
 def onboard_wa_helper(
     config: dict,
