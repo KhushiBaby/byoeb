@@ -27,8 +27,6 @@ class WhatsappResponder(BaseResponder):
     def __init__(self, config):
         self.config = config
         self.knowledge_base = KnowledgeBase(config)
-        # self.database = ConversationDatabase(config)
-        # self.long_term_db = LongTermDatabase(config)
         self.logger = LoggingDatabase(config)
         self.messenger = WhatsappMessenger(config, self.logger)
         self.azure_translate = translator()
@@ -101,13 +99,6 @@ class WhatsappResponder(BaseResponder):
 
         print("Message object: ", msg_object)
 
-
-        
-
-        # if msg_id in self.database.get_all_message_ids():
-        #     print("Message already processed", datetime.now())
-        #     return
-
         if self.user_conv_db.get_from_message_id(msg_id) or self.bot_conv_db.get_from_message_id(msg_id) or self.expert_conv_db.get_from_message_id(msg_id):
             print("Message already processed", datetime.now())
             return
@@ -136,13 +127,16 @@ class WhatsappResponder(BaseResponder):
             if len(logs) > 0: 
                 msg_log = logs[0]
                 if (
-                    msg_log["details"]["text"] == "user_onboard"
-                    or msg_log["details"]["text"] == "expert_onboard"
+                    msg_log["details"]["text"] == "asha_onboarding"
+                    or msg_log["details"]["text"] == "anm_onboarding"
                 ):
                     self.onboard_response(msg_object, row_lt)
                     return
-                if msg_log["details"]["text"] == "expert_reminder":
-                    self.expert_reminder_response(msg_object, row_lt)
+                if msg_log["details"]["text"] == "anm_response_request":
+                    row_req = self.bot_conv_db.get_from_message_id(reply_id)
+                    transaction_message_id = row_req["transaction_message_id"]
+                    row_query = self.user_conv_db.get_from_message_id(transaction_message_id)
+                    self.send_query_expert(row_lt, row_query)
                     return
 
 
@@ -151,7 +145,6 @@ class WhatsappResponder(BaseResponder):
             self.handle_response_user(msg_object, row_lt)
         elif user_type in self.config["EXPERTS"]:
             self.handle_response_expert(msg_object, row_lt)
-
         return
 
     def handle_unsupported_msg_types(self, msg_object, row_lt):
@@ -534,7 +527,7 @@ class WhatsappResponder(BaseResponder):
             and msg_object["interactive"]["button_reply"]["id"][:12] == "POLL_PRIMARY"
         ):
             self.receive_correction_poll_expert(msg_object, row_lt)
-        elif msg_type == "text":
+        elif msg_type == "text" or msg_type == "audio":
             self.get_correction_from_expert(msg_object, row_lt)
 
 
@@ -796,8 +789,39 @@ class WhatsappResponder(BaseResponder):
             )
             return
 
+        
 
-        msg_body = msg_object["text"]["body"]
+        if msg_object["type"] == "text":
+            msg_body = msg_object["text"]["body"]
+        elif msg_object["type"] == "audio":
+            audio_input_file = "test_audio_input.ogg"
+            audio_output_file = "test_audio_output.aac"
+            utils.remove_extra_voice_files(audio_input_file, audio_output_file)
+            self.messenger.download_audio(msg_object, audio_input_file)
+            subprocess.call(
+                ["ffmpeg", "-i", audio_input_file, audio_input_file[:-3] + "wav"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING").strip()
+            blob_service_client = BlobServiceClient.from_connection_string(connect_str)
+            container_name = self.config["AZURE_BLOB_CONTAINER_NAME"].strip()
+
+            blob_name = str(datetime.now()) + "_" + str(expert_row_lt['whatsapp_id']) + ".ogg"
+            blob_client = blob_service_client.get_blob_client(
+                container=container_name, blob=blob_name
+            )
+            with open(file=audio_input_file, mode="rb") as data:
+                blob_client.upload_blob(data)
+
+            
+            source_lang_text, eng_text = self.azure_translate.speech_translate_text(
+                audio_input_file[:-3] + "wav", expert_row_lt['user_language'], self.logger, blob_name
+            )
+            msg_body = source_lang_text
+            
+            utils.remove_extra_voice_files(audio_input_file, audio_output_file)
+        
         context_id = msg_object["context"]["id"]
 
         self.logger.add_log(
@@ -808,8 +832,20 @@ class WhatsappResponder(BaseResponder):
             details={"text": msg_body, "reply_to": context_id},
             timestamp=datetime.now(),
         )
+        
 
         poll = self.bot_conv_db.get_from_message_id(context_id)
+        if poll is None:
+            poll = self.bot_conv_db.get_from_audio_message_id(context_id)
+
+        if poll is None:
+            self.messenger.send_message(
+                msg_object["from"],
+                f"Please reply to the query that you are trying to fix.",
+                msg_object["id"],
+            )
+            return
+        
 
         if poll['message_type'] == 'consensus_poll':
             self.expert_conv_db.insert_row(
@@ -825,11 +861,12 @@ class WhatsappResponder(BaseResponder):
                 msg_object["from"], "Thank you for the response.", msg_object["id"]
             )
             row_query = self.user_conv_db.get_from_message_id(poll["transaction_message_id"])
-            self.find_consensus(row_query)
+            if not row_query.get("resolved", False):
+                self.find_consensus(row_query)
             return
             
 
-        if poll is None or (poll["message_type"] != "poll_primary" and poll["message_type"] != "poll_escalated"):
+        if poll["message_type"] != "poll_primary" and poll["message_type"] != "poll_escalated":
             self.messenger.send_message(
                 msg_object["from"],
                 f"Please reply to the query you want to fix.",
@@ -983,10 +1020,34 @@ class WhatsappResponder(BaseResponder):
             )
         return
     
+    def send_query_request_expert(self, expert_row_lt, row_query):
 
-    def send_query_expert(self, expert_row_lt, query_row):
+        message_id = self.messenger.send_template(
+            expert_row_lt['whatsapp_id'],
+            'anm_response_request',
+            expert_row_lt['user_language'],
+        )
 
-        query = query_row["message_source_lang"]
+        self.bot_conv_db.insert_row(
+            receiver_id=expert_row_lt["user_id"],
+            message_type="response_request",
+            message_id=message_id,
+            audio_message_id=None,
+            message_source_lang=f"Template: anm_response_request, Language: {expert_row_lt['user_language']}",
+            message_language=expert_row_lt['user_language'],
+            message_english="Template: anm_response_request",
+            reply_id=None,
+            citations=None,
+            message_timestamp=datetime.now(),
+            transaction_message_id=row_query["message_id"],
+        )
+
+
+
+
+    def send_query_expert(self, expert_row_lt, row_query):
+
+        query = row_query["message_source_lang"]
 
         message = f"*Asha query*: {query}"
 
@@ -994,8 +1055,8 @@ class WhatsappResponder(BaseResponder):
             expert_row_lt['whatsapp_id'], message, None
         )
 
-        if query_row["message_type"] == "audio":
-            audio_file = query_row["audio_blob_path"]
+        if row_query["message_type"] == "audio":
+            audio_file = row_query["audio_blob_path"]
             
             connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING").strip()
             blob_service_client = BlobServiceClient.from_connection_string(connect_str)
@@ -1017,46 +1078,46 @@ class WhatsappResponder(BaseResponder):
             message_id=message_id,
             audio_message_id=audio_msg_id,
             message_source_lang=query,
-            message_language=query_row["source_language"],
+            message_language=row_query["source_language"],
             message_english=query,
             reply_id=None,
             citations=None,
             message_timestamp=datetime.now(),
-            transaction_message_id=query_row["message_id"],
+            transaction_message_id=row_query["message_id"],
         )
 
-    def escalate_query_multiple(self, query_row):
+    def escalate_query_multiple(self, row_query):
 
-        previous_polls = self.bot_conv_db.find_all_with_transaction_id(query_row["message_id"], "consensus_poll")
+        previous_polls = self.bot_conv_db.find_all_with_transaction_id(row_query["message_id"], "consensus_poll")
 
         if len(previous_polls) >= self.config['MAX_ESCALATION_EXPERTS']:
             print("Max escalation experts reached")
-            user_row_lt = self.user_db.get_from_user_id(query_row["user_id"])
+            user_row_lt = self.user_db.get_from_user_id(row_query["user_id"])
             text = "Sorry, the bot was unable to answer your query."
             text_translated = self.azure_translate.translate_text(
                 text, "en", user_row_lt['user_language'], self.logger
             )
 
             self.messenger.send_message(
-                user_row_lt['whatsapp_id'], text_translated, query_row["message_id"]
+                user_row_lt['whatsapp_id'], text_translated, row_query["message_id"]
             )
-            self.user_conv_db.mark_resolved(query_row["message_id"])
+            self.user_conv_db.mark_resolved(row_query["message_id"])
             return
 
-        experts = self.user_db.get_random_expert(self.category_to_expert[query_row["query_type"]], self.config['NUM_ESCALATE_EXPERTS'])
+        experts = self.user_db.get_random_expert(self.category_to_expert[row_query["query_type"]], self.config['NUM_ESCALATE_EXPERTS'])
         
         for expert in experts:
-            self.send_query_expert(expert, query_row)
+            self.send_query_request_expert(expert, row_query)
 
-    def find_consensus(self, query_row):
 
-        
+    def find_consensus(self, row_query):
+
         consensus_prompt_path = os.path.join(os.environ['APP_PATH'], os.environ['DATA_PATH'], "consensus_prompt.txt")
 
         with open(consensus_prompt_path, "r") as f:
             consensus_prompt = f.read()
 
-        transaction_message_id = query_row["message_id"]
+        transaction_message_id = row_query["message_id"]
         all_expert_responses = self.expert_conv_db.get_from_transaction_message_id(transaction_message_id, "consensus_response")
         print(len(all_expert_responses))
         
@@ -1083,7 +1144,7 @@ class WhatsappResponder(BaseResponder):
 
         query_prompt = f'''
         Please find the consensus for the following input:
-        question: {query_row["message_english"]}
+        question: {row_query["message_source_lang"]}
         ANM_answers: [{", ".join(expert_responses)}]
         Share the output in a json format {{"answer": "xxx", "explanation": "xxx", "voting": "xxx"}}, do not include anything else.
         '''
@@ -1097,10 +1158,10 @@ class WhatsappResponder(BaseResponder):
             return
         
         answer = response['answer']
-        user_row_lt = self.user_db.get_from_user_id(query_row["user_id"])
+        user_row_lt = self.user_db.get_from_user_id(row_query["user_id"])
 
         
-        if query_row["message_type"] == "audio":
+        if row_query["message_type"] == "audio":
             corrected_audio_loc = "corrected_audio.wav"
             remove_extra_voice_files(
                 corrected_audio_loc, corrected_audio_loc[:-3] + ".aac"
@@ -1112,7 +1173,7 @@ class WhatsappResponder(BaseResponder):
             updated_msg_id = self.messenger.send_message(
                 user_row_lt['whatsapp_id'],
                 answer_source,
-                query_row["message_id"],
+                row_query["message_id"],
             )
 
             subprocess.run(
@@ -1130,7 +1191,7 @@ class WhatsappResponder(BaseResponder):
             updated_audio_msg_id = self.messenger.send_audio(
                 corrected_audio_loc[:-3] + ".aac",
                 user_row_lt['whatsapp_id'],
-                query_row["message_id"]
+                row_query["message_id"]
             )
             remove_extra_voice_files(
                 corrected_audio_loc, corrected_audio_loc[:-3] + ".aac"
@@ -1142,7 +1203,7 @@ class WhatsappResponder(BaseResponder):
             updated_msg_id = self.messenger.send_message(
                 user_row_lt['whatsapp_id'],
                 answer_source,
-                query_row["message_id"],
+                row_query["message_id"],
             )
             updated_audio_msg_id = None
         
@@ -1154,11 +1215,11 @@ class WhatsappResponder(BaseResponder):
             message_source_lang=answer_source,
             message_language=user_row_lt['user_language'],
             message_english=answer,
-            reply_id=query_row["message_id"],
+            reply_id=row_query["message_id"],
             citations=f"expert_consensus: {', '.join(expert_response_db_ids)}",
             message_timestamp=datetime.now(),
-            transaction_message_id=query_row["message_id"],
+            transaction_message_id=row_query["message_id"],
         )
 
-        self.user_conv_db.mark_resolved(query_row["message_id"])
-        print("Marking resolved", query_row["message_id"])
+        self.user_conv_db.mark_resolved(row_query["message_id"])
+        print("Marking resolved", row_query["message_id"])

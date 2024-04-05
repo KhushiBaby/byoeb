@@ -45,6 +45,10 @@ class BotConvDB(BaseDB):
         bot_conv = self.collection.find_one({'message_id': message_id})
         return bot_conv
     
+    def get_from_audio_message_id(self, audio_message_id):
+        bot_conv = self.collection.find_one({'audio_message_id': audio_message_id})
+        return bot_conv
+    
     def find_with_transaction_id(self, transaction_message_id, message_type=None):
         if message_type:
             bot_conv = self.collection.find_one({'$and': [{'transaction_message_id': transaction_message_id}, {'message_type': message_type}]})
