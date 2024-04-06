@@ -41,8 +41,12 @@ class UserConvDB(BaseDB):
         user_conv = self.collection.find_one({'message_id': message_id})
         return user_conv
     
-    def get_all_user_conv(self, user_id):
-        user_conv = self.collection.find({'user_id': user_id})
+    def get_all_user_conv(self, user_id, message_type=None):
+        if message_type is None:
+            user_conv = self.collection.find({'user_id': user_id})
+        else:
+            user_conv = self.collection.find({'$and': [{'user_id': user_id}, {'message_type': message_type}]})
+        user_conv = list(user_conv)
         return user_conv
 
     def add_llm_response(self,
