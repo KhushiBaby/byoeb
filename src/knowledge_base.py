@@ -8,11 +8,9 @@ import chromadb
 import json
 
 from conversation_database import (
-    ConversationDatabase,
-    LongTermDatabase,
     LoggingDatabase,
 )
-from database import UserConvDB
+from database import UserConvDB, BotConvDB
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import DirectoryLoader
 from chromadb.utils import embedding_functions
@@ -44,6 +42,7 @@ class KnowledgeBase:
     def answer_query(
         self,
         user_conv_db: UserConvDB,
+        bot_conv_db: BotConvDB,
         msg_id: str,
         logger: LoggingDatabase,
     ) -> tuple[str, str]:
@@ -114,13 +113,18 @@ class KnowledgeBase:
         # take all non empty conversations 
         all_conversations = user_conv_db.get_all_user_conv(db_row["user_id"])
         conversation_string = ""
-        # "\n".join(
-        #     [
-        #         row["query"] + "\n" + row["response"]
-        #         for row in all_conversations
-        #         if row["response"]
-        #     ][-3:]
-        # )
+        idx = -2
+        while idx >= -len(all_conversations):
+            try:
+                last_conv = all_conversations[-idx]
+                last_query = last_conv["message_english"]
+                last_response = bot_conv_db.find_with_transaction_id(last_conv["message_id"], "query_resposne")
+                conversation_string = f"Last query: {last_query}\nLast response: {last_response['message_english']}"
+                break
+            except:
+                idx -= 1
+
+
 
         system_prompt = self.llm_prompts["answer_query"]
         query_prompt = f"""

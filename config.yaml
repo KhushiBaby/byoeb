@@ -31,9 +31,9 @@ WELCOME_MESSAGES:
   EXPERTS:
     - 'Hi! I am Asha Bot. Thank you for volunteering.'
 SUGGESTION_QUESTIONS:
-  - 'What training does an Asha worker receive?'
-  - 'What is ASHA?'
-  - 'What kind of services do Asha provide?'
+  - 'What are the side effects of Antara injection?'
+  - 'Tell me about malnutrition.'
+  - 'How many iron tablets should be taken during pregnancy?'
 
 COSMOS_DB_NAME: llm-bot-database
 COSMOS_LOGGING_COLLECTION: logs
