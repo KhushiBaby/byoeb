@@ -300,6 +300,8 @@ class WhatsappResponder(BaseResponder):
                 audio_output_file[:-3] + "wav",
                 self.logger,
             )
+            if gpt_output.strip().startswith("I do not know the answer to your question"):
+                gpt_output_source = self.template_messages["idk_response"][row_lt['user_language']]
             subprocess.run(
                 [
                     "ffmpeg",
@@ -1107,11 +1109,16 @@ class WhatsappResponder(BaseResponder):
             )
             self.user_conv_db.mark_resolved(row_query["message_id"])
             return
-
+        previous_poll_receivers = []
+        for prev_poll in previous_polls:
+            previous_poll_receivers.append(prev_poll['receiver_id'])
+            
         experts = self.user_db.get_random_expert(self.category_to_expert[row_query["query_type"]], self.config['NUM_ESCALATE_EXPERTS'])
         
         for expert in experts:
-            self.send_query_request_expert(expert, row_query)
+            if expert['user_id'] not in previous_poll_receivers:
+                # print(expert)
+                self.send_query_request_expert(expert, row_query)
 
 
     def find_consensus(self, row_query):
@@ -1129,10 +1136,10 @@ class WhatsappResponder(BaseResponder):
         expert_response_db_ids = []
 
         for response in all_expert_responses:
-            if expert_responses.get(response['message_id'], None) is None:
-                expert_responses[response['message_id']] = response['message']
+            if expert_responses.get(response['user_id'], None) is None:
+                expert_responses[response['user_id']] = response['message']
             else:
-                expert_responses[response['message_id']] += f" {response['message']}"
+                expert_responses[response['user_id']] += f" {response['message']}"
             expert_response_db_ids.append(response['message_id'])
 
         expert_responses = list(expert_responses.values())

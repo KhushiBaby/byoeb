@@ -2,6 +2,7 @@ import os
 import datetime
 import pymongo
 import certifi
+import random
 
 from database.base import BaseDB
 
@@ -42,10 +43,16 @@ class UserDB(BaseDB):
             }}
         )
     
-    def get_random_expert(self, expert_type, number_of_experts):
+    def dep_get_random_expert(self, expert_type, number_of_experts):
         pipeline = [
             {"$match": {"user_type": expert_type}},
             {"$sample": {"size": number_of_experts}}
         ]
         experts = list(self.collection.aggregate(pipeline))
         return experts
+    
+    def get_random_expert(self, expert_type, numbers_of_experts):
+        rows = list(self.collection.find({'user_type':expert_type}))
+        print(len(rows))
+        random_experts = random.sample(rows, numbers_of_experts)
+        return random_experts
