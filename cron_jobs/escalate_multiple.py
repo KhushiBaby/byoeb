@@ -36,9 +36,16 @@ logger = LoggingDatabase(config)
 to_ts = datetime.datetime.now() - datetime.timedelta(hours=0)
 from_ts = datetime.datetime.now() - datetime.timedelta(days=1)
 
-list_cursor = user_conv_db.get_all_unresolved(from_ts, to_ts)
+list_queries = user_conv_db.get_all_unresolved(from_ts, to_ts)
 
-df = pd.DataFrame(list_cursor)
+
+df = pd.DataFrame(list_queries)
+
+if len(df) == 0:
+    print("No unresolved queries")
+    sys.exit()
+
+    
 df = df[df['query_type'] != 'small-talk']
 df.reset_index(drop=True, inplace=True)
 
