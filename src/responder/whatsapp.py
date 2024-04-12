@@ -1109,12 +1109,12 @@ class WhatsappResponder(BaseResponder):
             )
             self.user_conv_db.mark_resolved(row_query["message_id"])
             return
-        previous_poll_receivers = []
-        for prev_poll in previous_polls:
-            previous_poll_receivers.append(prev_poll['receiver_id'])
-            
         experts = self.user_db.get_random_expert(self.category_to_expert[row_query["query_type"]], self.config['NUM_ESCALATE_EXPERTS'])
         
+        previous_poll_receivers = []
+        previous_poll_requests = self.bot_conv_db.find_all_with_transaction_id(row_query["message_id"], "response_request")
+        for prev_poll_request in previous_poll_requests:
+            previous_poll_receivers.append(prev_poll_request['receiver_id'])
         for expert in experts:
             if expert['user_id'] not in previous_poll_receivers:
                 # print(expert)
