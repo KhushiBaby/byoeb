@@ -570,11 +570,12 @@ class KnowledgeBase:
         self.texts = []
         self.sources = []
         for document in self.documents:
-            next_text = RecursiveCharacterTextSplitter(chunk_size=1000).split_text(
-                document.page_content
-            )  # list of chunks
-            self.texts.extend(next_text)
+            if 'kb update' in document.metadata['source'].strip().lower():
+                next_text = document.page_content.split('##')[1:]
+            else:
+                next_text = RecursiveCharacterTextSplitter(chunk_size=1000).split_text(document.page_content)
             
+            self.texts.extend(next_text)
             self.sources.extend(
                 [
                     document.metadata["source"].split("/")[-1][:-4]
