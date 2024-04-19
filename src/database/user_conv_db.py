@@ -18,7 +18,8 @@ class UserConvDB(BaseDB):
         source_language,
         message_translated,
         audio_blob_path,
-        message_timestamp):
+        message_timestamp,
+        reply_id=None):
 
         user_conv = {
             'user_id': user_id,

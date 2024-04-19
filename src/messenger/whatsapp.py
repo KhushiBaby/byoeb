@@ -138,14 +138,7 @@ class WhatsappMessenger(BaseMessenger):
                         {
                             "type": "reply",
                             "reply": {"id": poll_id + "_NO", "title": "No"},
-                        },
-                        # {
-                        #     "type": "reply",
-                        #     "reply": {
-                        #         "id": poll_id + "_FORWARD",
-                        #         "title": "Send to " + send_to,
-                        #     },
-                        # },
+                        }
                     ]
                 },
             },
@@ -187,6 +180,72 @@ class WhatsappMessenger(BaseMessenger):
         self.send_reaction(to_number, msg_id, "📝")
 
         return msg_id
+    
+    def send_feedback_poll(
+        self,
+        to_number: str,
+        poll_string: str,
+        reply_to_msg_id: str = None,
+        buttons: list = ["Yes", "No"],
+    ):
+        
+        payload = {
+            "messaging_product": "whatsapp",
+            "to": to_number,
+            "type": "interactive",
+            "interactive": {
+                "type": "button",
+                "body": {"text": poll_string},
+                "action": {
+                    "buttons": [
+                        {
+                            "type": "reply",
+                            "reply": {"id": "feedback_poll" + "_YES", "title": buttons[0]},
+                        },
+                        {
+                            "type": "reply",
+                            "reply": {"id": "feedback_poll" + "_NO", "title": buttons[1]},
+                        }
+                    ]
+                },
+            },
+        }
+
+        if reply_to_msg_id is not None:
+            payload["context"] = {"message_id": reply_to_msg_id}
+
+        headers = {
+            "Authorization": "Bearer " + os.environ["WHATSAPP_TOKEN"].strip(),
+            "Content-Type": "application/json",
+        }
+        url = (
+            "https://graph.facebook.com/v17.0/"
+            + os.environ["PHONE_NUMBER_ID"]
+            + "/messages"
+        )
+
+        msg_output = requests.post(url, json=payload, headers=headers)
+
+        try:
+            msg_id = msg_output.json()["messages"][0]["id"]
+        except KeyError:
+            print(msg_output.json())
+            return None
+        self.logger.add_log(
+            sender_id="bot",
+            receiver_id=to_number,
+            message_id=msg_id,
+            action_type="send_poll",
+            details={
+                "text": poll_string,
+                "reply_to": reply_to_msg_id,
+                "options": buttons,
+            },
+            timestamp=datetime.now(),
+        )
+        return msg_id
+        
+
 
     def send_language_poll(
         self,

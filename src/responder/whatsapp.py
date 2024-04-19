@@ -1,6 +1,6 @@
 from typing import Any
 from io import BytesIO
-
+import random
 import os
 from azure_language_tools import translator
 import subprocess
@@ -10,8 +10,6 @@ import numpy as np
 import json
 from knowledge_base import KnowledgeBase
 from conversation_database import (
-    ConversationDatabase,
-    LongTermDatabase,
     LoggingDatabase,
 )
 from database import UserDB, UserConvDB, BotConvDB, ExpertConvDB, UserRelationDB
@@ -222,7 +220,19 @@ class WhatsappResponder(BaseResponder):
         print("Handling language poll response")
         msg_id = msg_object["id"]
         lang_detected = msg_object["interactive"]["list_reply"]["id"][5:-1].lower()
-            
+        
+        prev_lang = row_lt['user_language']
+
+        if lang_detected == prev_lang:
+            text = "Noted, thank you for your response."
+            text_src = self.azure_translate.translate_text(
+                text, "en", row_lt['user_language'], self.logger)
+            self.messenger.send_message(
+                row_lt['whatsapp_id'],
+                text_src,
+                msg_id,
+            )
+            return
 
         self.logger.add_log(
             sender_id=row_lt['whatsapp_id'],
@@ -342,6 +352,12 @@ class WhatsappResponder(BaseResponder):
             transaction_message_id=msg_id,
         )
 
+        if self.config["SEND_FEEDBACK_POLL"]:
+            if query_type != 'small-talk' and not gpt_output.strip().startswith("I do not know the answer to your question"):
+                num = random.randint(0, 1)
+                if num <= self.config['FEEDBACK_POLL_PROBABILITY']:
+                    self.send_feedback_poll(row_lt, msg_id, sent_msg_id)
+        
         if not gpt_output.strip().startswith("I do not know the answer to your question"):
             self.user_conv_db.mark_resolved(msg_id)
 
@@ -364,6 +380,8 @@ class WhatsappResponder(BaseResponder):
         if self.config['ESCALATE_MULTIPLE'] and query_type != "small-talk" and gpt_output.strip().startswith("I do not know the answer to your question"):
             print("Escalating query")
             self.escalate_query_multiple(row_query)
+
+        
 
         return
 
@@ -444,6 +462,14 @@ class WhatsappResponder(BaseResponder):
             and msg_object["interactive"]["list_reply"]["id"][:5] == "LANG_"
         ):
             self.handle_language_poll_response(msg_object, row_lt)
+            return
+        
+        if (
+            msg_object["type"] == "interactive"
+            and msg_object["interactive"]["type"] == "button_reply"
+            and msg_object["interactive"]["button_reply"]["id"][:8] == "feedback"
+        ):
+            self.receive_feedback_poll(row_lt, msg_object)
             return
 
         if msg_object.get("text") or (
@@ -1236,3 +1262,65 @@ class WhatsappResponder(BaseResponder):
 
         self.user_conv_db.mark_resolved(row_query["message_id"])
         print("Marking resolved", row_query["message_id"])
+
+    def send_feedback_poll(self, row_lt, transaction_message_id, reply_id):
+        lang = row_lt["user_language"]
+        message = self.template_messages["asha_survey"][lang]
+        buttons = [
+            self.template_messages["asha_survey"][lang+"_yes"],
+            self.template_messages["asha_survey"][lang+"_no"],
+        ]
+        
+        message_id = self.messenger.send_feedback_poll(
+            row_lt['whatsapp_id'], message, reply_id, buttons
+        )
+
+        self.bot_conv_db.insert_row(
+            receiver_id=row_lt['user_id'],
+            message_type="feedback_poll",
+            message_id=message_id,
+            audio_message_id=None,
+            message_source_lang=message,
+            message_language=lang,
+            message_english=self.template_messages["asha_survey"]["en"],
+            reply_id=reply_id,
+            citations=None,
+            message_timestamp=datetime.now(),
+            transaction_message_id=transaction_message_id,
+        )
+
+    def receive_feedback_poll(self, row_lt, msg_object):
+        button_id = msg_object["interactive"]["button_reply"]["id"]
+        answer = msg_object["interactive"]["button_reply"]["title"]
+        context_id = msg_object["context"]["id"]
+
+        answer_en = button_id.split('_')[-1].lower()
+
+                
+
+        poll = self.bot_conv_db.get_from_message_id(context_id)
+        
+        transaction_message_id = poll["transaction_message_id"]
+        self.user_conv_db.insert_row(
+            user_id=row_lt["user_id"],
+            message_id=msg_object["id"],
+            message_type="feedback_response",
+            message_source_lang=answer,
+            source_language=row_lt["user_language"],
+            message_translated=answer_en,
+            audio_blob_path=None,
+            message_timestamp=datetime.now(),
+            reply_id=context_id,
+        )
+        print("Feedback received")
+
+        self.messenger.send_message(
+            row_lt['whatsapp_id'],
+            self.template_messages["asha_survey_response"][answer_en][row_lt["user_language"]],
+            msg_object["id"],
+        )
+
+        return
+
+
+
