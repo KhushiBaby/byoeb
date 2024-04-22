@@ -4,7 +4,7 @@ import random
 import os
 from azure_language_tools import translator
 import subprocess
-from datetime import datetime
+from datetime import datetime, timedelta
 from azure.storage.blob import BlobServiceClient
 import numpy as np
 import json
@@ -256,11 +256,11 @@ class WhatsappResponder(BaseResponder):
         audio_file = os.path.join(os.environ['DATA_PATH'], audio_file)
         self.messenger.send_audio(audio_file, row_lt['whatsapp_id'])
         print("Sending language poll")
-        self.messenger.send_language_poll(
-            row_lt['whatsapp_id'],
-            self.language_prompts[lang_detected],
-            self.language_prompts[lang_detected + "_title"],
-        )
+        # self.messenger.send_language_poll(
+        #     row_lt['whatsapp_id'],
+        #     self.language_prompts[lang_detected],
+        #     self.language_prompts[lang_detected + "_title"],
+        # )
 
         self.user_db.update_user_language(row_lt['user_id'], lang_detected)
         return
@@ -302,16 +302,21 @@ class WhatsappResponder(BaseResponder):
 
 
         if msg_type == "audio":
+            if gpt_output.strip().startswith("I do not know the answer to your question"):
+                eng_text = self.template_messages["idk_response"]["en"]
+            else:
+                eng_text = gpt_output
             audio_input_file = "test_audio_input.aac"
             audio_output_file = "test_audio_output.aac"
             gpt_output_source = self.azure_translate.text_translate_speech(
-                gpt_output,
+                eng_text,
                 row_lt['user_language'] + "-IN",
                 audio_output_file[:-3] + "wav",
                 self.logger,
             )
             if gpt_output.strip().startswith("I do not know the answer to your question"):
                 gpt_output_source = self.template_messages["idk_response"][row_lt['user_language']]
+            
             subprocess.run(
                 [
                     "ffmpeg",
@@ -521,7 +526,7 @@ class WhatsappResponder(BaseResponder):
             blob_service_client = BlobServiceClient.from_connection_string(connect_str)
             container_name = self.config["AZURE_BLOB_CONTAINER_NAME"].strip()
 
-            blob_name = str(datetime.now()) + "_" + str(row_lt['whatsapp_id']) + ".ogg"
+            blob_name = "queries/" + str(datetime.now()) + "_" + str(row_lt['user_id']) + ".ogg"
             blob_client = blob_service_client.get_blob_client(
                 container=container_name, blob=blob_name
             )
@@ -1156,17 +1161,37 @@ class WhatsappResponder(BaseResponder):
 
         transaction_message_id = row_query["message_id"]
         all_expert_responses = self.expert_conv_db.get_from_transaction_message_id(transaction_message_id, "consensus_response")
-        print(len(all_expert_responses))
+        now = datetime.now()
+        five_minutes_ago = now - timedelta(minutes=5)
+        
+        
+        
         
         expert_responses = {}
-        expert_response_db_ids = []
+        expert_latest_time = {}
+        aggregate = 'user_id'
 
         for response in all_expert_responses:
-            if expert_responses.get(response['user_id'], None) is None:
-                expert_responses[response['user_id']] = response['message']
+            if expert_responses.get(response[aggregate], None) is None:
+                expert_responses[response[aggregate]] = response['message']
             else:
-                expert_responses[response['user_id']] += f" {response['message']}"
-            expert_response_db_ids.append(response['message_id'])
+                expert_responses[response[aggregate]] += f" {response['message']}"
+            if expert_latest_time.get(response[aggregate], None) is None:
+                expert_latest_time[response[aggregate]] = response['message_timestamp']
+            else:
+                if response['message_timestamp'] > expert_latest_time[response[aggregate]]:
+                    expert_latest_time[response[aggregate]] = response['message_timestamp']
+            
+        #delete if latest_time is less than 5 minutes
+        for user_id, latest_time in expert_latest_time.items():
+            if latest_time > five_minutes_ago:
+                expert_responses.pop(user_id)
+
+
+        expert_response_db_ids = []
+        for response in all_expert_responses:
+            if response['user_id'] in expert_responses.keys():
+                expert_response_db_ids.append(response['message_id'])
 
         expert_responses = list(expert_responses.values())
         if len(expert_responses) < self.config['MIN_CONSENSUS_RESPONSES']:
@@ -1206,7 +1231,7 @@ class WhatsappResponder(BaseResponder):
             answer_source = self.azure_translate.text_translate_speech(
                 answer, user_row_lt['user_language'] + "-IN", corrected_audio_loc, self.logger
             )
-            message_source = f"{self.template_messages['consensus_response'][user_row_lt['user_language']]} \n\n{answer_source}"
+            message_source = f"{answer_source}\n\n{self.template_messages['consensus_response'][user_row_lt['user_language']]}"
             updated_msg_id = self.messenger.send_message(
                 user_row_lt['whatsapp_id'],
                 message_source,
@@ -1237,7 +1262,7 @@ class WhatsappResponder(BaseResponder):
             answer_source = self.azure_translate.translate_text(
                 answer, "en", user_row_lt['user_language'], self.logger
             )
-            message_source = f"{self.template_messages['consensus_response'][user_row_lt['user_language']]} \n\n{answer_source}"
+            message_source = f"{answer_source}\n\n{self.template_messages['consensus_response'][user_row_lt['user_language']]}"
             
             updated_msg_id = self.messenger.send_message(
                 user_row_lt['whatsapp_id'],
