@@ -51,8 +51,12 @@ class UserDB(BaseDB):
         experts = list(self.collection.aggregate(pipeline))
         return experts
     
-    def get_random_expert(self, expert_type, numbers_of_experts):
-        rows = list(self.collection.find({'user_type':expert_type}))
-        print(len(rows))
+    def get_random_expert(self, expert_type, numbers_of_experts, test=False):
+        if test:
+            rows = list(self.collection.find({'$and': [{'user_type':expert_type}, {'test_user':True}]}))
+        else:   
+            rows = list(self.collection.find({'$and': [{'user_type':expert_type}, {'test_user':{'$ne':True}}]}))
+        if len(rows) < numbers_of_experts:
+            return rows
         random_experts = random.sample(rows, numbers_of_experts)
         return random_experts

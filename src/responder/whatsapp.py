@@ -278,6 +278,11 @@ class WhatsappResponder(BaseResponder):
             message_timestamp = datetime.now()
         ).inserted_id
 
+        if msg_type == "audio" and message == "":
+            self.handle_empty_audio(msg_id, row_lt)
+            self.user_conv_db.mark_resolved(msg_id)
+            return
+        
         gpt_output, citations, query_type = self.knowledge_base.answer_query(
             self.user_conv_db, self.bot_conv_db, msg_id, self.logger
         )
@@ -384,7 +389,8 @@ class WhatsappResponder(BaseResponder):
 
         if self.config['ESCALATE_MULTIPLE'] and query_type != "small-talk" and gpt_output.strip().startswith("I do not know the answer to your question"):
             print("Escalating query")
-            self.escalate_query_multiple(row_query)
+            is_test_user = row_lt.get("test_user", False)
+            self.escalate_query_multiple(row_query, is_test_user)
 
         
 
@@ -453,6 +459,51 @@ class WhatsappResponder(BaseResponder):
             message_timestamp=datetime.now(),
             transaction_message_id=row_query['message_id'],
         )
+
+    def handle_empty_audio(self, msg_id, row_lt):
+        
+        text = "I'm sorry, I did not understand this. Can you please repeat yourself, maybe more loudly? Make sure you are keeping the microphone button🎙️pressed while you are speaking."
+        audio_input_file = "test_audio_input.aac"
+        audio_output_file = "test_audio_output.aac"
+        text_source = self.azure_translate.text_translate_speech(
+            text,
+            row_lt['user_language'] + "-IN",
+            audio_output_file[:-3] + "wav",
+            self.logger,
+        )
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-i",
+                audio_output_file[:-3] + "wav",
+                "-codec:a",
+                "aac",
+                audio_output_file,
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        sent_msg_id = self.messenger.send_message(
+            row_lt['whatsapp_id'], text_source, msg_id
+        )
+        audio_msg_id = self.messenger.send_audio(
+            audio_output_file, row_lt['whatsapp_id'], msg_id
+        )
+
+        self.bot_conv_db.insert_row(
+            receiver_id=row_lt['user_id'],
+            message_type="empty_audio_response",
+            message_id=sent_msg_id,
+            audio_message_id=audio_msg_id,
+            message_source_lang=text_source,
+            message_language=row_lt['user_language'],
+            message_english=text,
+            reply_id=msg_id,
+            citations=None,
+            message_timestamp=datetime.now(),
+            transaction_message_id=msg_id,
+        )
+        return
 
 
     def handle_response_user(self, msg_object, row_lt):
@@ -813,17 +864,17 @@ class WhatsappResponder(BaseResponder):
     
     def get_correction_from_expert(self, msg_object, expert_row_lt):
         
-        if msg_object.get("context", False) == False:
-            text = "Please reply to the question you want to fix."
-            text_translated = self.azure_translate.translate_text(
-                text, "en", expert_row_lt["user_language"], self.logger
-            )
-            self.messenger.send_message(
-                expert_row_lt['whatsapp_id'],
-                text_translated,
-                msg_object["id"],
-            )
-            return
+        # if msg_object.get("context", False) == False:
+        #     text = "Please reply to the question you want to fix."
+        #     text_translated = self.azure_translate.translate_text(
+        #         text, "en", expert_row_lt["user_language"], self.logger
+        #     )
+        #     self.messenger.send_message(
+        #         expert_row_lt['whatsapp_id'],
+        #         text_translated,
+        #         msg_object["id"],
+        #     )
+        #     return
 
         
 
@@ -858,7 +909,13 @@ class WhatsappResponder(BaseResponder):
             
             utils.remove_extra_voice_files(audio_input_file, audio_output_file)
         
-        context_id = msg_object["context"]["id"]
+        if msg_object.get("context", False) == False:
+            prev_polls = self.bot_conv_db.find_with_receiver_id(expert_row_lt["user_id"], 'consensus_poll')
+            poll = prev_polls[-1]
+            context_id = prev_polls[-1]['message_id']
+        else:
+            context_id = msg_object["context"]["id"]
+            poll = self.bot_conv_db.get_from_message_id(context_id)
 
         self.logger.add_log(
             sender_id=msg_object["from"],
@@ -869,8 +926,6 @@ class WhatsappResponder(BaseResponder):
             timestamp=datetime.now(),
         )
         
-
-        poll = self.bot_conv_db.get_from_message_id(context_id)
         if poll is None:
             poll = self.bot_conv_db.get_from_audio_message_id(context_id)
 
@@ -1126,7 +1181,7 @@ class WhatsappResponder(BaseResponder):
             transaction_message_id=row_query["message_id"],
         )
 
-    def escalate_query_multiple(self, row_query):
+    def escalate_query_multiple(self, row_query, is_test_user=False):
 
         previous_polls = self.bot_conv_db.find_all_with_transaction_id(row_query["message_id"], "consensus_poll")
 
@@ -1140,7 +1195,8 @@ class WhatsappResponder(BaseResponder):
             )
             self.user_conv_db.mark_resolved(row_query["message_id"])
             return
-        experts = self.user_db.get_random_expert(self.category_to_expert[row_query["query_type"]], self.config['NUM_ESCALATE_EXPERTS'])
+        
+        experts = self.user_db.get_random_expert(self.category_to_expert[row_query["query_type"]], self.config['NUM_ESCALATE_EXPERTS'], is_test_user)
         
         previous_poll_receivers = []
         previous_poll_requests = self.bot_conv_db.find_all_with_transaction_id(row_query["message_id"], "response_request")
@@ -1148,7 +1204,6 @@ class WhatsappResponder(BaseResponder):
             previous_poll_receivers.append(prev_poll_request['receiver_id'])
         for expert in experts:
             if expert['user_id'] not in previous_poll_receivers:
-                # print(expert)
                 self.send_query_request_expert(expert, row_query)
 
 
@@ -1206,9 +1261,9 @@ class WhatsappResponder(BaseResponder):
 
         query_prompt = f'''
         Please find the consensus for the following input:
-        question: {row_query["message_source_lang"]}
-        ANM_answers: [{", ".join(expert_responses)}]
-        Share the output in a json format {{"answer": "xxx", "explanation": "xxx", "voting": "xxx"}}, do not include anything else.
+        q: {row_query["message_source_lang"]}
+        anm_answers: [{", ".join(expert_responses)}]
+        Share the output in JSON format {{"anm_votes": "xxx", "consensus_explanation": "consensus_answer", "answer": "xxx"}}, do not include anything else.
         '''
 
         prompt.append({"role": "user", "content": str(query_prompt)})
