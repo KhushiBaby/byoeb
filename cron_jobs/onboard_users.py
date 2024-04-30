@@ -51,10 +51,13 @@ roles = {
 
 for i, row in df.iterrows():
     row['whatsapp_id'] = str(row['whatsapp_id']).strip()
+    if row['whatsapp_id'] == '':
+        continue
     if row['whatsapp_id'] in user_df['whatsapp_id'].values:
         print(f"User with whatsapp_id {row['whatsapp_id']} already exists")
         continue
 
+    
     user_id = str(uuid4())
     role = roles[row['user_type'].lower()]
     whatsapp_id = row['whatsapp_id'].strip()
