@@ -1,94 +1,90 @@
 ###Task Description:
-We're creating a chatbot to support ASHA workers by answering their questions. If the chatbot can't provide an answer, the question will automatically be forwarded to the Auxiliary Nurse and Midwives (ANMs) for expert input. Synthesise our input, which will be the original questions and the ANMs’ replies, to generate a single clear, cohesive, and comprehensive answer. 
+A question ("q") asked by an Accredited Social Health Activist (ASHA) has been answered by multiple Auxiliary Nurse Midwives (ANMs) ("anm_answers"). Your task is to synthesise facts and clarifications in anm_answers into a simple and comprehensive answer ("consensus_answer"), by first identifying any conflicting information in anm_answers and providing a count ("anm_votes"), and second generating a precise explanation ("consensus_explanation").
 
-The output should be in JSON format and look as follows: {"answer": “xxx”, "explanation": “xxx”, "voting": xxx}. Please do not generate any other opening, closing, and explanations. Be as specific and detailed as possible in your short two-sentence “explanation” of why you chose that answer. "Voting" is the exact number of ANMs supporting each different answer (not just the range of responses, or the majority decision); if there are no answers which are different from each other, “voting” should be blank.
-
-###Procedure to follow while generating the consolidated “answer”:
-Identify the responses which are directly relevant to the question. Disregard responses that are unrelated or consist of small talk.
-For non-conflicting information: generate “answer” as a synthesis of all relevant information, including factual data and expressions of empathy. Include clarification questions if necessary. Do not add any information not included in the answers. 
-In the case of conflicting information (e.g., numerical data like timeframes or quantities, or qualitative details), always follow the resolution policy which is majority voting. To carry out majority voting, use this Python function, taking in “voting” as the json_string:
-import json
-
-def find_majority_options(json_string):
-  `  # Helper function to find majority in a voting set
-    def find_majority(votes):
-        max_votes = max(votes.values())
-        winners = [option for option, count in votes.items() if count == max_votes]
-        # Check if there's a clear majority or a tie
-        if len(winners) == 1:
-            return winners[0]
-        return ""
-    
-    # Parse the JSON string
-    data = json.loads(json_string)
-    voting_str = data.get('voting', '')
-    
-    # Split into separate voting topics
-    voting_parts = voting_str.split('. ')
+###Steps:
+1. Read q and anm_answers carefully. 
+2. Identify information within anm_answers relevant to q. Identify the exact count of ANMs whose answers include relevant information.
+3a. If the count is less than 3: (A) Provide an empty string for anm_votes. (B) Provide only "Consensus not reached." as consensus_answer.
+3b. Else, ignore all irrelevant information or smalltalk, and identify whether there is conflicting information among anm_answers, i.e., numerical or qualitative details that cannot be simultaneously true.
+3b.i. If there are no conflicts: (A) Provide an empty string for anm_votes. (B) Provide consensus_explanation. (C) Provide consensus_answer.
+3b.ii. Else, if there are one or more conflicts: (A) Identify the number of conflicts. (B) For each conflict, provide the exact count of ANMs supporting each of the different information (not just the range of answers, or the information provided by a majority of ANMs) in anm_votes. If a single ANM response contains the same information multiple times, count it as only one vote. (C) Use this Python function ‘majority_voting(anm_votes)’ to count if the number of votes among ANMs resulted in a voting majority or not.
+def majority_voting(anm_votes):
     results = {}
-   
- for part in voting_parts:
-        # Extract topic and votes
-        topic, votes_str = part.split(': ')
-        votes = {}
-        for vote_info in votes_str.split(', '):
-            option, count_str = vote_info.rsplit(' (', 1)
-            # Strip non-numeric characters from the count before conversion
-            count = int(count_str.rstrip(')').split(' ')[0])  # Edited line
-            votes[option.strip()] = count
-        
-        # Find the majority for this topic
-        results[topic] = find_majority(votes)
-    
+    for conflict, votes in anm_votes.items():
+        # Convert the vote counts from strings to integers
+        votes = {key: int(value) for key, value in votes.items()}
+        # Find the maximum number of votes received
+        max_votes = max(votes.values())
+        # Check how many pieces of information have the maximum vote count
+        max_vote_keys = [key for key, value in votes.items() if value == max_votes]
+        if len(max_vote_keys) == 1:
+            # If one piece of information has the highest count, it's the majority
+            results[conflict] = "Voting majority"
+        else:
+            # If there's a tie, indicate no voting majority
+            results[conflict] = "No voting majority"
     return results
+ 3b.ii.1. If there is ‘No voting majority’ (i.e., if there is a tie in votes) for one or more conflicts: (A) Provide consensus_explanation. (B) Provide only "Consensus not reached." as consensus_answer.
+3b.ii.2. Else, if there is 'Voting majority' for all conflicts: (A) For each conflict, identify the information provided by a majority of ANMs. (B) Provide consensus_explanation. (C) For each conflict, integrate only that majority information into consensus_answer. Do not mention minority information or conflicts in consensus_answer.
 
-If a majority is identified, integrate that majority information directly into the “answer”. Ensure to include explanations of the conflicting information in “explanation” and NOT “answer”.
-If a majority is not identified, your “answer” must only be “Consensus not reached.” In the “explanation”, you must state the contradicting topic(s), and mention that the votes are from ANMs. 
+###Instructions:
+1. Only use information in anm_answers to generate consensus_answer. Do not use any other source.
+2. Strictly follow the JSON output format in the examples. Do not generate any other (opening or closing) explanations or code.
+3. Your output (anm_votes, consensus_explanation, and consensus_answer) must only be in English. The input (q and anm_answers) can be in Hindi, English, or Hinglish.
+4. consensus_answer must explain information in simple terms without using medical jargon or uncommon words. 
+5. consensus_answer must be as short as possible.
+6. consensus_answer must be framed as an answer for ASHA workers, who are not patients themselves. 
+7. consensus_explanation must only be 1-2 sentences long.
+8. Do not allow the length of the ANM answers to influence your output.
+9. Be as objective as possible.
+10. Make sure you read and understand these instructions carefully.
+11. Keep this document open while reviewing, and refer to it as needed.
+12. Think step-by-step.
 
-###Important points to remember:
-“Answer” has to be simple to understand and as short as possible.
-Frame “answer” for the target audience (the ASHA workers), who are not the patients themselves, but community-based health volunteers who would have questions during the course of their work.
-The question and ANM answers could be in English/Hindi/Hinglish, but your response should always be in English. 
+###Examples:
 
-###Few-shot examples of what we expect from you for your reference:
-Example 1:
-Input:
+##Example 1:
+
+#Input:
 {
-"question": "Is the sugar of the pregnant woman also likely to cause her baby to have sugar or not?",
-"ANM_answers": [“Birth defects make baby too big, gets food from mother's blood. If mother's blood has too much sugar, baby's body makes more insulin. Macrosomia”, “good morning”, “high blood sugar during pregnancy increases the risk of babies developing type 2 diabetes in future”, “If a woman with diabetes controls her blood sugar well before and during pregnancy, she can have a healthy baby.”, “what is sugar level of woman exactly"]
+"q": "माला एन की टेबलेट कैसे इस्तेमाल करें?",
+"anm_answers": ["यहां गर्भ निरोधक गोलियां होती है जिसमें 21 गोली सफेद रंग की एवं 7 गोली काले रंग की होती है टोटल 28 गोली होती है प्रथम बार शुरू करते समय महावारी के पांचवें दिन से स्टार्ट करनी है और बिना किसी रुकावट के प्रत्येक दिन निर्धारित समय पर ही गोली लेनी है अगर किसी दिन गोली लेना भूल जाए तो जैसे ही याद आता है तुरंत गोली लेना है स्टार्ट की तरफ से गोली स्टार्ट करनी है और एक पत्ता खत्म होते ही दूसरा स्टार्ट करना है गोली को बच्चों से दूर रखना है", "यह एक सुरक्षित गर्भ निरोधक साधन है, पिरयड आने कै पांचवे दिन से शुरू करते है हर रोज एक गोली खानी ह", "haa", "Daily ek goli", "Mala N ke tab.mahila ke period ke 5ve din par lene h, Ansar shi h kiya", "Mala and tablet MC ke paanchvein din se tablet Ke Piche Teer ka Nishan se chalu karni hai Lal tablet MC ke Samay per leni hai", "Per Day 1 tablet"]
 }
 
-Output:
+
+#Output:
 {
-"answer": “High blood sugar in a pregnant woman can affect her baby's health. If a mother's blood has too much sugar, her baby might produce more insulin, which can lead to a condition called Macrosomia, where the baby is larger than normal. This condition can increase the baby's risk of developing type 2 diabetes in the future. However, if a woman with diabetes manages her blood sugar levels effectively before and during pregnancy, she can have a healthy baby. For more specific information, please share the woman's sugar level.”,
-"explanation": “This answer combines important details from ANMs about the impact of maternal blood sugar on the baby. Small talk was ignored to focus on the key insights about managing blood sugar levels for a healthy pregnancy.”,
-"voting": “”
+"anm_votes": "",
+"consensus_explanation": "This answer synthesises the unanimous guidance provided by ANMs on the correct usage of Mala N tablets, focusing on starting the cycle, daily intake, and handling missed doses. As the information given by ANMs was qualitativey different but could be simultaneously true, there was no conflicting information and counting votes and identifying the majority was not required.",
+"consensus_answer": "Mala N tablets should be started on the fifth day of the menstrual cycle. The pack contains 28 pills, with 21 white and 7 black pills. One pill should be taken daily at the same time without any interruption. If a pill is missed, take it as soon as you remember. After finishing one pack, start the next pack immediately. Keep the pills out of reach of children."
 }
 
-Example 2:
-Input:
+##Example 2:
+
+#Input:
 {
-"question": "How much money will we get for sterilisation and when we will get it?",
-"ANM_answers": [“Under the Janani Suraksha Yojana, women will get ₹700. Also, ASHA workers will receive ₹600 for transport and other costs when they help women at the hospital. In 2 months you will get.”, “700 In 1 month”, “600 in 2 months”, “As an ASHA worker, you will get ₹600. This money is for your travel and other costs when you stay with women at the hospital.”, “600 In 1 month"]
+"q": "HIV walo ko pension milti h kya?",
+"anm_answers": ["No", "Yes", "haa", "5 लाख तक का इलाज सरकारी या प्राइवेट हॉस्पिटलो मे निशुल्क किया जायेगा", "Han ji"]
 }
 
-Output:
+#Output:
 {
-"answer": "Consensus not reached.",
-"explanation": "There was confusion among ANM responses regarding the amount and timing of payments for sterilisation support - ₹700 relates to benefits under the Janani Suraksha Yojana for women, separate from the support of  ₹600 for ASHA workers for their travel and other costs. But variation in the timeframe for receiving the payment (1 month vs. 2 months) prevented a unified answer.”,
-"voting": "For how much money they get: ₹700 (1), ₹600 (4). For when they would get it: 1 month (2), and 2 months (2)."
+"anm_votes": {"Pension": {"No": "1", "Yes: "3" }},
+"consensus_explanation": "The majority of responses indicate that individuals living with HIV do receive pensions. The information about free treatment provides additional support and is included as part of the comprehensive answer.",
+"consensus_answer": "People living with HIV are eligible for pensions and can receive free treatment up to ₹5 lakh in government or private hospitals."
 }
 
-Example 3:
-Input:
+##Example 3:
+
+#Input:
 {
-"question": "What are the side effects of Antara?",
-"ANM_answers": [“No side effects, its very safe”, “No side effects”, “period changes”, “For many women, bleeding each month gets very light or just a little. About half stop having periods after a year. When they stop shots, periods come back. After stopping DMPA, it takes longer, maybe 4-6 months, to get pregnant.”, “Menstrual changes mainly. also sometimes: Weight gain Headaches Dizziness Abdominal bloating and discomfort Mood changes Less sex drive"]
+"q": "How much money will we get for nasbandi and when we will get it?",
+"anm_answers": ["Under the Janani Suraksha Yojana, ASHA workers will receive ₹600 for transport and other costs when they help women at the hospital. In 2 months you will get.", "1 महीने में सात सौ रुपये सर🙏🏽", "haan 600 in 2 months", "ASHA will get 600 rs for ur travel and other costs when you stay with women at the hospital.", "600 In 1 month"]
 }
 
-Output:
+#Output:
 {
-"answer": "Antara can have side effects mainly related to menstrual changes. Commonly reported changes include lighter or less frequent periods, with about half of the users experiencing a stopping of periods after a year. Periods generally return upon discontinuation of Antara, but conceiving might take longer, about 4-6 months, after stopping. Other potential side effects include weight gain, headaches, dizziness, abdominal bloating and discomfort, mood changes, and a decreased sex drive.",
-"explanation": "The responses vary on Antara's side effects, from a couple saying none to others detailing specific menstrual and other physical changes. This answer merges these views to present a balanced understanding of potential side effects, supporting the majority view.",
-"voting": "No side effects (2), reported side effects (3)."
+"anm_votes": {"Money for sterilisation": {"₹700": "1","₹600": "4"}, "When they would get it": {"1 month": "2", "2 months": "2" }}, 
+"consensus_explanation": "There was confusion among ANM responses regarding the amount and timing of payments for sterilisation support. Although a majority of ANMs agreed that ASH workers will receive support of ₹600 for their travel and other costs, however variation in the timeframe for receiving the payment (1 month vs. 2 months) prevented a unified answer.",
+"consensus_answer": "Consensus not reached."
 }
