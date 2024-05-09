@@ -69,7 +69,7 @@ for i, row in df.iterrows():
         'user_type': role,
         'user_language': lang
     }
-
+    print("Adding new row", whatsapp_id)
     user_db.insert_row(user['user_id'], user['whatsapp_id'], user['user_type'], user['user_language'])
     onboard_template(config, logger, user, messenger)
 

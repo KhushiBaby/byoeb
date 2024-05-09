@@ -292,21 +292,21 @@ class WhatsappResponder(BaseResponder):
         print("GPT output: ", gpt_output)
 
 
-        if msg_type == "text" or msg_type == "interactive":
-            audio_msg_id = None
-            if gpt_output.strip().startswith("I do not know the answer to your question"):
-                gpt_output_source = self.template_messages["idk_response"][row_lt['user_language']]
-            else:
-                gpt_output_source = self.azure_translate.translate_text(
-                    gpt_output, "en", row_lt['user_language'], self.logger
-                )
-            sent_msg_id = self.messenger.send_message(
-                row_lt['whatsapp_id'], gpt_output_source, msg_id
-            )
+        # if msg_type == "text" or msg_type == "interactive":
+        #     audio_msg_id = None
+        #     if gpt_output.strip().startswith("I do not know the answer to your question"):
+        #         gpt_output_source = self.template_messages["idk_response"][row_lt['user_language']]
+        #     else:
+        #         gpt_output_source = self.azure_translate.translate_text(
+        #             gpt_output, "en", row_lt['user_language'], self.logger
+        #         )
+        #     sent_msg_id = self.messenger.send_message(
+        #         row_lt['whatsapp_id'], gpt_output_source, msg_id
+        #     )
 
 
 
-        if msg_type == "audio":
+        if msg_type == "audio" or msg_type == "text" or msg_type == "interactive":
             if gpt_output.strip().startswith("I do not know the answer to your question"):
                 eng_text = self.template_messages["idk_response"]["en"]
             else:
@@ -321,10 +321,10 @@ class WhatsappResponder(BaseResponder):
             )
             if gpt_output.strip().startswith("I do not know the answer to your question"):
                 gpt_output_source = self.template_messages["idk_response"][row_lt['user_language']]
-            
             subprocess.run(
                 [
                     "ffmpeg",
+                    "-y",
                     "-i",
                     audio_output_file[:-3] + "wav",
                     "-codec:a",
@@ -340,7 +340,6 @@ class WhatsappResponder(BaseResponder):
             audio_msg_id = self.messenger.send_audio(
                 audio_output_file, row_lt['whatsapp_id'], msg_id
             )
-            print(msg_id)
             utils.remove_extra_voice_files(audio_input_file, audio_output_file)
 
         self.user_conv_db.add_query_type(
@@ -474,6 +473,7 @@ class WhatsappResponder(BaseResponder):
         subprocess.run(
             [
                 "ffmpeg",
+                "-y",
                 "-i",
                 audio_output_file[:-3] + "wav",
                 "-codec:a",
@@ -1050,6 +1050,7 @@ class WhatsappResponder(BaseResponder):
             subprocess.run(
                 [
                     "ffmpeg",
+                    "-y",
                     "-i",
                     corrected_audio_loc,
                     "-codec:a",
@@ -1278,7 +1279,7 @@ class WhatsappResponder(BaseResponder):
         user_row_lt = self.user_db.get_from_user_id(row_query["user_id"])
 
         
-        if row_query["message_type"] == "audio":
+        if row_query["message_type"] == "audio" or row_query["message_type"] == "text" or row_query["message_type"] == "interactive":
             corrected_audio_loc = "corrected_audio.wav"
             remove_extra_voice_files(
                 corrected_audio_loc, corrected_audio_loc[:-3] + ".aac"
@@ -1296,6 +1297,7 @@ class WhatsappResponder(BaseResponder):
             subprocess.run(
                 [
                     "ffmpeg",
+                    "-y",
                     "-i",
                     corrected_audio_loc,
                     "-codec:a",
@@ -1313,18 +1315,18 @@ class WhatsappResponder(BaseResponder):
             remove_extra_voice_files(
                 corrected_audio_loc, corrected_audio_loc[:-3] + ".aac"
             )
-        else:
-            answer_source = self.azure_translate.translate_text(
-                answer, "en", user_row_lt['user_language'], self.logger
-            )
-            message_source = f"{answer_source}\n\n{self.template_messages['consensus_response'][user_row_lt['user_language']]}"
+        # else:
+        #     answer_source = self.azure_translate.translate_text(
+        #         answer, "en", user_row_lt['user_language'], self.logger
+        #     )
+        #     message_source = f"{answer_source}\n\n{self.template_messages['consensus_response'][user_row_lt['user_language']]}"
             
-            updated_msg_id = self.messenger.send_message(
-                user_row_lt['whatsapp_id'],
-                message_source,
-                row_query["message_id"],
-            )
-            updated_audio_msg_id = None
+        #     updated_msg_id = self.messenger.send_message(
+        #         user_row_lt['whatsapp_id'],
+        #         message_source,
+        #         row_query["message_id"],
+        #     )
+        #     updated_audio_msg_id = None
         
         self.bot_conv_db.insert_row(
             receiver_id=user_row_lt['user_id'],
