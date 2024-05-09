@@ -62,9 +62,8 @@ for i, row in tqdm(kb_updates.iterrows()):
 myfile.close()
 rawfile.close()
 
-if not kb_updates.empty:
-    knowledge_base = KnowledgeBase(config)
-    print(repr(knowledge_base.config['PROJECT_NAME']))
-    knowledge_base.create_embeddings()
-    print('KB updated successfully')
+knowledge_base = KnowledgeBase(config)
+print(repr(knowledge_base.config['PROJECT_NAME']))
+knowledge_base.create_embeddings()
+print('KB updated successfully')
 
