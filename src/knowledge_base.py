@@ -571,8 +571,10 @@ class KnowledgeBase:
         self.sources = []
         for document in self.documents:
             if 'kb update' in document.metadata['source'].strip().lower():
+                print('Splitting text for kb update')
                 next_text = document.page_content.split('##')[1:]
             else:
+                print('Splitting text for normal document')
                 next_text = RecursiveCharacterTextSplitter(chunk_size=1000).split_text(document.page_content)
             
             self.texts.extend(next_text)

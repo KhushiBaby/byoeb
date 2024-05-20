@@ -1264,7 +1264,7 @@ class WhatsappResponder(BaseResponder):
         Please find the consensus for the following input:
         q: {row_query["message_source_lang"]}
         anm_answers: [{", ".join(expert_responses)}]
-        Share the output in JSON format {{"anm_votes": "xxx", "consensus_explanation": "consensus_answer", "answer": "xxx"}}, do not include anything else.
+        Share the output in JSON format {{"anm_votes": "xxx", "consensus_explanation": "xxx", "consensus_answer": "xxx"}}, do not include anything else.
         '''
 
         prompt.append({"role": "user", "content": str(query_prompt)})
@@ -1272,10 +1272,10 @@ class WhatsappResponder(BaseResponder):
 
         print(response)
         response = json.loads(response)
-        if response['answer'] == 'Consensus not reached.':
+        if response['consensus_answer'] == 'Consensus not reached.':
             return
         
-        answer = response['answer']
+        answer = response['consensus_answer']
         user_row_lt = self.user_db.get_from_user_id(row_query["user_id"])
 
         
