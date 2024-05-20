@@ -39,7 +39,7 @@ logger = LoggingDatabase(config)
 
 
 to_ts = datetime.datetime.now() - datetime.timedelta(hours=0)
-from_ts = datetime.datetime.now() - datetime.timedelta(days=1)
+from_ts = datetime.datetime.now() - datetime.timedelta(days=7)
 
 list_cursor = user_conv_db.get_all_unresolved(from_ts, to_ts)
 

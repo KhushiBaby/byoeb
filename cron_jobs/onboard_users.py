@@ -37,6 +37,7 @@ downloaded_blob = blob_client.download_blob()
 #load blob to pandas dataframe
 import pandas as pd
 df = pd.read_excel(BytesIO(downloaded_blob.readall()))
+print(len(df))
 
 cursor = user_db.collection.find({})
 user_df = pd.DataFrame(list(cursor))
