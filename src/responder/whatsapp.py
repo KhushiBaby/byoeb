@@ -19,7 +19,7 @@ from utils import remove_extra_voice_files
 from onboard import onboard_wa_helper
 from responder import BaseResponder
 from utils import get_llm_response
-
+from uuid import uuid4
 
 class WhatsappResponder(BaseResponder):
     def __init__(self, config):
@@ -107,12 +107,31 @@ class WhatsappResponder(BaseResponder):
         user_type, row_lt = self.check_user_type(from_number)
         print("User type: ", user_type, "Row: ", row_lt)
         if user_type is None:
-            self.messenger.send_message(
-                from_number,
-                "Unknown User, Kindly fill the onboarding form",
-                reply_to_msg_id=msg_id,
-            )
-            return
+            if msg_object["text"]["body"] == 'onboard-asha':
+                user_id = str(uuid4())
+                self.user_db.insert_row(
+                    user_id=user_id,
+                    whatsapp_id=from_number,
+                    user_type="Asha",
+                    user_language="hi",
+                    test_user=True,
+                )
+                row_lt = {
+                    "user_id": user_id,
+                    "whatsapp_id": from_number,
+                    "user_type": "Asha",
+                    "user_language": "hi",
+                    "test_user": True,
+                }
+                onboard_wa_helper(self.config, self.logger, row_lt)
+                return
+            else:
+                self.messenger.send_message(
+                    from_number,
+                    "Unknown User, Kindly fill the onboarding form",
+                    reply_to_msg_id=msg_id,
+                )
+                return
         if self.check_expiration(row_lt):
             return
 
