@@ -100,7 +100,7 @@ def scheduler():
         iter = croniter(cron_expression, now)
         prev_time = iter.get_prev(datetime)
 
-        command = command.replace("$LOCAL_PATH", os.environ["APP_PATH"])
+        command = command.replace("$APP_PATH", os.environ["APP_PATH"])
         print("Command: ", command)
         print("Previous execution time: ", prev_time)
 
