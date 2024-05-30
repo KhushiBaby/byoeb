@@ -1,0 +1,82 @@
+
+pentavalent vaccine (Penta): guide for health workers with answers to frequently asked questions
+
+What is Pentavalent vaccine?
+the government of india has decided to introduce pentavalent vaccine in the national immunization programme in selected states. pentavalent vaccine provides protection to a child from 5 life threatening diseases   diphtheria, pertussis, tetanus, hepatitis b and hib. dpt (diptheria+pertussis+tetanus) and hep b are already part of routine immunization in india; hib vaccine is a new addition. together, the combination is called pentavalent. hib vaccine can prevent serious diseases caused by haemophilus influenzae type b like pneumonia, meningitis, bacteremia, epiglottitis, septic arthritis etc. giving pentavalent vaccine reduces the number of pricks to a child, and provides protection from all five diseases
+
+important things to remember: 
+the pentavalent vaccine will replace the current hepatitis b and dpt primary vaccination schedule in the immunization programme. additionally
+• hepatitis b birth dose will continue as before, in institutional birth within 24 hours of birth
+• dpt boosters at 16 24 months and 5 6 years will continue as before. the following is the revised immunization schedule: 
+<table><thead><th>Vaccine</th><th>Schedule</th></thead><tr><td>BCG, Hep B birth dose, OPV-O</td><td>At Birth</td></tr><tr><td>Pentavalent (DPT + Hep B + Hib), OPV</td><td>6 weeks, 10 weeks and 14 weeks</td></tr><tr><td>Measles and Vitamin A</td><td>9-12 months</td></tr><tr><td>DPT booster, OPV booster, Measles2 2nd dose or mmr (in a few selected states)</td><td>16-24 months</td></tr><tr><td>DPT booster</td><td>5-6 years</td></tr></table>
+
+in uip, pentavalent vaccine comes in a liquid form in a vial which contains 10 doses. each dose is 0.5 ml to be given by intra muscular injection in anterolateral aspect of the mid thigh using ad syringes. discard injection waste as per guideline for immunization waste management. pentavalent vaccine is a freeze sensitive vaccine, and should be stored and transported at +2 to +8 degree celsius in ice lined refrigerators and vaccine carriers with conditioned ice packs. discard if vaccine is frozen or vvm reaches discard point
+
+usable vvm: the colour of the square is lighter than the circle. unusable vvm   the colour of the square matches or is darker than the circle
+
+what is hib? what diseases does it cause? 
+hib is the abbreviation for haemophilus influenzae type b, a bacterium that causes severe infections, as listed below
+• bacterial meningitis   inflammation of the membranes that cover and protect the spinal cord and brain. it is a serious infection
+• pneumonia:  inflammation of the lungs. 
+• septicaemia:  presence of pathogenic bacteria in the blood. 
+• septic arthritis : inflammation of the joints. 
+• epiglottitis : inflammation of the area around the vocal cords and obstruction of the airway
+hib disease is not the same as hepatitis b (hep b), which is a viral disease that affects the liver
+
+why is hib disease a public health problem? 
+hib disease is a public health problem because it causes serious diseases that can result in hospitalization or death, including pneumonia (one of the major causes of death in children) and meningitis
+
+how does the hib infection spread? 
+hib bacteria are passed from child to child through droplets of saliva expelled when an infected child coughs or sneezes. hib also spreads among children when they share toys and other things that they have put in their mouths
+
+who can get hib infections? who is most at risk? 
+hib mostly affects children under five years of age; children between four months and 18 months of age are most at risk. by age of five years, most children have developed antibodies against the disease, hence serious diseases from hib are uncommon in older children and adults
+
+
+do antibiotics work against hib infections? 
+antibiotics are used for treatment of hib disease, but they are not always effective. even with antibiotics and the best medical care, 3% to 5% of meningitis patients die. some strains of hib are now resistant to antibiotics, making treatment even more difficult
+
+how can hib infections be prevented? 
+most hib infections can only be prevented by hib vaccine. a small proportion of cases can be averted by giving antibiotics to members of households where children have been infected, but at best, this amounts to only 1% to 2% of cases
+
+what are the limitations of hib vaccine? 
+hib vaccine protects only against diseases caused by the hib bacterium. after hib immunization, a child may still get pneumonia, meningitis, or flu caused by other bacteria and viruses
+
+who should be immunized with hib vaccine?
+generally, all children aged up to 1 year (after 6 weeks and less than 1 year) should receive hib vaccine as part of routine immunization
+
+how many doses are needed? when should they be given? 
+three doses are given. the first dose is given as pentavalent vaccine only after a child is 6 weeks old. the second and third doses are given at 10 and 14 weeks of age respectively also in the form of pentavalent vaccines. there is no booster dose recommended under uip
+
+why is hib given as a pentavalent vaccine and not separately? 
+the schedule for dpt, hep b and hib is the same at 6, 10 and 14 weeks. therefore, if these three vaccines are given separately, a child gets three pricks at the same time. giving a pentavalent vaccine will reduce the number of pricks
+
+a child who is 10 months old has not received any immunization. what are the vaccines that can be given to her? 
+the child should receive bcg, measles, and first dose of pentavalent vaccines with opv drops, and vitamin a syrup
+
+till what age can pentavalent vaccine be administered? 
+pentavalent vaccine can be given to any child aged more than 6 weeks and up to 1 year of age
+
+if a child comes unimmunized at completing 12 months of age, what vaccines would you give? 
+give three doses of dpt and opv at intervals of four weeks and a booster dose of dpt after six months. also give measles vaccine and vitamin a solution with the first dose of dpt
+
+what are the side effects of pentavalent vaccine? 
+pentavalent vaccine has not been associated with any serious side effects. however, redness, swelling, and pain may occur at the limb site where the injection was given. these symptoms usually appear the day after the injection has been given and last from one to three days. less commonly, children may develop fever for a short time after immunization
+
+is there any reason why a child should not be given pentavalent vaccine? 
+although serious side effects have not been reported, a child who has had a severe reaction to pentavalent vaccine earlier should not be given another dose
+
+what types of pentavalent vaccine are available? 
+the pentavalent vaccine is available in various forms of liquid and lyophilised. however, under the uip in india, the vaccine will be available as a liquid formulation only
+
+is it necessary to monitor pentavalent vaccine use, wastage, and immunization coverage? what records need to be kept?
+ monitoring use, wastage, and coverage of pentavalent vaccine provides information about how effectively immunization targets have been met. records also indicate how efficiently the pentavalent vaccine is being used. therefore, all records need to be maintained as is done for any other uip vaccine
+
+key facts about hib
+(1) Globally, Hib kills more than 370,000 children under five every year. Nearly 20% of these children die in India.
+(2) Hib disease survivors are often permanently paralyzed, become deaf, or get brain damaged.
+(3) Hib vaccine can prevent over a third of pneumonia cases and 90% of Hib meningitis cases.
+(4) The pentavalent vaccine protects against five potential killers: diphtheria, tetanus, pertussis, Hib, and hepatitis B.
+(5) Giving a pentavalent vaccine will reduce the number of pricks to the child.
+
+prevent 5 diseases by giving 1 vaccine 3 times!
