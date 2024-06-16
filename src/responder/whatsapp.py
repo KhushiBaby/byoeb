@@ -327,7 +327,12 @@ class WhatsappResponder(BaseResponder):
 
         if msg_type == "audio" or msg_type == "text" or msg_type == "interactive":
             if gpt_output.strip().startswith("I do not know the answer to your question"):
-                eng_text = self.template_messages["idk_response"]["en"]
+                if msg_type == "audio":
+                    eng_text = self.template_messages["idk_response_audio"][row_lt['user_language']]
+                    #replace <query> with the actual query
+                    eng_text = eng_text.replace("<query>", message)
+                else:
+                    eng_text = self.template_messages["idk_response"]["en"]
             else:
                 eng_text = gpt_output
             audio_input_file = "test_audio_input.aac"
@@ -339,7 +344,12 @@ class WhatsappResponder(BaseResponder):
                 self.logger,
             )
             if gpt_output.strip().startswith("I do not know the answer to your question"):
-                gpt_output_source = self.template_messages["idk_response"][row_lt['user_language']]
+                if msg_type == "audio":
+                    gpt_output_source = self.template_messages["idk_response_audio"][row_lt['user_language']]
+                    #replace <query> with the actual query
+                    gpt_output_source = gpt_output_source.replace("<query>", message)
+                else:
+                    gpt_output_source = self.template_messages["idk_response"][row_lt['user_language']]
             subprocess.run(
                 [
                     "ffmpeg",
@@ -416,7 +426,9 @@ class WhatsappResponder(BaseResponder):
 
     def send_suggestions(self, row_lt, row_query, gpt_output):
 
-
+        if gpt_output.strip().startswith("I do not know the answer to your question"):
+            return
+        
         source_lang = row_lt["user_language"]
         query = row_query["message_source_lang"]
         query_type = row_query["query_type"]
