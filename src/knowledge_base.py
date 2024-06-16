@@ -113,18 +113,15 @@ class KnowledgeBase:
         # take all non empty conversations 
         all_conversations = user_conv_db.get_all_user_conv(db_row["user_id"])
         conversation_string = ""
-        idx = -2
-        while idx >= -len(all_conversations):
-            try:
-                last_conv = all_conversations[-idx]
-                last_query = last_conv["message_english"]
-                last_response = bot_conv_db.find_with_transaction_id(last_conv["message_id"], "query_resposne")
-                conversation_string = f"Last query: {last_query}\nLast response: {last_response['message_english']}"
-                break
-            except:
-                idx -= 1
-
-
+        all_conversations = [conv for conv in all_conversations if conv["message_type"] != "feedback_response"]
+        
+        last_two_conversations = all_conversations[-3:-1]
+        for conv in last_two_conversations:
+            response = bot_conv_db.find_with_transaction_id(conv["message_id"], "query_response")
+            if response:
+                conversation_string += f"User: {conv['message_english']}\nBot: {response['message_english']}\n\n"
+            else:
+                conversation_string += f"User: {conv['message_english']}\n\n"
 
         system_prompt = self.llm_prompts["answer_query"]
         query_prompt = f"""

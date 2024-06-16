@@ -131,6 +131,7 @@ def long_term():
 # Define a route for handling webhooks
 @app.route("/webhooks", methods=["GET"])
 def verify_webhook():
+    print("Verifying webhook")
     verify_token = os.environ.get("VERIFY_TOKEN").strip()
     mode = request.args.get("hub.mode")
     token = request.args.get("hub.verify_token")
