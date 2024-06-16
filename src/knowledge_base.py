@@ -132,13 +132,13 @@ class KnowledgeBase:
             {relevant_chunks_string}\n\n\
             New documents are as follows:\n\
             {relevant_update_chunks_string}\n\n\
-            The most recent conversations are here:\n\n\
+            The most recent conversations are here:\n\
             {conversation_string}\n\
-            You are asked the following query:\n\n\
-            Original query (in Hindi/Hinglish): {query_source}\n\n\
-            Transalted query in English: {query}\n\n\
-            Please return the answer in english only.\n\n\
-            \n\n\
+            Use previous conversation as added context for the query.\n\
+            You are asked the following query:\n\
+            Original query (in Hindi/Hinglish): {query_source}\n\
+            Transalted query in English: {query}\n\
+            Please return the answer in english only.\n\
 
         """
 
