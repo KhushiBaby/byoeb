@@ -1226,7 +1226,6 @@ class WhatsappResponder(BaseResponder):
             if expert['user_id'] not in previous_poll_receivers:
                 self.send_query_request_expert(expert, row_query)
 
-
     def find_consensus(self, row_query):
 
         consensus_prompt_path = os.path.join(os.environ['APP_PATH'], os.environ['DATA_PATH'], "consensus_prompt.txt")
@@ -1334,18 +1333,7 @@ class WhatsappResponder(BaseResponder):
             remove_extra_voice_files(
                 corrected_audio_loc, corrected_audio_loc[:-3] + ".aac"
             )
-        # else:
-        #     answer_source = self.azure_translate.translate_text(
-        #         answer, "en", user_row_lt['user_language'], self.logger
-        #     )
-        #     message_source = f"{answer_source}\n\n{self.template_messages['consensus_response'][user_row_lt['user_language']]}"
-            
-        #     updated_msg_id = self.messenger.send_message(
-        #         user_row_lt['whatsapp_id'],
-        #         message_source,
-        #         row_query["message_id"],
-        #     )
-        #     updated_audio_msg_id = None
+       
         
         self.bot_conv_db.insert_row(
             receiver_id=user_row_lt['user_id'],
@@ -1423,5 +1411,21 @@ class WhatsappResponder(BaseResponder):
 
         return
 
+    def send_reminder_anm(self, poll_row):
+        expert_row_lt = self.user_db.get_from_user_id(poll_row["receiver_id"])
+        message = self.template_messages["reminder_anm"][expert_row_lt["user_language"]]
+        message_id = self.messenger.send_message(expert_row_lt["whatsapp_id"], message, poll_row["message_id"])
 
-
+        self.bot_conv_db.insert_row(
+            receiver_id=expert_row_lt["user_id"],
+            message_type="reminder_anm",
+            message_id=message_id,
+            audio_message_id=None,
+            message_source_lang=message,
+            message_language=expert_row_lt["user_language"],
+            message_english=message,
+            reply_id=poll_row["message_id"],
+            citations=None,
+            message_timestamp=datetime.now(),
+            transaction_message_id=poll_row["transaction_message_id"],
+        )
