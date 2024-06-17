@@ -14,36 +14,37 @@ sys.path.append(os.path.join(os.environ['APP_PATH'], 'src'))
 from database.user_db import UserDB
 from database.user_relation_db import UserRelationDB
 
-
+from onboard import onboard_wa_helper, onboard_template
+from messenger import WhatsappMessenger
+from conversation_database import LoggingDatabase
 
 user_db = UserDB(config)
 user_relation_db = UserRelationDB(config)
+logger = LoggingDatabase(config)
 
 
-user_whatsapp_id = '918375066113'
-user_language = 'en'
-user_type = 'Student'
+messenger = WhatsappMessenger(config, logger)
 
-expert_whatsapp_id = '918904954952'
-expert_language = 'en'
-expert_type = 'Teacher'
+# onboard_template(config, logger, user, messenger)
 
-#assign user_id and expert_id, use uuid
+
 
 from uuid import uuid4
 
 user_id = str(uuid4())
 
+phone_numbers2role = {
+    "919876543210": "asha",
+}
 
-user_db.insert_row(user_id, user_whatsapp_id, user_type, user_language)
-
-
-expert_row = user_db.collection.find_one({'$and': [{'whatsapp_id': expert_whatsapp_id}, {'user_type': expert_type}]})
-print(expert_row)
-if expert_row is None:
-    expert_id = str(uuid4())
-    user_db.insert_row(expert_id, expert_whatsapp_id, expert_type, expert_language)
-else:
-    expert_id = expert_row['user_id']
-
-user_relation_db.insert_row(user_id, expert_id, user_type, expert_type)
+for i, phone_num in enumerate(phone_numbers2role):
+    role = phone_numbers2role[phone_num]
+    user = {
+        'user_id': str(uuid4()),
+        'user_language': 'hi',
+        'whatsapp_id': phone_num,
+        'user_type': role
+    }
+    print(user)
+    user_db.insert_row(user['user_id'], user['whatsapp_id'], user['user_type'], user['user_language'])
+    onboard_template(config, logger, user, messenger)
