@@ -15,7 +15,7 @@ def get_llm_response(prompt):
     openai.api_key = os.environ["OPENAI_API_KEY"].strip()
     openai.api_version = os.environ["OPENAI_API_VERSION"].strip()
 
-    model_engine = "gpt-4"
+    model_engine = "gpt-4o"
 
     # client = AzureOpenAI(
     #     api_key=os.environ["OPENAI_API_KEY"].strip(),
