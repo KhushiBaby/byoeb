@@ -42,6 +42,7 @@ llm_prompts['generate_correction'] = CORRECTION_SYSTEM_PROMPT
 
 FOLLOW_UP_PROMPT = f''' What are three possible follow-up questions the user might ask? \
 Respond with the questions only in a python list of strings. Each question should not exceed 72 characters.\
+Sample output: [Q1, Q2, Q3]\
 '''
 
 llm_prompts['follow_up_questions'] = FOLLOW_UP_PROMPT
