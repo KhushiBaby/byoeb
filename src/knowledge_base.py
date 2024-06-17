@@ -29,7 +29,7 @@ class KnowledgeBase:
         )
         self.embedding_fn = embedding_functions.OpenAIEmbeddingFunction(
             api_key=os.environ['OPENAI_API_KEY'].strip(),
-            model_name="text-embedding-ada-002"
+            model_name="text-embedding-3-large"
         )
         
         self.llm_prompts = json.load(open(os.path.join(os.environ["APP_PATH"], os.environ["DATA_PATH"], "llm_prompt.json")))

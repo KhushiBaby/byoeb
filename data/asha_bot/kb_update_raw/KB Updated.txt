@@ -94,3 +94,6 @@ The PCV vaccine is used to prevent pneumonia.
 ##
 What are the symptoms of vitamin C deficiency?
 Symptoms of Vitamin C deficiency can include weakness, fatigue, bleeding gums, dry skin, and decreased vision.
+##
+In how many months is the blue pill fired on children?
+The blue pill is given to children aged 10-19 years every Tuesday of the month, with a total of 4 tablets per month.
