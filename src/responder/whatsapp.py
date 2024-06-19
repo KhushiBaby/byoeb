@@ -49,6 +49,9 @@ class WhatsappResponder(BaseResponder):
         self.template_messages = json.load(
             open(os.path.join(os.environ['DATA_PATH'],"template_messages.json"), "r")
         )
+        self.language_fix = json.load(
+            open(os.path.join(os.environ['DATA_PATH'], "language_fix.json"), "r")
+        )
         self.yes_responses = [
             self.language_prompts[key]
             for key in self.language_prompts.keys()
@@ -285,7 +288,7 @@ class WhatsappResponder(BaseResponder):
         return
 
     def answer_query_text(self, msg_id, message, translated_message, msg_type, row_lt, blob_name=None):
-        print("Answering query")
+        print("Answering query: ", message, translated_message)
         db_id = self.user_conv_db.insert_row(
             user_id = row_lt['user_id'],
             message_id = msg_id,
@@ -591,6 +594,7 @@ class WhatsappResponder(BaseResponder):
                 source_language=row_lt['user_language'],
                 target_language="en",
                 logger=self.logger,
+                lang_fix=self.language_fix,
             )
             response = self.answer_query_text(msg_id, msg_body, translated_message, msg_type, row_lt)
             return
@@ -615,9 +619,8 @@ class WhatsappResponder(BaseResponder):
             with open(file=audio_input_file, mode="rb") as data:
                 blob_client.upload_blob(data)
 
-            
             source_lang_text, eng_text = self.azure_translate.speech_translate_text(
-                audio_input_file[:-3] + "wav", row_lt['user_language'], self.logger, blob_name
+                audio_input_file[:-3] + "wav", row_lt['user_language'], self.logger, blob_name, self.language_fix
             )
             self.logger.add_log(
                 sender_id=row_lt['whatsapp_id'],
