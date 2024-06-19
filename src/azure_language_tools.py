@@ -30,12 +30,13 @@ class translator:
             },
         }
 
-    def translate_text(self, input_text, source_language, target_language, logger):
+    def translate_text(self, input_text, source_language, target_language, logger, lang_fix=None):
         """
         This function translates the given input text from source language to target language.
         """
-        if source_language == target_language:
-            return input_text
+        input_text = self.fix_language(input_text, lang_fix)
+        # if source_language == target_language:
+        #     return input_text
         params = {
             "api-version": "3.0",
             "from": source_language,
@@ -70,10 +71,10 @@ class translator:
             },
             timestamp=datetime.now(),
         )
-
+        translated_text = self.fix_language(translated_text, lang_fix)
         return translated_text
 
-    def speech_translate_text(self, audio_file, source_language, logger, blob_name):
+    def speech_translate_text(self, audio_file, source_language, logger, blob_name, lang_fix=None):
         """
         This function returns the translated english text from the source language audio.
         """
@@ -103,12 +104,23 @@ class translator:
             },
             timestamp=datetime.now(),
         )
-
+        result = self.fix_language(result, lang_fix)
         english_text = self.translate_text(result, source_language, "en", logger)
+        english_text = self.fix_language(english_text, lang_fix)
+        
         return result, english_text
 
+    def fix_language(self, text, lang_fix):
+
+        if lang_fix is None:
+            return text
+        text = text.lower()
+        for key in lang_fix:
+            text = text.replace(key, lang_fix[key])
+        return text
+
     def text_translate_speech(
-        self, english_text, source_audio_language, save_filename, logger
+        self, english_text, source_audio_language, save_filename, logger, lang_fix=None
     ):
         """
         This function stores the translated speech into save_filename location.
