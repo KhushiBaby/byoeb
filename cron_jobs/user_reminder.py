@@ -9,46 +9,36 @@ import sys
 
 sys.path.append(local_path + "/src")
 
-from conversation_database import LongTermDatabase, LoggingDatabase
+from database import UserDB, UserConvDB
+from conversation_database import LoggingDatabase
 from messenger.whatsapp import WhatsappMessenger
 import os
 import json
 import datetime
+import pandas as pd
 
-template_name = "reminder_cataractbot"
+template_name = "asha_reminder"
 
-long_term_db = LongTermDatabase(config)
+user_db = UserDB(config)
+user_conv_db = UserConvDB(config)
 logger = LoggingDatabase(config)
 messenger = WhatsappMessenger(config, logger)
 
 print("Date: ", datetime.datetime.now())
 
-all_user_list = []
-all_user_language = []
-all_user_expiration = []
+users = user_db.get_all_users(user_type="Asha")
+print("Total users: ", len(users))
+df = pd.DataFrame(users)
 
-for user in config["USERS"]:
-    user_list = long_term_db.get_list_of_multiple_columns([user+"_whatsapp_id", user+"_language", "is_expired"])
-    all_user_list = all_user_list + user_list[user+"_whatsapp_id"]
-    all_user_language = all_user_language + user_list[user+"_language"]
-    all_user_expiration = all_user_expiration + user_list["is_expired"]
-
-
-
-for user_whatsapp_id, user_language, expired in zip(all_user_list, all_user_language, all_user_expiration):
-    
-    activity = list(logger.collection.find({"sender_id": user_whatsapp_id}))
-
-    if expired or (len(activity) and (
-        datetime.datetime.now() - activity[-1]["timestamp"]
-    ) < datetime.timedelta(hours=2)):
-        continue
-    
+for i, user_row in df.iterrows():
 
     try:
-        print("Sending message to ", user_whatsapp_id)
-        messenger.send_template(user_whatsapp_id, template_name, user_language, None)
-    except:
+        last_query = user_conv_db.get_most_recent_query(user_row["user_id"])
+        if last_query is None or ((datetime.datetime.now() - last_query["message_timestamp"]) > datetime.timedelta(days=1)):
+            print("Sending message to ", user_row["whatsapp_id"])
+            messenger.send_template(user_row["whatsapp_id"], template_name, user_row["user_language"], None)
+        else:
+            print("Not sending message to ", user_row["whatsapp_id"])
+    except Exception as e:
+        print("Error: ", e)
         continue
-
-print("Sent messages to patients and caregivers")

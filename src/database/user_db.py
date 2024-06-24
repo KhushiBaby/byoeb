@@ -62,3 +62,11 @@ class UserDB(BaseDB):
             return rows
         random_experts = random.sample(rows, numbers_of_experts)
         return random_experts
+    
+    def get_all_users(self, user_type=None):
+        if user_type is None:
+            users = self.collection.find({})
+        else:
+            users = self.collection.find({'user_type': user_type})
+        users = list(users)
+        return users
