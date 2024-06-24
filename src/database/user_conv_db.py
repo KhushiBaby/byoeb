@@ -84,3 +84,9 @@ class UserConvDB(BaseDB):
     def get_all_unresolved(self, from_ts, to_ts):
         user_conv = self.collection.find({"$and": [{"resolved": {"$ne": True}}, {'message_timestamp': {'$gte': from_ts, '$lt': to_ts}}]})
         return user_conv
+    
+    def get_most_recent_query(self, user_id):
+        user_conv = self.collection.find({'$and': [{'user_id': user_id}, {'message_type': {'$ne': 'feedback_response'}}]})
+        user_conv = list(user_conv)
+        user_conv = sorted(user_conv, key=lambda x: x['message_timestamp'], reverse=True)
+        return user_conv[0] if len(user_conv) > 0 else None
