@@ -20,6 +20,7 @@ from onboard import onboard_wa_helper
 from responder import BaseResponder
 from utils import get_llm_response
 from uuid import uuid4
+import traceback
 
 class WhatsappResponder(BaseResponder):
     def __init__(self, config):
@@ -289,6 +290,21 @@ class WhatsappResponder(BaseResponder):
 
     def answer_query_text(self, msg_id, message, translated_message, msg_type, row_lt, blob_name=None):
         print("Answering query: ", message, translated_message)
+        
+        #ignore if the same query is repeated within an hour
+        try:
+            last_query = self.user_conv_db.get_most_recent_query(row_lt['user_id'])
+            print("Last query: ", last_query)
+            last_msg_timestamp = last_query["message_timestamp"]
+            time_diff = datetime.now() - last_msg_timestamp
+            if time_diff < timedelta(hours=1) and last_query["message_english"] == translated_message:
+                print("Ignoring repeated query")
+                return
+        except Exception as e:
+            print(e)
+            traceback.print_exc()
+        
+
         db_id = self.user_conv_db.insert_row(
             user_id = row_lt['user_id'],
             message_id = msg_id,
@@ -541,7 +557,6 @@ class WhatsappResponder(BaseResponder):
 
 
     def handle_response_user(self, msg_object, row_lt):
-        # data is a dictionary that contains from_number, msg_id, msg_object, user_type
         print("Handling user response")
         msg_type = msg_object["type"]
         user_id = row_lt['user_id'] 

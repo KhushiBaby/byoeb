@@ -1,7 +1,7 @@
 import datetime
 import sys
 import yaml
-
+import traceback
 import os
 
 local_path = os.environ["APP_PATH"]
@@ -10,7 +10,6 @@ with open(local_path + "/config.yaml") as file:
 
 sys.path.append(local_path.strip() + "/src")
 
-NUM_EXPERTS = 1
 from database import UserDB, UserConvDB, BotConvDB, ExpertConvDB, UserRelationDB
 
 
@@ -47,6 +46,7 @@ if len(df) == 0:
 
     
 df = df[df['query_type'] != 'small-talk']
+df = df[df['message_type'] != 'feedback_response']
 df.reset_index(drop=True, inplace=True)
 
 category_to_expert = {}
@@ -55,14 +55,14 @@ for expert in config["EXPERTS"]:
     category_to_expert[config["EXPERTS"][expert]] = expert
 
 for i, row in tqdm(df.iterrows()):
-    print(row.keys())
-    # print(row['message_id'], row['message_english'])
     try:
-    # get x numbers of experts randomly
-        responder.escalate_query_multiple(row)    
+        user_row = userdb.get_from_user_id(row['user_id'])
+        is_test_user = user_row.get("test_user", False)
+        responder.escalate_query_multiple(row, is_test_user)
     except Exception as e:
-        print(e)
-
+        print("Error in escalation")
+        print(row)
+        traceback.print_exc()
     
 
 print("Escalation done")
