@@ -45,14 +45,6 @@ class UserDB(BaseDB):
             }}
         )
     
-    def dep_get_random_expert(self, expert_type, number_of_experts):
-        pipeline = [
-            {"$match": {"user_type": expert_type}},
-            {"$sample": {"size": number_of_experts}}
-        ]
-        experts = list(self.collection.aggregate(pipeline))
-        return experts
-    
     def get_random_expert(self, expert_type, numbers_of_experts, test=False):
         if test:
             rows = list(self.collection.find({'$and': [{'user_type':expert_type}, {'test_user':True}]}))

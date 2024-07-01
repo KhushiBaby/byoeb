@@ -167,13 +167,32 @@ def process_queue():
                     responder.response(body)
                     queue_client.delete_message(message)
                 except Exception as e:
-                    print(e)
+                    error_message = "Error in processing queue: " + str(e)
+                    error_message = error_message + "\n" + traceback.format_exc()
                     traceback.print_exc()
+                    logger.add_log(
+                        sender_id="bot",
+                        receiver_id="bot",
+                        message_id=None,
+                        action_type="app_error",
+                        details={"message": message.content, "error": error_message},
+                        timestamp=datetime.now(),
+                    )
                     print("Invalid message received: ", message.content)
                     queue_client.delete_message(message)
         except Exception as e:
+            error_message = "Error in processing queue: " + str(e)
             print(e)
+            error_message = error_message + "\n" + traceback.format_exc()
             traceback.print_exc()
+            logger.add_log(
+                sender_id="bot",
+                receiver_id="bot",
+                message_id=None,
+                action_type="app_error",
+                details={"message": message.content, "error": error_message},
+                timestamp=datetime.now(),
+            )
         queue_lock.release()
         sleep(0.1)
 
