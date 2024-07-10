@@ -111,7 +111,8 @@ class WhatsappResponder(BaseResponder):
         user_type, row_lt = self.check_user_type(from_number)
         print("User type: ", user_type, "Row: ", row_lt)
         if user_type is None:
-            if msg_object["text"]["body"] == 'onboard-asha':
+            if (msg_object.get("text", False) and msg_object["text"].get("body", False) and msg_object["text"]["body"] == 'onboard-asha') \
+            or msg_object.get("type", None) == "request_welcome":
                 user_id = str(uuid4())
                 self.user_db.insert_row(
                     user_id=user_id,
@@ -157,11 +158,7 @@ class WhatsappResponder(BaseResponder):
                     self.onboard_response(msg_object, row_lt)
                     return
                 if msg_log["details"]["text"] == "anm_response_request":
-                    row_req = self.bot_conv_db.get_from_message_id(reply_id)
-                    transaction_message_id = row_req["transaction_message_id"]
-                    row_query = self.user_conv_db.get_from_message_id(transaction_message_id)
-                    self.send_query_expert(row_lt, row_query)
-                    return
+                    self.get_request_response_expert(msg_object, row_lt)
 
 
 
@@ -652,6 +649,7 @@ class WhatsappResponder(BaseResponder):
     def handle_response_expert(self, msg_object, row_lt):
         msg_type = msg_object["type"]
 
+        
         if (
             msg_type == "interactive"
             and msg_object["interactive"]["type"] == "button_reply"
@@ -661,6 +659,43 @@ class WhatsappResponder(BaseResponder):
         elif msg_type == "text" or msg_type == "audio":
             self.get_correction_from_expert(msg_object, row_lt)
 
+    def get_request_response_expert(self, msg_object, row_lt):
+        reply_id = msg_object["context"]["id"]
+        row_req = self.bot_conv_db.get_from_message_id(reply_id)
+        transaction_message_id = row_req["transaction_message_id"]
+        row_query = self.user_conv_db.get_from_message_id(transaction_message_id)
+        
+        response_rows = self.expert_conv_db.find_all_with_transaction_id_and_receiver_id(
+            transaction_message_id, row_lt["user_id"], "consensus_response"
+        )
+        print("Response rows: ", response_rows)
+        if len(response_rows) > 0:
+            response_row = response_rows[-1]
+            text = "You have already responded to this query."
+            text_src = self.azure_translate.translate_text(
+                text, "en", row_lt['user_language'], self.logger
+            )
+            self.messenger.send_message(
+                row_lt['whatsapp_id'], text_src, response_row["message_id"]
+            )
+            return
+        
+        poll_row = self.bot_conv_db.find_with_transaction_id_and_receiver_id(
+            transaction_message_id, row_lt["user_id"], "consensus_poll"
+        )
+        if poll_row is not None:
+            text = "This query has already been shared."
+            text_src = self.azure_translate.translate_text(
+                text, "en", row_lt['user_language'], self.logger
+            )
+            self.messenger.send_message(
+                row_lt['whatsapp_id'], text_src, poll_row["message_id"]
+            )
+            return
+        
+
+        self.send_query_expert(row_lt, row_query)
+        return
 
     def send_correction_poll_expert(self, row_lt, row_query, escalation=False):
 
@@ -1443,6 +1478,7 @@ class WhatsappResponder(BaseResponder):
 
     def send_reminder_anm(self, poll_row):
         expert_row_lt = self.user_db.get_from_user_id(poll_row["receiver_id"])
+        message_en = self.template_messages["reminder_anm"]["en"]
         message = self.template_messages["reminder_anm"][expert_row_lt["user_language"]]
         message_id = self.messenger.send_message(expert_row_lt["whatsapp_id"], message, poll_row["message_id"])
 
@@ -1453,7 +1489,7 @@ class WhatsappResponder(BaseResponder):
             audio_message_id=None,
             message_source_lang=message,
             message_language=expert_row_lt["user_language"],
-            message_english=message,
+            message_english=message_en,
             reply_id=poll_row["message_id"],
             citations=None,
             message_timestamp=datetime.now(),
