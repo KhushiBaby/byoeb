@@ -38,14 +38,29 @@ class KnowledgeBase:
             path=self.persist_directory, settings=Settings(anonymized_telemetry=False)
         )
 
-
     def answer_query(
         self,
         user_conv_db: UserConvDB,
         bot_conv_db: BotConvDB,
         msg_id: str,
         logger: LoggingDatabase,
-    ) -> tuple[str, str]:
+        max_retries: int = 5,
+    ):
+        for i in range(max_retries):
+            try:
+                return self.answer_query_helper(user_conv_db, bot_conv_db, msg_id, logger)
+            except Exception as e:
+                print(f"Error in answer_query: {e}")
+                continue
+        return None
+
+    def answer_query_helper(
+        self,
+        user_conv_db: UserConvDB,
+        bot_conv_db: BotConvDB,
+        msg_id: str,
+        logger: LoggingDatabase,
+    ):
         """answer the user's query using the knowledge base and chat history
         Args:
             query (str): the query
@@ -420,6 +435,22 @@ class KnowledgeBase:
             return gpt_output
 
     def follow_up_questions(
+        self,
+        query: str,
+        response: str,
+        user_type: str,
+        logger: LoggingDatabase,
+        max_retries: int = 5,
+    ):
+        for i in range(max_retries):
+            try:
+                return self.follow_up_questions_helper(query, response, user_type, logger)
+            except Exception as e:
+                print(f"Error in follow_up_questions: {e}")
+                continue
+        return None
+
+    def follow_up_questions_helper(
         self,
         query: str,
         response: str,
