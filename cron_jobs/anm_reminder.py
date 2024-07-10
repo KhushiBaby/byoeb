@@ -51,27 +51,25 @@ df.reset_index(drop=True, inplace=True)
 
 category_to_expert = {}
 
+
 for expert in config["EXPERTS"]:
     category_to_expert[config["EXPERTS"][expert]] = expert
 
 for i, row in tqdm(df.iterrows()):
 
     print(row)
+    previous_poll_requests = bot_conv_db.find_all_with_transaction_id(row["message_id"], "response_request")
     previous_polls = bot_conv_db.find_all_with_transaction_id(row["message_id"], "consensus_poll")
     previous_consensus_responses = expert_conv_db.get_from_transaction_message_id(row["message_id"], "consensus_response")
 
-    print("Previous poll responses", previous_polls)
-    print("Previous consensus responses", previous_consensus_responses)
-
-    if len(previous_polls) == 0:
-        print("No previous polls")
-        continue
-
     response_sent = {}
+    experts_processed = set()
     for response in previous_consensus_responses:
         response_sent[response["user_id"]] = True
 
+
     for poll in previous_polls:
+        experts_processed.add(poll["receiver_id"])
         current_time = datetime.datetime.now()
         delta = current_time - poll["message_timestamp"]
         if (poll["receiver_id"] in response_sent) or (delta.total_seconds() / 3600) < 1:
@@ -84,3 +82,24 @@ for i, row in tqdm(df.iterrows()):
 
         print("Sending reminder to expert")
         responder.send_reminder_anm(poll)
+
+    #if request is ignored, send again
+
+    for poll_request in previous_poll_requests:
+        if poll_request["receiver_id"] in experts_processed:
+            continue
+        experts_processed.add(poll_request["receiver_id"])
+        current_time = datetime.datetime.now()
+        delta = current_time - poll_request["message_timestamp"]
+        if (poll_request["receiver_id"] in response_sent) or (delta.total_seconds() / 3600) < 2:
+            continue
+
+        requests = bot_conv_db.find_with_transaction_id_and_receiver_id(poll_request["transaction_message_id"], poll_request["receiver_id"], "response_request")
+        if len(requests) > 1:
+            print("More than one request found")
+            continue
+
+        print("Sending the request again to expert")
+        # responder.send_reminder_anm(poll_request, template=True)
+        expert_row_lt = userdb.get_from_user_id(poll_request["receiver_id"])
+        responder.send_query_request_expert(expert_row_lt, row)

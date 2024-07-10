@@ -44,4 +44,12 @@ class ExpertConvDB(BaseDB):
         rows = list(rows)
         return rows
     
+    def find_all_with_transaction_id_and_receiver_id(self, transaction_message_id, user_id, message_type=None):
+        if message_type:
+            rows = self.collection.find({'$and': [{'transaction_message_id': transaction_message_id}, {'user_id': user_id}, {'message_type': message_type}]})
+        else:
+            rows = self.collection.find({'$and': [{'transaction_message_id': transaction_message_id}, {'user_id': user_id}]})
+        rows = list(rows)
+        return rows
+    
     
