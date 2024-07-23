@@ -1321,16 +1321,18 @@ class WhatsappResponder(BaseResponder):
                 if response['message_timestamp'] > expert_latest_time[response[aggregate]]:
                     expert_latest_time[response[aggregate]] = response['message_timestamp']
             
-        #delete if latest_time is less than 5 minutes
+        # delete if latest_time is less than 5 minutes
         for user_id, latest_time in expert_latest_time.items():
             if latest_time > five_minutes_ago:
                 expert_responses.pop(user_id)
 
 
         expert_response_db_ids = []
+        receive_notif = {}
         for response in all_expert_responses:
             if response['user_id'] in expert_responses.keys():
                 expert_response_db_ids.append(response['message_id'])
+                receive_notif[response['user_id']] = response['message_id']
 
         expert_responses = list(expert_responses.values())
         if len(expert_responses) < self.config['MIN_CONSENSUS_RESPONSES']:
@@ -1352,7 +1354,7 @@ class WhatsappResponder(BaseResponder):
 
         prompt.append({"role": "user", "content": str(query_prompt)})
         response = get_llm_response(prompt)
-
+        
         print(response)
         response = json.loads(response)
         if response['consensus_answer'] == 'Consensus not reached.':
@@ -1416,6 +1418,40 @@ class WhatsappResponder(BaseResponder):
 
         self.user_conv_db.mark_resolved(row_query["message_id"])
         print("Marking resolved", row_query["message_id"])
+
+        anm_message_en = f"{self.template_messages['anm_consensus_prefix']['en']} {answer}"
+
+        answers = {
+            'en': answer,
+        }
+        answers[user_row_lt['user_language']] = answer_source
+
+        for user_id, reply_id in receive_notif.items():
+            expert_row_lt = self.user_db.get_from_user_id(user_id)
+            if answers.get(expert_row_lt['user_language'], None) is None:
+                answers[expert_row_lt['user_language']] = self.azure_translate.translate_text(
+                    answer, "en", expert_row_lt['user_language'], self.logger
+                )
+            answer_source = answers[expert_row_lt['user_language']]
+            anm_message_source = f"{self.template_messages['anm_consensus_prefix'][expert_row_lt['user_language']]} {answer_source}"
+            message_id = self.messenger.send_message(
+                expert_row_lt['whatsapp_id'], anm_message_source, reply_id
+            )
+
+            self.bot_conv_db.insert_row(
+                receiver_id=expert_row_lt["user_id"],
+                message_type="anm_consensus_response",
+                message_id=message_id,
+                audio_message_id=None,
+                message_source_lang=anm_message_source,
+                message_language=expert_row_lt['user_language'],
+                message_english=anm_message_en,
+                reply_id=reply_id,
+                citations=f"expert_consensus: {', '.join(expert_response_db_ids)}",
+                message_timestamp=datetime.now(),
+                transaction_message_id=row_query["message_id"],
+            )
+
 
     def send_feedback_poll(self, row_lt, transaction_message_id, reply_id):
         lang = row_lt["user_language"]
