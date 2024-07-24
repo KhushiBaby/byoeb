@@ -78,3 +78,8 @@ class BotConvDB(BaseDB):
             bot_conv = self.collection.find({'receiver_id': receiver_id})
         bot_conv = list(bot_conv)
         return bot_conv
+    
+    def find_with_receiver_id_and_duration(self, receiver_id, message_type, start_time, end_time):
+        bot_conv = self.collection.find({'$and': [{'receiver_id': receiver_id}, {'message_type': message_type}, {'message_timestamp': {'$gte': start_time, '$lte': end_time}}]})
+        bot_conv = list(bot_conv)
+        return bot_conv
