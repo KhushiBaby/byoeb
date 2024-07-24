@@ -1281,7 +1281,7 @@ class WhatsappResponder(BaseResponder):
             self.user_conv_db.mark_resolved(row_query["message_id"])
             return
         
-        experts = self.user_db.get_random_expert(self.category_to_expert[row_query["query_type"]], self.config['NUM_ESCALATE_EXPERTS'], is_test_user)
+        experts = self.user_db.get_random_expert(self.category_to_expert[row_query["query_type"]], self.config['NUM_ESCALATE_EXPERTS'], self.bot_conv_db, is_test_user)
         
         previous_poll_receivers = []
         previous_poll_requests = self.bot_conv_db.find_all_with_transaction_id(row_query["message_id"], "response_request")

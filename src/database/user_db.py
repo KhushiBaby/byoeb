@@ -45,15 +45,41 @@ class UserDB(BaseDB):
             }}
         )
     
-    def get_random_expert(self, expert_type, numbers_of_experts, test=False):
+    def get_random_expert(self, expert_type, numbers_of_experts, bot_conv_db, test=False):
         if test:
             rows = list(self.collection.find({'$and': [{'user_type':expert_type}, {'test_user':True}]}))
         else:   
             rows = list(self.collection.find({'$and': [{'user_type':expert_type}, {'test_user':{'$ne':True}}]}))
         if len(rows) < numbers_of_experts:
             return rows
-        random_experts = random.sample(rows, numbers_of_experts)
+        
+        #for every expert, find the number of messages sent to them in the last 24 hours
+        from_ts = datetime.datetime.now() - datetime.timedelta(hours=24)
+        to_ts = datetime.datetime.now()
+        for row in rows:
+            user_id = row['user_id']
+            expert_conv = bot_conv_db.find_with_receiver_id_and_duration(user_id, "response_request", from_ts, to_ts)
+            #find unique number of transaction message ids
+            expert_conv = list(expert_conv)
+            expert_conv = [conv['transaction_message_id'] for conv in expert_conv]
+            expert_conv = set(expert_conv)
+            row['number_of_messages'] = len(expert_conv)
+
+        #sort the experts based on the number of messages
+        rows = sorted(rows, key = lambda i: i['number_of_messages'])
+
+        #filter experts with less than 3 messages
+        filtered_rows = [row for row in rows if row['number_of_messages'] < 3]
+
+        if len(filtered_rows) >= numbers_of_experts:
+            random_experts = random.sample(filtered_rows, numbers_of_experts)
+        
+        else:
+            random_experts = rows[:numbers_of_experts]
+
+        
         return random_experts
+        
     
     def get_all_users(self, user_type=None):
         if user_type is None:
