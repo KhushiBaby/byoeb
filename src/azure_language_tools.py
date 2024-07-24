@@ -2,6 +2,7 @@ import requests, uuid
 import os
 import azure.cognitiveservices.speech as speechsdk
 from datetime import datetime
+from utils import translate_gpt_en2hi
 
 
 class translator:
@@ -37,27 +38,34 @@ class translator:
         input_text = self.fix_language(input_text, lang_fix)
         # if source_language == target_language:
         #     return input_text
-        params = {
-            "api-version": "3.0",
-            "from": source_language,
-            "to": [target_language],
-        }
+        if source_language == "en" and target_language == "hi":
+            translated_text = translate_gpt_en2hi(input_text)
+            #strip any "" from the translated text
+            translated_text = translated_text.strip('"')
+        else:
+            params = {
+                "api-version": "3.0",
+                "from": source_language,
+                "to": [target_language],
+            }
 
-        headers = {
-            "Ocp-Apim-Subscription-Key": self.translation_key,
-            "Ocp-Apim-Subscription-Region": self.location,
-            "Content-type": "application/json",
-            "X-ClientTraceId": str(uuid.uuid4()),
-        }
+            headers = {
+                "Ocp-Apim-Subscription-Key": self.translation_key,
+                "Ocp-Apim-Subscription-Region": self.location,
+                "Content-type": "application/json",
+                "X-ClientTraceId": str(uuid.uuid4()),
+            }
 
-        body = [{"text": input_text}]
+            body = [{"text": input_text}]
 
-        request = requests.post(
-            self.translation_url, params=params, headers=headers, json=body
-        )
-        response = request.json()
+            request = requests.post(
+                self.translation_url, params=params, headers=headers, json=body
+            )
+            response = request.json()
 
-        translated_text = response[0]["translations"][0]["text"]
+            translated_text = response[0]["translations"][0]["text"]
+    
+        
         logger.add_log(
             sender_id="bot",
             receiver_id="bot",
