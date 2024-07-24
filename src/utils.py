@@ -1,6 +1,7 @@
 import regex as re
 import datetime
 import os
+import json
 import openai
 import pickle
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -50,6 +51,20 @@ def get_llm_response(prompt):
     response_text = response.choices[0].message.content.strip()
     return response_text
 
+def translate_gpt_en2hi(eng_text):
+    
+    llm_prompts = json.load(open(os.path.join(os.environ["APP_PATH"], os.environ["DATA_PATH"], "llm_prompt.json")))
+    system_prompt = llm_prompts["translate"]
+    query_prompt = f'''
+        English Sentence: {eng_text}
+        Hindi Translation:
+    '''
+
+    prompt = [{"role": "system", "content": system_prompt}]
+    prompt.append({"role": "user", "content": query_prompt})
+
+    response = get_llm_response(prompt)
+    return response
 
 def gsheet_api_check(SCOPES, local_path):
     creds = None
