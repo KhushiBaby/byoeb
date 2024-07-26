@@ -92,11 +92,11 @@ def onboard_wa_helper(
             messenger.send_message(user_row['whatsapp_id'], message)
         audio_file = os.path.join(os.environ['APP_PATH'], os.environ['DATA_PATH'],f"onboarding/welcome_messages_experts_{lang}.aac")
         messenger.send_audio(audio_file, user_row['whatsapp_id'])
-        messenger.send_language_poll(
-            user_row['whatsapp_id'],
-            language_prompts[lang],
-            language_prompts[lang + "_title"],
-        )
+        # messenger.send_language_poll(
+        #     user_row['whatsapp_id'],
+        #     language_prompts[lang],
+        #     language_prompts[lang + "_title"],
+        # )
         return
 
     return

@@ -12,7 +12,7 @@ class AppLogger:
 
         configure_azure_monitor(
             logger_name=os.environ["APPINSIGHT_LOGGER"],
-            connection_string=os.environ["APPINSIGHT_CONNECTION_STRING"]
+            connection_string=os.environ["APPLICATIONINSIGHTS_CONNECTION_STRING"]
         )
 
         # trace.set_tracer_provider(TracerProvider())
