@@ -6,10 +6,10 @@ asttokens==2.2.1
 async-timeout==4.0.3
 attrs==23.1.0
 azure-cognitiveservices-speech==1.30.0
-azure-monitor-events-extension=0.1.0
-azure-monitor-ingestion=1.0.4
-azure-monitor-opentelemetry=1.6.0
-azure-monitor-opentelemetry-exporter=1.0.0b27
+azure-monitor-events-extension==0.1.0
+azure-monitor-ingestion==1.0.4
+azure-monitor-opentelemetry==1.6.0
+azure-monitor-opentelemetry-exporter==1.0.0b27
 azure-core==1.29.5
 azure-identity==1.13.0
 azure-storage-blob==12.16.0
