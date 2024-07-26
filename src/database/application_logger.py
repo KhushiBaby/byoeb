@@ -2,8 +2,8 @@
 import os
 import json
 from azure.monitor.opentelemetry import configure_azure_monitor
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
+# from opentelemetry import trace
+# from opentelemetry.sdk.trace import TracerProvider
 from azure.monitor.events.extension import track_event
 
 class AppLogger:
