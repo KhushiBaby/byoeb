@@ -21,7 +21,8 @@ lang_prompts = {"en": reminder_message, "en_title": title, "en_yes": "Yes", "en_
 
 languages = ["hi", "kn", "ta", "te"]
 
-logger = LoggingDatabase(config)
+from database import AppLogger
+app_logger = AppLogger()
 
 for lang in languages:
     message_source = azure_translate.translate_text(
@@ -31,13 +32,13 @@ for lang in languages:
         logger=logger,
     )
     title_source = azure_translate.translate_text(
-        input_text=title, source_language="en", target_language=lang, logger=logger
+        input_text=title, source_language="en", target_language=lang, logger=app_logger
     )
     yes_source = azure_translate.translate_text(
-        input_text="Yes", source_language="en", target_language=lang, logger=logger
+        input_text="Yes", source_language="en", target_language=lang, logger=app_logger
     )
     no_source = azure_translate.translate_text(
-        input_text="No", source_language="en", target_language=lang, logger=logger
+        input_text="No", source_language="en", target_language=lang, logger=app_logger
     )
     lang_prompts[lang] = str(message_source)
     lang_prompts[lang + "_title"] = str(title_source)

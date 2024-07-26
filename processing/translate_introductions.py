@@ -5,6 +5,7 @@ sys.path.append(local_path)
 from azure_language_tools import translator
 import json
 from conversation_database import LoggingDatabase
+from database import AppLogger
 import yaml
 
 config_path = os.path.join(os.environ['APP_PATH'], 'config.yaml')
@@ -26,7 +27,7 @@ languages = ["hi", "kn", "ta", "te"]
 for lang in languages:
     welcome_messages["users"][lang] = []
 
-logger = LoggingDatabase(config)
+app_logger = AppLogger()
 
 for lang in languages:
     for message in welcome_messages_users:
@@ -34,7 +35,7 @@ for lang in languages:
             input_text=message,
             source_language="en",
             target_language=lang,
-            logger=logger,
+            logger=app_logger,
         )
         welcome_messages["users"][lang].append(str(message_source))
 

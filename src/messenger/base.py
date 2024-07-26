@@ -15,7 +15,7 @@ from conversation_database import (
 
 class BaseMessenger(ABC):
     @abstractmethod
-    def __init__(self, config, logger: LoggingDatabase):
+    def __init__(self, config, app_logger):
         pass
 
     @abstractmethod

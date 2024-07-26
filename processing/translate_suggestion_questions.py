@@ -2,6 +2,7 @@ import os
 import sys
 local_path = os.path.join(os.environ['APP_PATH'], 'src')
 sys.path.append(local_path)
+from database import AppLogger
 from azure_language_tools import translator
 import json
 from conversation_database import LoggingDatabase
@@ -12,6 +13,7 @@ with open(config_path) as file:
     config = yaml.load(file, Loader=yaml.FullLoader)
 
 azure_translate = translator()
+app_logger = AppLogger()
 
 title = "What to do next?"
 list_title = "Related questions"
@@ -20,21 +22,20 @@ data = {"title": title, "list_title": list_title, "questions": questions}
 onboard_ques = {"en": data}
 languages = ["hi", "kn", "ta", "te"]
 
-logger = LoggingDatabase(config)
 
 # store onboard questions in all langs in json file
 
 
 for lang in languages:
-    current_title = azure_translate.translate_text(title, "en", lang, logger)
-    current_list_title = azure_translate.translate_text(list_title, "en", lang, logger)
+    current_title = azure_translate.translate_text(title, "en", lang, app_logger)
+    current_list_title = azure_translate.translate_text(list_title, "en", lang, app_logger)
     current_questions = []
     for question in questions:
         message_source = azure_translate.translate_text(
             input_text=question,
             source_language="en",
             target_language=lang,
-            logger=logger,
+            logger=app_logger,
         )
         current_questions.append(str(message_source))
     onboard_ques[lang] = {

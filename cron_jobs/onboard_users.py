@@ -14,14 +14,15 @@ from messenger import WhatsappMessenger
 from conversation_database import (
     LoggingDatabase,
 )
-from database import UserDB
+from database import UserDB, BotConvDB, AppLogger
 from uuid import uuid4
 
-logger = LoggingDatabase(config)
+app_logger = AppLogger()
 user_db = UserDB(config)
-messenger = WhatsappMessenger(config, logger)
+messenger = WhatsappMessenger(config, app_logger)
 
 from onboard import onboard_template
+
 
 container_name = os.environ["USER_FILE_CONTAINER"]
 excel_path = os.environ["USER_FILE_PATH"]
@@ -72,7 +73,7 @@ for i, row in df.iterrows():
     }
     print("Adding new row", whatsapp_id)
     user_db.insert_row(user['user_id'], user['whatsapp_id'], user['user_type'], user['user_language'])
-    onboard_template(config, logger, user, messenger)
+    onboard_template(config, app_logger, user, messenger, bot_conv_db)
 
 
     
