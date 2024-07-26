@@ -1,11 +1,12 @@
-from conversation_database import LoggingDatabase
+from database import BotConvDB, AppLogger
 import json
 import os
 from azure_language_tools import translator
 from messenger import WhatsappMessenger
+from datetime import datetime
 
 
-def onboard_template(config: dict, logger: LoggingDatabase, data_row: dict, messenger: WhatsappMessenger) -> None:
+def onboard_template(config: dict, app_logger: AppLogger, data_row: dict, messenger: WhatsappMessenger, bot_conv_db: BotConvDB) -> None:
     print("Onboarding template")
 
 
@@ -13,7 +14,7 @@ def onboard_template(config: dict, logger: LoggingDatabase, data_row: dict, mess
 
     if user_type == 'Asha':
         lang = data_row.get('user_language', 'hi')
-        messenger.send_template(
+        sent_msg_id = messenger.send_template(
             data_row['whatsapp_id'],
             'asha_onboarding',
             lang,
@@ -21,24 +22,36 @@ def onboard_template(config: dict, logger: LoggingDatabase, data_row: dict, mess
 
     elif user_type == 'ANM':
         lang = data_row.get('user_language', 'hi')
-        messenger.send_template(
+        sent_msg_id = messenger.send_template(
             data_row['whatsapp_id'],
             'anm_onboarding',
             lang,
         )
 
-    else:
-        print("Invalid user type")
+    bot_conv_db.insert_row(
+        receiver_id=data_row['user_id'],
+        message_type=f'{user_type}_onboarding_template',
+        message_id=sent_msg_id,
+        audio_message_id=None,
+        message_source_lang=None,
+        message_language=lang,
+        message_english=None,
+        reply_id=None,
+        citations=None,
+        message_timestamp=datetime.now(),
+        transaction_message_id=None,
+
+    )
         
     return
     
 
 def onboard_wa_helper(
     config: dict,
-    logger: LoggingDatabase,
+    app_logger: AppLogger,
     user_row: dict,
 ) -> None:
-    messenger = WhatsappMessenger(config, logger)
+    messenger = WhatsappMessenger(config, app_logger)
     welcome_messages = json.load(
         open(
             os.path.join(os.environ['APP_PATH'], os.environ['DATA_PATH'],"onboarding/welcome_messages.json"),

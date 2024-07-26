@@ -35,7 +35,6 @@ responder = WhatsappResponder(config)
 import pandas as pd
 from tqdm import tqdm
 
-logger = LoggingDatabase(config)
 
 
 to_ts = datetime.datetime.now() - datetime.timedelta(hours=0)

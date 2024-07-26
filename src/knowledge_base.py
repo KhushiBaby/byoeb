@@ -7,10 +7,7 @@ sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
 import chromadb
 import json
 
-from conversation_database import (
-    LoggingDatabase,
-)
-from database import UserConvDB, BotConvDB
+from database import UserConvDB, BotConvDB, AppLogger
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import DirectoryLoader
 from chromadb.utils import embedding_functions
@@ -43,12 +40,12 @@ class KnowledgeBase:
         user_conv_db: UserConvDB,
         bot_conv_db: BotConvDB,
         msg_id: str,
-        logger: LoggingDatabase,
+        app_logger: AppLogger,
         max_retries: int = 5,
     ):
         for i in range(max_retries):
             try:
-                return self.answer_query_helper(user_conv_db, bot_conv_db, msg_id, logger)
+                return self.answer_query_helper(user_conv_db, bot_conv_db, msg_id, app_logger)
             except Exception as e:
                 print(f"Error in answer_query: {e}")
                 continue
@@ -59,7 +56,7 @@ class KnowledgeBase:
         user_conv_db: UserConvDB,
         bot_conv_db: BotConvDB,
         msg_id: str,
-        logger: LoggingDatabase,
+        app_logger: AppLogger,
     ):
         """answer the user's query using the knowledge base and chat history
         Args:
@@ -116,13 +113,9 @@ class KnowledgeBase:
                 chunk1 += 1
                 chunks.append((chunk_text, relevant_chunks["metadatas"][0][chunk]["source"].strip()))
 
-        logger.add_log(
-            sender_id="bot",
-            receiver_id="bot",
-            message_id=None,
-            action_type="get_citations",
+        app_logger.add_log(
+            event_name="get_citations",
             details={"query": query, "chunks": chunks, "transaction_id": db_row["message_id"]},
-            timestamp=datetime.now(),
         )
 
         # take all non empty conversations 
@@ -159,31 +152,23 @@ class KnowledgeBase:
 
         prompt = [{"role": "system", "content": system_prompt}]
         prompt.append({"role": "user", "content": query_prompt})
-        logger.add_log(
-            sender_id="bot",
-            receiver_id="gpt4",
-            message_id=None,
-            action_type="answer_query_request",
+        app_logger.add_log(
+            event_name="answer_query_request_gpt4",
             details={
                 "system_prompt": system_prompt,
                 "query_prompt": query_prompt,
                 "transaction_id": db_row["message_id"],
             },
-            timestamp=datetime.now(),
         )
         gpt_output = get_llm_response(prompt)
-        logger.add_log(
-            sender_id="gpt4",
-            receiver_id="bot",
-            message_id=None,
-            action_type="answer_query_response",
+        app_logger.add_log(
+            event_name="answer_query_response_gpt4",
             details={
                 "system_prompt": system_prompt,
                 "query_prompt": query_prompt,
                 "gpt_output": gpt_output,
                 "transaction_id": db_row["message_id"],
             },
-            timestamp=datetime.now(),
         )
 
         json_output = json.loads(gpt_output.strip())
@@ -200,33 +185,25 @@ class KnowledgeBase:
             query_prompt = f"""You are given the following response: {bot_response}"""
             prompt = [{"role": "system", "content": system_prompt}]
             prompt.append({"role": "user", "content": query_prompt})
-            logger.add_log(
-                sender_id="bot",
-                receiver_id="gpt4",
-                message_id=None,
-                action_type="answer_summary_request",
+            app_logger.add_log(
+                event_name="answer_summary_request_gpt4",
                 details={
                     "system_prompt": system_prompt,
                     "query_prompt": query_prompt,
                     "transaction_id": db_row["message_id"],
                 },
-                timestamp=datetime.now(),
             )
 
             gpt_output = get_llm_response(prompt)
 
-            logger.add_log(
-                sender_id="gpt4",
-                receiver_id="bot",
-                message_id=None,
-                action_type="answer_summary_response",
+            app_logger.add_log(
+                event_name="answer_summary_response",
                 details={
                     "system_prompt": system_prompt,
                     "query_prompt": query_prompt,
                     "gpt_output": gpt_output,
                     "transaction_id": db_row["message_id"],
                 },
-                timestamp=datetime.now(),
             )
             return (gpt_output, citations, query_type)
         
@@ -234,7 +211,7 @@ class KnowledgeBase:
         self,
         query_src: str,
         query: str,
-        logger: LoggingDatabase,
+        app_logger: AppLogger,
     ) -> tuple[str, str]:
         """answer the user's query using the knowledge base and chat history
         Args:
@@ -282,13 +259,9 @@ class KnowledgeBase:
                 relevant_chunks_string += f"Chunk #{chunk1 + 1}\n{chunk_text}\n\n"
                 chunk1 += 1
 
-        logger.add_log(
-            sender_id="bot",
-            receiver_id="bot",
-            message_id=None,
-            action_type="get_citations",
+        app_logger.add_log(
+            event_name="get_citations",
             details={"query": query, "citations": citations},
-            timestamp=datetime.now(),
         )
 
         # take all non empty conversations 
@@ -319,17 +292,13 @@ class KnowledgeBase:
         prompt = [{"role": "system", "content": system_prompt}]
         prompt.append({"role": "user", "content": query_prompt})
         gpt_output = get_llm_response(prompt)
-        logger.add_log(
-            sender_id="bot",
-            receiver_id="bot",
-            message_id=None,
-            action_type="gpt4",
+        app_logger.add_log(
+            event_name="gpt4",
             details={
                 "system_prompt": system_prompt,
                 "query_prompt": query_prompt,
                 "gpt_output": gpt_output,
             },
-            timestamp=datetime.now(),
         )
         print(gpt_output.strip())
         gpt_output = gpt_output.strip()
@@ -360,17 +329,13 @@ class KnowledgeBase:
             prompt.append({"role": "user", "content": query_prompt})
 
             gpt_output = get_llm_response(prompt)
-            logger.add_log(
-                sender_id="bot",
-                receiver_id="bot",
-                message_id=None,
-                action_type="gpt4",
+            app_logger.add_log(
+                event_name="gpt4",
                 details={
                     "system_prompt": system_prompt,
                     "query_prompt": query_prompt,
                     "gpt_output": gpt_output,
                 },
-                timestamp=datetime.now(),
             )
             return (gpt_output, citations, query_type, relevant_chunks)
 
@@ -379,7 +344,7 @@ class KnowledgeBase:
         row_query: dict[str, Any],
         row_response: dict[str, Any],
         row_correction: dict[str, Any],
-        logger: LoggingDatabase,
+        app_loger: AppLogger,
     ):
         
         if self.config["API_ACTIVATED"] is False:
@@ -400,13 +365,9 @@ class KnowledgeBase:
 
         """
         transaction_message_id = row_query["message_id"]
-        logger.add_log(
-            sender_id="bot",
-            receiver_id="bot",
-            message_id=None,
-            action_type="get_correction",
+        app_logger.add_log(
+            event_name="get_correction",
             details={"system_prompt": system_prompt, "query_prompt": query_prompt, "transaction_message_id": transaction_message_id},
-            timestamp=datetime.now(),
         )
 
         prompt = [{"role": "system", "content": system_prompt}]
@@ -422,13 +383,9 @@ class KnowledgeBase:
             prompt = [{"role": "system", "content": system_prompt}]
             prompt.append({"role": "user", "content": query_prompt})
 
-            logger.add_log(
-                sender_id="bot",
-                receiver_id="bot",
-                message_id=None,
-                action_type="gpt4",
+            app_logger.add_log(
+                event_name="gpt4",
                 details={"system_prompt": system_prompt, "query_prompt": query_prompt},
-                timestamp=datetime.now(),
             )
             gpt_output = get_llm_response(prompt)
 
@@ -439,12 +396,12 @@ class KnowledgeBase:
         query: str,
         response: str,
         user_type: str,
-        logger: LoggingDatabase,
+        app_logger: AppLogger,
         max_retries: int = 5,
     ):
         for i in range(max_retries):
             try:
-                return self.follow_up_questions_helper(query, response, user_type, logger)
+                return self.follow_up_questions_helper(query, response, user_type, app_logger)
             except Exception as e:
                 print(f"Error in follow_up_questions: {e}")
                 continue
@@ -455,7 +412,7 @@ class KnowledgeBase:
         query: str,
         response: str,
         user_type: str,
-        logger: LoggingDatabase,
+        app_logger: AppLogger,
     ) -> list[str]:
         """look at the chat history and suggest follow up questions
 
@@ -486,17 +443,13 @@ class KnowledgeBase:
         llm_out = get_llm_response(prompt)
         next_questions = eval(llm_out.strip("\n"))
 
-        logger.add_log(
-            sender_id="bot",
-            receiver_id="bot",
-            message_id=None,
-            action_type="gpt4",
+        app_logger.add_log(
+            event_name="gpt4",
             details={
                 "system_prompt": system_prompt,
                 "query_prompt": query_prompt,
                 "gpt_output": llm_out,
             },
-            timestamp=datetime.now(),
         )
 
         return next_questions

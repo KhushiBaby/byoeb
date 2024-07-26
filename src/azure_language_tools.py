@@ -31,7 +31,7 @@ class translator:
             },
         }
 
-    def translate_text(self, input_text, source_language, target_language, logger, lang_fix=None):
+    def translate_text(self, input_text, source_language, target_language, app_logger, lang_fix=None):
         """
         This function translates the given input text from source language to target language.
         """
@@ -66,23 +66,19 @@ class translator:
             translated_text = response[0]["translations"][0]["text"]
     
         
-        logger.add_log(
-            sender_id="bot",
-            receiver_id="bot",
-            message_id=None,
-            action_type="translate",
+        app_logger.add_log(
+            event_name="azure_translate",
             details={
                 "source_language": source_language,
                 "translated_language": target_language,
                 "input text": input_text,
                 "translated_text": translated_text,
-            },
-            timestamp=datetime.now(),
+            }
         )
         translated_text = self.fix_language(translated_text, lang_fix)
         return translated_text
 
-    def speech_translate_text(self, audio_file, source_language, logger, blob_name, lang_fix=None):
+    def speech_translate_text(self, audio_file, source_language, app_logger, blob_name, lang_fix=None):
         """
         This function returns the translated english text from the source language audio.
         """
@@ -100,20 +96,16 @@ class translator:
 
         speech_recognition_result = speech_recognizer.recognize_once_async().get()
         result = speech_recognition_result.text
-        logger.add_log(
-            sender_id="bot",
-            receiver_id="bot",
-            message_id=None,
-            action_type="speech_to_text",
+        app_logger.add_log(
+            event_name="azure_speech_to_text",
             details={
                 "source_language": "en",
                 "blob_name": blob_name,
                 "output_text": result,
-            },
-            timestamp=datetime.now(),
+            }
         )
         result = self.fix_language(result, lang_fix)
-        english_text = self.translate_text(result, source_language, "en", logger)
+        english_text = self.translate_text(result, source_language, "en", app_logger)
         english_text = self.fix_language(english_text, lang_fix)
         
         return result, english_text
@@ -128,7 +120,7 @@ class translator:
         return text
 
     def text_translate_speech(
-        self, english_text, source_audio_language, save_filename, logger, lang_fix=None
+        self, english_text, source_audio_language, save_filename, app_logger, lang_fix=None
     ):
         """
         This function stores the translated speech into save_filename location.
@@ -147,20 +139,16 @@ class translator:
         )
 
         source_text = self.translate_text(
-            english_text, "en", source_audio_language[:2], logger
+            english_text, "en", source_audio_language[:2], app_logger
         )
 
         speech_synthesizer.speak_text_async(source_text).get()
-        logger.add_log(
-            sender_id="bot",
-            receiver_id="bot",
-            message_id=None,
-            action_type="text_to_speech",
+        app_logger.add_log(
+            event_name="azure_text_to_speech",
             details={
                 "source_language": source_audio_language[:2],
                 "input_text": source_text,
             },
-            timestamp=datetime.now(),
         )
 
         return source_text

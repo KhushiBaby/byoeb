@@ -22,9 +22,9 @@ from messenger.base import BaseMessenger
 
 
 class WhatsappMessenger(BaseMessenger):
-    def __init__(self, config, logger):
+    def __init__(self, config, app_logger):
         self.config = config
-        self.logger = logger
+        self.app_logger = app_logger
         
         self.users_types = self.config["USERS"]
         self.experts_types = []
@@ -66,13 +66,12 @@ class WhatsappMessenger(BaseMessenger):
         print("Message output: ", msg_output.json())
         msg_id = msg_output.json()["messages"][0]["id"]
 
-        self.logger.add_log(
+        self.app_logger.add_log(
+            event_name="send_message",
             sender_id="bot",
             receiver_id=to_number,
             message_id=msg_id,
-            action_type="send_message",
             details={"text": msg_body, "reply_to": reply_to_msg_id},
-            timestamp=datetime.now(),
         )
 
         return msg_id
@@ -103,13 +102,12 @@ class WhatsappMessenger(BaseMessenger):
         msg_output = requests.post(url, json=payload, headers=headers)
         msg_id = msg_output.json()["messages"][0]["id"]
 
-        self.logger.add_log(
+        self.app_logger.add_log(
+            event_name="send_reaction",
             sender_id="bot",
             receiver_id=to_number,
             message_id=msg_id,
-            action_type="send_reaction",
             details={"emoji": emoji, "reply_to": reply_to_msg_id},
-            timestamp=datetime.now(),
         )
 
         return
@@ -164,17 +162,16 @@ class WhatsappMessenger(BaseMessenger):
         except KeyError:
             print(msg_output.json())
             return None
-        self.logger.add_log(
+        self.app_logger.add_log(
+            event_name="send_poll",
             sender_id="bot",
             receiver_id=to_number,
             message_id=msg_id,
-            action_type="send_poll",
             details={
                 "text": poll_string,
                 "reply_to": reply_to_msg_id,
                 "options": ["Yes", "No", "Send to " + send_to],
             },
-            timestamp=datetime.now(),
         )
 
         self.send_reaction(to_number, msg_id, "📝")
@@ -231,17 +228,16 @@ class WhatsappMessenger(BaseMessenger):
         except KeyError:
             print(msg_output.json())
             return None
-        self.logger.add_log(
+        self.app_logger.add_log(
+            event_name="send_poll",
             sender_id="bot",
             receiver_id=to_number,
             message_id=msg_id,
-            action_type="send_poll",
             details={
                 "text": poll_string,
                 "reply_to": reply_to_msg_id,
                 "options": buttons,
             },
-            timestamp=datetime.now(),
         )
         return msg_id
         
@@ -291,17 +287,16 @@ class WhatsappMessenger(BaseMessenger):
         msg_output = requests.post(url, json=payload, headers=headers)
         print(msg_output.json())
         msg_id = msg_output.json()["messages"][0]["id"]
-        self.logger.add_log(
+        self.app_logger.add_log(
+            event_name="send_language_poll",
             sender_id="bot",
             receiver_id=to_number,
             message_id=msg_id,
-            action_type="send_poll",
             details={
                 "text": poll_string,
                 "reply_to": None,
                 "options": ["English", "हिंदी", "ಕನ್ನಡ", "தமிழ்", "తెలుగు"],
             },
-            timestamp=datetime.now(),
         )
 
         return msg_id
@@ -354,13 +349,12 @@ class WhatsappMessenger(BaseMessenger):
         print(msg_output.json())
         msg_id = msg_output.json()["messages"][0]["id"]
 
-        self.logger.add_log(
+        self.app_logger.add_log(
+            event_name="send_suggestions",
             sender_id="bot",
             receiver_id=to_number,
             message_id=msg_id,
-            action_type="send_suggestions",
             details={"text": text_poll, "suggestions": questions},
-            timestamp=datetime.now(),
         )
 
         return msg_id
@@ -402,13 +396,12 @@ class WhatsappMessenger(BaseMessenger):
         print("Message output: ", msg_output.json())
         msg_id = msg_output.json()["messages"][0]["id"]
 
-        self.logger.add_log(
+        self.app_logger.add_log(
+            event_name="send_message",
             sender_id="bot",
             receiver_id=to_number,
             message_id=msg_id,
-            action_type="send_message",
             details={"text": template_name, "reply_to": reply_to_msg_id},
-            timestamp=datetime.now(),
         )
 
         return msg_id
@@ -501,13 +494,12 @@ class WhatsappMessenger(BaseMessenger):
         answer = msg_object["interactive"]["button_reply"]["title"]
         context_id = msg_object["context"]["id"]
 
-        self.logger.add_log(
+        self.app_logger.add_log(
+            event_name="receive_poll",
             sender_id=msg_object["from"],
             receiver_id="bot",
             message_id=msg_object["id"],
-            action_type="receive_poll",
             details={"answer": answer, "reply_to": context_id},
-            timestamp=datetime.now(),
         )
 
         row_list_primary = database.find_with_poll_primary_id(context_id)
@@ -571,7 +563,7 @@ class WhatsappMessenger(BaseMessenger):
                 )
             text = f"This response has been verified by the {expert}."
             text_translated = azure_translate.translate_text(
-                text, "en", lang, self.logger
+                text, "en", lang, self.app_logger
             )
             self.send_message(
                 row_lt[row["user_type"] + "_whatsapp_id"],
@@ -593,7 +585,7 @@ class WhatsappMessenger(BaseMessenger):
             )
             text = f"This answer is invalid. Please wait for the correct response from the {expert}."
             text_translated = azure_translate.translate_text(
-                text, "en", lang, self.logger
+                text, "en", lang, self.app_logger
             )
             self.send_message(
                 row_lt[row["user_type"] + "_whatsapp_id"],
@@ -640,13 +632,12 @@ class WhatsappMessenger(BaseMessenger):
             )
             return
 
-        self.logger.add_log(
+        self.app_logger.add_log(
+            event_name="received_correction",
             sender_id=from_number,
             receiver_id="bot",
             message_id=msg_object["id"],
-            action_type="received_correction",
             details={"text": msg_body, "reply_to": msg_context},
-            timestamp=datetime.now(),
         )
         if len(list_msg_ids) == 0:
             self.send_message(
@@ -683,7 +674,7 @@ class WhatsappMessenger(BaseMessenger):
 
         # remove inverted commas from the output in beggining and end
 
-        gpt_output = knowledge_base.generate_correction(database, db_id, self.logger)
+        gpt_output = knowledge_base.generate_correction(database, db_id, self.app_logger)
         gpt_output = gpt_output.strip('"')
 
         
@@ -695,7 +686,7 @@ class WhatsappMessenger(BaseMessenger):
                 corrected_audio_loc, corrected_audio_loc[:-3] + ".aac"
             )
             gpt_output_source = azure_translate.text_translate_speech(
-                gpt_output, source_language + "-IN", corrected_audio_loc, self.logger
+                gpt_output, source_language + "-IN", corrected_audio_loc, self.app_logger
             )
 
             updated_msg_id = self.send_message(
@@ -731,7 +722,7 @@ class WhatsappMessenger(BaseMessenger):
             )
         else:
             gpt_output_source = azure_translate.translate_text(
-                gpt_output, "en", source_language, self.logger
+                gpt_output, "en", source_language, self.app_logger
             )
             updated_msg_id = self.send_message(
                 row_lt[row["user_type"] + "_whatsapp_id"],
@@ -743,7 +734,7 @@ class WhatsappMessenger(BaseMessenger):
 
         expert = self.category_to_expert[row['query_type']]
         text = f"This response has been verified by the {expert}."
-        msg_text = azure_translate.translate_text(text, "en", source_language, self.logger)
+        msg_text = azure_translate.translate_text(text, "en", source_language, self.app_logger)
         self.send_message(row_lt[row["user_type"] + "_whatsapp_id"], msg_text, updated_msg_id)
 
         self.send_message(

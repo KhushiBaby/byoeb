@@ -18,7 +18,7 @@ __import__("pysqlite3")
 sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
 sys.path.append("src")
 from onboard import onboard_template
-from conversation_database import LoggingDatabase
+from database import AppLogger
 from responder import WhatsappResponder
 
 
@@ -30,7 +30,7 @@ app = Flask(__name__)
 log = logging.getLogger("werkzeug")
 log.setLevel(logging.ERROR)
 
-logger = LoggingDatabase(config)
+app_logger = AppLogger()
 print("Loading Databases done")
 
 if config["CHAT_APPLICATION"] == "whatsapp":
@@ -67,13 +67,8 @@ def webhook():
 
 @app.route("/scheduler", methods=["POST"])
 def scheduler():
-    logger.add_log(
-        sender_id="Scheduler",
-        receiver_id="Bot",
-        message_id=None,
-        action_type="Scheduler",
-        details={"date": datetime.now()},
-        timestamp=datetime.now(),
+    app_logger.add_log(
+        event_name="Scheduler called",
     )
     # stop the process queue
     global pause_queue, queue_lock
@@ -107,6 +102,10 @@ def scheduler():
         # Check if the job should run at the current time
         if (rounded_now - prev_time).total_seconds() < 60:
             print("Running command: ", command)
+            app_logger.add_log(
+                event_name="Running cron_job",
+                details={"command": command},
+            )
             subprocess.run(command, shell=True)
             if "kb_update" in command:
                 responder.update_kb()
@@ -121,10 +120,10 @@ def scheduler():
 # Define a route for handling a POST request related to long-term processing
 @app.route("/long_term", methods=["POST"])
 def long_term():
-    data_row = request.json
-    print("Long term updated")
-    print(data_row)
-    onboard_template(config, logger, data_row)
+    # data_row = request.json
+    # print("Long term updated")
+    # print(data_row)
+    # onboard_template(config, app_logger, data_row,)
     return "OK", 200
 
 
@@ -150,7 +149,7 @@ def verify_webhook():
 def process_queue():
     print("Starting queue processing")
     global pause_queue
-    global config, logger
+    global config, app_logger
     # while the queue is non empty, retrieve the top massage and process it
     while True:
         queue_lock.acquire()
@@ -170,28 +169,19 @@ def process_queue():
                     error_message = "Error in processing queue: " + str(e)
                     error_message = error_message + "\n" + traceback.format_exc()
                     traceback.print_exc()
-                    logger.add_log(
-                        sender_id="bot",
-                        receiver_id="bot",
-                        message_id=None,
-                        action_type="app_error",
+                    app_logger.add_log(
+                        event_name="app_error",
                         details={"message": message.content, "error": error_message},
-                        timestamp=datetime.now(),
                     )
                     print("Invalid message received: ", message.content)
                     queue_client.delete_message(message)
         except Exception as e:
             error_message = "Error in processing queue: " + str(e)
-            print(e)
             error_message = error_message + "\n" + traceback.format_exc()
             traceback.print_exc()
-            logger.add_log(
-                sender_id="bot",
-                receiver_id="bot",
-                message_id=None,
-                action_type="app_error",
+            app_logger.add_log(
+                event_name="app_error",
                 details={"message": message.content, "error": error_message},
-                timestamp=datetime.now(),
             )
         queue_lock.release()
         sleep(0.1)
