@@ -33,7 +33,7 @@ from tqdm import tqdm
 
 
 to_ts = datetime.datetime.now() - datetime.timedelta(hours=0)
-from_ts = datetime.datetime.now() - datetime.timedelta(days=1)
+from_ts = datetime.datetime.now() - datetime.timedelta(days=3)
 
 list_queries = user_conv_db.get_all_unresolved(from_ts, to_ts)
 

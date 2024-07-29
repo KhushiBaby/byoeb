@@ -129,7 +129,7 @@ class WhatsappResponder(BaseResponder):
                     "user_language": "hi",
                     "test_user": True,
                 }
-                onboard_wa_helper(self.config, self.app_logger, row_lt)
+                onboard_wa_helper(self.config, self.app_logger, row_lt, self.messenger)
                 return
             else:
                 self.messenger.send_message(
@@ -189,13 +189,13 @@ class WhatsappResponder(BaseResponder):
         reply_id = msg_object["context"]["id"]
 
         if msg_object["button"]["payload"] in self.yes_responses:
-            onboard_wa_helper(self.config, self.app_logger, row_lt)
+            onboard_wa_helper(self.config, self.app_logger, row_lt, self.messenger)
         else:
             text_message = "Thank you for your response."
             text = self.azure_translate.translate_text(
                 text_message, "en", row_lt['user_language'], self.app_logger
             )
-            self.messenger.send_message(row_lt['whatsapp_id'], text, reply_to_msg_id=None)
+            self.messenger.send_message(row_lt['whatsapp_id'], text, reply_to_msg_id=msg_id)
         self.app_logger.add_log(
             event_name="onboard",
             sender_id=row_lt['whatsapp_id'],
