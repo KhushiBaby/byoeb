@@ -835,3 +835,74 @@ class WhatsappMessenger(BaseMessenger):
         msg_id = msg_output.json()["messages"][0]["id"]
 
         return msg_id
+
+    def upload_video(self,
+        video_file_path: str,
+    ):
+
+        url = (
+            "https://graph.facebook.com/v15.0/"
+            + os.environ["PHONE_NUMBER_ID"]
+            + "/media"
+        )
+        payload = {"messaging_product": "whatsapp"}
+        
+        video_ext = video_file_path.split(".")[-1]
+        files = [
+            ("file", (video_file_path, open(video_file_path, "rb"), f"video/{video_ext}"))
+        ]
+
+        headers = {
+            "Authorization": f"Bearer {os.environ['WHATSAPP_TOKEN'].strip()}",
+        }
+        response = requests.request(
+            "POST", url, headers=headers, data=payload, files=files
+        )
+
+        data = response.json()
+        return data
+        
+
+    def send_video(self,
+        video_file_path: str,
+        to_number: str,
+        reply_to_msg_id: str = None
+        ):
+
+        data = self.upload_video(video_file_path)
+        print("Video data: ", data)
+        return self.send_video_helper(data["id"], to_number, reply_to_msg_id)
+        
+    def send_video_helper(self,
+        video_id: str,
+        to_number: str,
+        reply_to_msg_id: str = None
+    ):
+
+        payload = {
+            "messaging_product": "whatsapp",
+            "to": to_number,
+            "type": "video",
+            "video": {"id": video_id},
+        }
+
+        if reply_to_msg_id is not None:
+            payload["context"] = {"message_id": reply_to_msg_id}
+        
+        headers = {
+            "Authorization": "Bearer " + os.environ["WHATSAPP_TOKEN"].strip(),
+            "Content-Type": "application/json",
+        }
+        url = (
+            "https://graph.facebook.com/v17.0/"
+            + os.environ["PHONE_NUMBER_ID"]
+            + "/messages"
+        )
+
+        msg_output = requests.post(url, json=payload, headers=headers)
+        print("msg output: ", msg_output.json())
+        msg_id = msg_output.json()["messages"][0]["id"]
+
+        return msg_id
+
+    
