@@ -196,6 +196,7 @@ class WhatsappResponder(BaseResponder):
                 text_message, "en", row_lt['user_language'], self.app_logger
             )
             self.messenger.send_message(row_lt['whatsapp_id'], text, reply_to_msg_id=msg_id)
+            self.user_db.mark_user_opted_out(row_lt['user_id'])
         self.app_logger.add_log(
             event_name="onboard",
             sender_id=row_lt['whatsapp_id'],
