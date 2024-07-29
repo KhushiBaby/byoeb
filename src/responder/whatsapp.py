@@ -132,11 +132,11 @@ class WhatsappResponder(BaseResponder):
                 onboard_wa_helper(self.config, self.app_logger, row_lt, self.messenger)
                 return
             else:
-                self.messenger.send_message(
-                    from_number,
-                    "Unknown User, Kindly fill the onboarding form",
-                    reply_to_msg_id=msg_id,
-                )
+                # self.messenger.send_message(
+                #     from_number,
+                #     "Unknown User, Kindly fill the onboarding form",
+                #     reply_to_msg_id=msg_id,
+                # )
                 return
         if self.check_expiration(row_lt):
             return
