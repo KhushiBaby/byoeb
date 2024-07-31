@@ -903,6 +903,14 @@ class WhatsappMessenger(BaseMessenger):
         print("msg output: ", msg_output.json())
         msg_id = msg_output.json()["messages"][0]["id"]
 
+        self.app_logger.add_log(
+            event_name="send_video",
+            sender_id="bot",
+            receiver_id=to_number,
+            message_id=msg_id,
+            details={"video_id": video_id, "reply_to": reply_to_msg_id},
+        )
+
         return msg_id
 
     

@@ -61,6 +61,10 @@ def webhook():
     body = request.json
     # adding request to queue
     # print("Adding message to queue, ", body)
+    app_logger.add_log(
+        event_name="Webhook received",
+        details=body,
+    )
     queue_client.send_message(json.dumps(body))
     return "OK", 200
 
