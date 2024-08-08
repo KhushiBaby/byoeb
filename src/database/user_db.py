@@ -54,6 +54,15 @@ class UserDB(BaseDB):
         )
         return
     
+    def mark_user_opted_in(self, user_id):
+        self.collection.update_one(
+            {'user_id': user_id},
+            {'$set': {
+                'opt out': False
+            }}
+        )
+        return
+    
     def get_random_expert(self, expert_type, numbers_of_experts, bot_conv_db, test=False):
         if test:
             rows = list(self.collection.find({'$and': [{'user_type':expert_type}, {'test_user':True}, {'opt out' :{'$ne':True}}]}))
