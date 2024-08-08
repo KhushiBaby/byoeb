@@ -120,14 +120,32 @@ class WhatsappResponder(BaseResponder):
                     whatsapp_id=from_number,
                     user_type="Asha",
                     user_language="hi",
-                    test_user=True,
+                    test_user=False,
                 )
                 row_lt = {
                     "user_id": user_id,
                     "whatsapp_id": from_number,
                     "user_type": "Asha",
                     "user_language": "hi",
-                    "test_user": True,
+                    "test_user": False,
+                }
+                onboard_wa_helper(self.config, self.app_logger, row_lt, self.messenger)
+                return
+            elif (msg_object.get("text", False) and msg_object["text"].get("body", False) and msg_object["text"]["body"] == 'onboard-anm'):
+                user_id = str(uuid4())
+                self.user_db.insert_row(
+                    user_id=user_id,
+                    whatsapp_id=from_number,
+                    user_type="ANM",
+                    user_language="hi",
+                    test_user=False,
+                )
+                row_lt = {
+                    "user_id": user_id,
+                    "whatsapp_id": from_number,
+                    "user_type": "ANM",
+                    "user_language": "hi",
+                    "test_user": False,
                 }
                 onboard_wa_helper(self.config, self.app_logger, row_lt, self.messenger)
                 return
@@ -189,6 +207,7 @@ class WhatsappResponder(BaseResponder):
         reply_id = msg_object["context"]["id"]
 
         if msg_object["button"]["payload"] in self.yes_responses:
+            self.user_db.mark_user_opted_in(row_lt['user_id'])
             onboard_wa_helper(self.config, self.app_logger, row_lt, self.messenger)
         else:
             text_message = "Thank you for your response."
@@ -986,6 +1005,8 @@ class WhatsappResponder(BaseResponder):
         
         if msg_object.get("context", False) == False:
             prev_polls = self.bot_conv_db.find_with_receiver_id(expert_row_lt["user_id"], 'consensus_poll')
+            if len(prev_polls) == 0:
+                return
             poll = prev_polls[-1]
             context_id = prev_polls[-1]['message_id']
         else:
