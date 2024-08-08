@@ -206,6 +206,18 @@ class WhatsappResponder(BaseResponder):
         msg_id = msg_object["id"]
         reply_id = msg_object["context"]["id"]
 
+        self.user_conv_db.insert_row(
+            user_id=row_lt['user_id'],
+            message_id=msg_id,
+            message_type="onboarding_response",
+            message_source_lang=msg_object["button"]["payload"],
+            source_language=row_lt['user_language'],
+            message_translated=msg_object["button"]["text"],
+            audio_blob_path=None,
+            message_timestamp=datetime.now(),
+            reply_id=reply_id,
+        )
+
         if msg_object["button"]["payload"] in self.yes_responses:
             self.user_db.mark_user_opted_in(row_lt['user_id'])
             onboard_wa_helper(self.config, self.app_logger, row_lt, self.messenger)
