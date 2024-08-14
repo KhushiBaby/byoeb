@@ -34,7 +34,7 @@ for i, user_row in df.iterrows():
 
     try:
         last_query = user_conv_db.get_most_recent_query(user_row["user_id"])
-        if last_query is None or ((datetime.datetime.now() - last_query["message_timestamp"]) > datetime.timedelta(days=1)):
+        if last_query is None or ((datetime.datetime.now() - last_query["message_timestamp"]) > datetime.timedelta(days=7)):
             print("Sending message to ", user_row["whatsapp_id"])
             messenger.send_template(user_row["whatsapp_id"], template_name, user_row["user_language"], None)
         else:
