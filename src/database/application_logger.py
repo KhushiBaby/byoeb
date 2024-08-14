@@ -28,6 +28,7 @@ class AppLogger:
     def add_log(self,
         event_name,
         **kwargs):
-        kwargs['details'] = json.dumps(kwargs['details'])
+        if 'details' in kwargs:
+            kwargs['details'] = json.dumps(kwargs['details'])
         track_event(event_name, kwargs)
         return
