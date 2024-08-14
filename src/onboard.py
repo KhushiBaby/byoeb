@@ -40,7 +40,6 @@ def onboard_template(config: dict, app_logger: AppLogger, data_row: dict, messen
         citations=None,
         message_timestamp=datetime.now(),
         transaction_message_id=None,
-
     )
         
     return
@@ -67,6 +66,11 @@ def onboard_wa_helper(
             os.path.join(os.environ['APP_PATH'], os.environ['DATA_PATH'],"onboarding/suggestion_questions.json"),
         )
     )
+    video_ids = json.load(
+        open(
+            os.path.join(os.environ['APP_PATH'], os.environ['DATA_PATH'],"videos/video_ids.json"),
+        )
+    )
     lang = user_row['user_language']
     if user_row['user_type'] in config["USERS"]:
         for message in welcome_messages["users"][lang]:
@@ -84,7 +88,7 @@ def onboard_wa_helper(
             suggestion_questions[lang]["list_title"],
         )
         messenger.send_suggestions(user_row['whatsapp_id'], title, list_title, questions)
-        messenger.send_video_helper('1168012307647784', user_row['whatsapp_id']) #ASHA video (TODO: replace later)
+        messenger.send_video_helper(video_ids['asha'], user_row['whatsapp_id']) #ASHA video (TODO: replace later)
         return
 
     if user_row['user_type'] in config["EXPERTS"]:
@@ -92,7 +96,7 @@ def onboard_wa_helper(
             messenger.send_message(user_row['whatsapp_id'], message)
         audio_file = os.path.join(os.environ['APP_PATH'], os.environ['DATA_PATH'],f"onboarding/welcome_messages_experts_{lang}.aac")
         messenger.send_audio(audio_file, user_row['whatsapp_id'])
-        messenger.send_video_helper('2319023238489534', user_row['whatsapp_id']) #ANM video (TODO: replace later)
+        messenger.send_video_helper(video_ids['anm'], user_row['whatsapp_id']) #ANM video (TODO: replace later)
         # messenger.send_language_poll(
         #     user_row['whatsapp_id'],
         #     language_prompts[lang],
