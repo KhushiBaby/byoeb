@@ -25,8 +25,8 @@ bot_conv_db = BotConvDB(config)
 app_logger = AppLogger()
 messenger = WhatsappMessenger(config, app_logger)
 
-to_ts = datetime.datetime.now() - datetime.timedelta(hours=0)
-from_ts = datetime.datetime.now() - datetime.timedelta(days=3)
+to_ts = datetime.datetime.now() - datetime.timedelta(days=2)
+from_ts = datetime.datetime.now() - datetime.timedelta(days=4)
 
 asha_onboarding_msgs = bot_conv_db.find_all_with_duration(from_ts, to_ts, 'Asha_onboarding_template')
 anm_onboarding_msgs = bot_conv_db.find_all_with_duration(from_ts, to_ts, 'ANM_onboarding_template')
