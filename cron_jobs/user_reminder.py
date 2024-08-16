@@ -9,7 +9,7 @@ import sys
 
 sys.path.append(local_path + "/src")
 
-from database import UserDB, UserConvDB
+from database import UserDB, UserConvDB, AppLogger
 from conversation_database import LoggingDatabase
 from messenger.whatsapp import WhatsappMessenger
 import os
@@ -21,8 +21,8 @@ template_name = "asha_reminder"
 
 user_db = UserDB(config)
 user_conv_db = UserConvDB(config)
-logger = LoggingDatabase(config)
-messenger = WhatsappMessenger(config, logger)
+app_logger = LoggingDatabase(config)
+messenger = WhatsappMessenger(config, app_logger)
 
 print("Date: ", datetime.datetime.now())
 
@@ -31,6 +31,10 @@ print("Total users: ", len(users))
 df = pd.DataFrame(users)
 
 for i, user_row in df.iterrows():
+
+    if user_row.get("opt out", False) and not pd.isna(user_row["opt out"]):
+        print("User opted out: ", user_row["whatsapp_id"], user_row["opt out"])
+        continue
 
     try:
         last_query = user_conv_db.get_most_recent_query(user_row["user_id"])
