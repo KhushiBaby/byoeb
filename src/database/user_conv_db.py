@@ -29,7 +29,8 @@ class UserConvDB(BaseDB):
             'source_language': source_language,
             'message_english': message_translated,
             'audio_blob_path': audio_blob_path,
-            'message_timestamp': message_timestamp
+            'message_timestamp': message_timestamp,
+            'reply_id': reply_id,
         }
         db_id = self.collection.insert_one(user_conv)
         return db_id
@@ -90,3 +91,7 @@ class UserConvDB(BaseDB):
         user_conv = list(user_conv)
         user_conv = sorted(user_conv, key=lambda x: x['message_timestamp'], reverse=True)
         return user_conv[0] if len(user_conv) > 0 else None
+    
+    def get_from_reply_id(self, reply_id):
+        user_conv = self.collection.find_one({'reply_id': reply_id})
+        return user_conv

@@ -83,3 +83,11 @@ class BotConvDB(BaseDB):
         bot_conv = self.collection.find({'$and': [{'receiver_id': receiver_id}, {'message_type': message_type}, {'message_timestamp': {'$gte': start_time, '$lte': end_time}}]})
         bot_conv = list(bot_conv)
         return bot_conv
+    
+    def find_all_with_duration(self, start_time, end_time, message_type=None):
+        if message_type:
+            bot_conv = self.collection.find({'$and': [{'message_type': message_type}, {'message_timestamp': {'$gte': start_time, '$lte': end_time}}]})
+        else:
+            bot_conv = self.collection.find({'message_timestamp': {'$gte': start_time, '$lte': end_time}})
+        bot_conv = list(bot_conv)
+        return bot_conv

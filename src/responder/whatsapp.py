@@ -205,7 +205,7 @@ class WhatsappResponder(BaseResponder):
         user_type = row_lt["user_type"]
         msg_id = msg_object["id"]
         reply_id = msg_object["context"]["id"]
-
+        
         self.user_conv_db.insert_row(
             user_id=row_lt['user_id'],
             message_id=msg_id,
