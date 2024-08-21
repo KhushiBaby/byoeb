@@ -24,6 +24,9 @@ class KnowledgeBase:
         self.persist_directory = os.path.join(
             os.path.join(os.environ["APP_PATH"], os.environ["DATA_PATH"]), "vectordb"
         )
+        self.responses = json.load(
+            open(os.path.join(os.environ["APP_PATH"], os.environ["DATA_PATH"], "responses.json"))
+        )
         self.embedding_fn = embedding_functions.OpenAIEmbeddingFunction(
             api_key=os.environ['OPENAI_API_KEY'].strip(),
             model_name="text-embedding-3-large"
@@ -83,6 +86,10 @@ class KnowledgeBase:
 
         db_row = user_conv_db.get_from_message_id(msg_id)
         query = db_row["message_english"]
+
+        if query in self.responses:
+            return (self.responses[query], "fixed responses", "Clinical")
+
         query_source = db_row["message_source_lang"]
         if not query.endswith("?"):
             query += "?"
@@ -117,6 +124,8 @@ class KnowledgeBase:
             event_name="get_citations",
             details={"query": query, "chunks": chunks, "transaction_id": db_row["message_id"]},
         )
+
+        print(chunks)
 
         # take all non empty conversations 
         all_conversations = user_conv_db.get_all_user_conv(db_row["user_id"])
