@@ -30,7 +30,6 @@ users = user_db.get_all_users(user_type="Asha")
 print("Total users: ", len(users))
 df = pd.DataFrame(users)
 
-df = df[df['whatsapp_id'] == '918375066113']
 
 for i, user_row in df.iterrows():
 
