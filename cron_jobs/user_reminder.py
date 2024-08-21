@@ -30,6 +30,8 @@ users = user_db.get_all_users(user_type="Asha")
 print("Total users: ", len(users))
 df = pd.DataFrame(users)
 
+df = df[df['whatsapp_id'] == '918375066113']
+
 for i, user_row in df.iterrows():
 
     if user_row.get("opt out", False) and not pd.isna(user_row["opt out"]):
@@ -37,8 +39,10 @@ for i, user_row in df.iterrows():
         continue
 
     try:
-        last_query = user_conv_db.get_most_recent_query(user_row["user_id"])
-        if last_query is None or ((datetime.datetime.now() - last_query["message_timestamp"]) > datetime.timedelta(days=7)):
+        last_msg = user_conv_db.get_most_recent_message(user_row["user_id"])
+        last_msg_type = last_msg.get("message_type", 'small-talk')
+        day_delta = 2 if last_msg_type == 'onboarding_response' else 7
+        if last_msg is None or ((datetime.datetime.now() - last_msg["message_timestamp"]) > datetime.timedelta(days=day_delta)):
             print("Sending message to ", user_row["whatsapp_id"])
             messenger.send_template(user_row["whatsapp_id"], template_name, user_row["user_language"], None)
         else:

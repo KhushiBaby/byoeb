@@ -87,7 +87,14 @@ class UserConvDB(BaseDB):
         return user_conv
     
     def get_most_recent_query(self, user_id):
-        user_conv = self.collection.find({'$and': [{'user_id': user_id}, {'message_type': {'$ne': 'feedback_response'}}]})
+        query_types = ['text', 'audio', 'interactive']
+        user_conv = self.collection.find({'$and': [{'user_id': user_id}, {'message_type': {'$in': query_types}}]})
+        user_conv = list(user_conv)
+        user_conv = sorted(user_conv, key=lambda x: x['message_timestamp'], reverse=True)
+        return user_conv[0] if len(user_conv) > 0 else None
+    
+    def get_most_recent_message(self, user_id):
+        user_conv = self.collection.find({'user_id': user_id})
         user_conv = list(user_conv)
         user_conv = sorted(user_conv, key=lambda x: x['message_timestamp'], reverse=True)
         return user_conv[0] if len(user_conv) > 0 else None
