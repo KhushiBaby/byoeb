@@ -45,6 +45,15 @@ class BotConvDB(BaseDB):
         bot_conv = self.collection.find_one({'message_id': message_id})
         return bot_conv
     
+    def find_most_recent_with_receiver_id(self, receiver_id, message_type=None):
+        if message_type:
+            bot_conv = self.collection.find({'$and': [{'receiver_id': receiver_id}, {'message_type': message_type}]})
+        else:
+            bot_conv = self.collection.find({'receiver_id': receiver_id})
+        bot_conv = list(bot_conv)
+        bot_conv = sorted(bot_conv, key=lambda x: x['message_timestamp'], reverse=True)
+        return bot_conv[0] if bot_conv else None
+
     def get_from_audio_message_id(self, audio_message_id):
         bot_conv = self.collection.find_one({'audio_message_id': audio_message_id})
         return bot_conv
