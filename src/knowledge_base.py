@@ -24,9 +24,6 @@ class KnowledgeBase:
         self.persist_directory = os.path.join(
             os.path.join(os.environ["APP_PATH"], os.environ["DATA_PATH"]), "vectordb"
         )
-        self.responses = json.load(
-            open(os.path.join(os.environ["APP_PATH"], os.environ["DATA_PATH"], "responses.json"))
-        )
         self.embedding_fn = embedding_functions.OpenAIEmbeddingFunction(
             api_key=os.environ['OPENAI_API_KEY'].strip(),
             model_name="text-embedding-3-large"
@@ -48,7 +45,11 @@ class KnowledgeBase:
     ):
         for i in range(max_retries):
             try:
-                return self.answer_query_helper(user_conv_db, bot_conv_db, msg_id, app_logger)
+                gpt_output, citations, query_type = self.answer_query_helper(user_conv_db, bot_conv_db, msg_id, app_logger, 3)
+                if gpt_output.strip().startswith("I do not know the answer to your question"):
+                    print("Retrying with top 7")
+                    gpt_output, citations, query_type = self.answer_query_helper(user_conv_db, bot_conv_db, msg_id, app_logger, 7)
+                return gpt_output, citations, query_type
             except Exception as e:
                 print(f"Error in answer_query: {e}")
                 continue
@@ -60,6 +61,7 @@ class KnowledgeBase:
         bot_conv_db: BotConvDB,
         msg_id: str,
         app_logger: AppLogger,
+        top_k: int = 3,
     ):
         """answer the user's query using the knowledge base and chat history
         Args:
@@ -87,16 +89,13 @@ class KnowledgeBase:
         db_row = user_conv_db.get_from_message_id(msg_id)
         query = db_row["message_english"]
 
-        if query in self.responses:
-            return (self.responses[query], "fixed responses", "Clinical")
-
         query_source = db_row["message_source_lang"]
         if not query.endswith("?"):
             query += "?"
 
         relevant_chunks = self.collection.query(
             query_texts=[query],
-            n_results=3, 
+            n_results=top_k,
         )
         citations: str = "\n".join(
             [metadata["source"] for metadata in relevant_chunks["metadatas"][0]]
@@ -125,7 +124,6 @@ class KnowledgeBase:
             details={"query": query, "chunks": chunks, "transaction_id": db_row["message_id"]},
         )
 
-        print(chunks)
 
         # take all non empty conversations 
         all_conversations = user_conv_db.get_all_user_conv(db_row["user_id"])

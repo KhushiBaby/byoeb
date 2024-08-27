@@ -1,3 +1,14 @@
 {
-    "what are the side effects of antara injection?": "A woman who receives an Antara injection can have the following side effects: changes in menstrual bleeding patterns, including very light bleeding, spotting, or irregular bleeding. In about half the women, periods stop after a year of use. Monthly bleeding resumes when a woman stops getting injections."
+    "एक स्वस्थ नवजात शिशु का वजन कितना होता है?": {
+        "en": "A healthy newborn's weight is usually between 2.5 to 4.5 kilograms.",
+        "hi": "एक स्वस्थ नवजात शिशु का वजन आमतौर पर 2.5 किलो से 4.5 किलो के बीच होता है।"
+    },
+    "मेरा दोस्त बीड़ी पीता है. क्या इससे मुझे नुकसान होगा?": {
+        "en": "Yes, if your friend smokes beedi around you, it can harm you. This is called passive smoking. When you come in contact with the smoke of someone else's beedi or cigarette, it can affect your health. Children and women are especially sensitive to the risks of secondhand smoke if a family member smokes.",
+        "hi": "हां, अगर आपका दोस्त आपके आस-पास बीड़ी पीता है, तो यह आपको नुकसान पहुंचा सकता है। इसे पैसिव स्मोकिंग कहते हैं। जब आप किसी और की बीड़ी या सिगरेट के सेकेंड हैंड धुएं के संपर्क में आते हैं, तो यह आपके स्वास्थ्य को प्रभावित कर सकता है। बच्चे और महिलाएं खासकर सेकेंड हैंड धुएं के खतरों के प्रति संवेदनशील होते हैं, अगर उनके परिवार के कोई सदस्य धूम्रपान करता है।"
+    },
+    "अंतरा इंजेक्शन के दुष्प्रभाव क्या हैं?": {
+        "en": "There are no serious side effects of Antara injection. For most women after the injection, the monthly bleedings becomes very light or in the form of spotting. A few women may experience irregular bleeding, or prolonged bleeding. Monthly bleeding resumes when a woman stops getting injections. Other minor side effects include weight gain, abdominal bloating and discomfort, headaches, mood changes, and dizziness.",
+        "hi": "अंतरा इंजेक्शन के कोई गंभीर साइड इफेक्ट्स नहीं होते। ज्यादातर महिलाओं में इंजेक्शन के बाद मासिक रक्तस्राव बहुत हल्का या धब्बों के रूप में हो जाता है। कुछ महिलाओं को अनियमित रक्तस्राव या लंबे समय तक रक्तस्राव हो सकता है। जब महिला इंजेक्शन लेना बंद कर देती है, तो मासिक रक्तस्राव फिर से शुरू हो जाता है। अन्य छोटे साइड इफेक्ट्स में वजन बढ़ना, पेट में सूजन और असुविधा, सिरदर्द, मूड में बदलाव, और चक्कर आना शामिल हैं।"
+    }
 }
