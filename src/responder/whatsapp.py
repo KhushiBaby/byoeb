@@ -54,6 +54,9 @@ class WhatsappResponder(BaseResponder):
         self.language_fix = json.load(
             open(os.path.join(os.environ['DATA_PATH'], "language_fix.json"), "r")
         )
+        self.fixed_responses = json.load(
+            open(os.path.join(os.environ['DATA_PATH'], "responses.json"), "r")
+        )
         self.yes_responses = [
             self.language_prompts[key]
             for key in self.language_prompts.keys()
@@ -343,64 +346,27 @@ class WhatsappResponder(BaseResponder):
             self.handle_empty_audio(msg_id, row_lt)
             self.user_conv_db.mark_resolved(msg_id)
             return
-        
-        gpt_output, citations, query_type = self.knowledge_base.answer_query(
-            self.user_conv_db, self.bot_conv_db, msg_id, self.app_logger
-        )
-        citations = "".join(citations)
-        citations_str = citations
+        if message in self.fixed_responses:
+            gpt_output = self.fixed_responses[message]["en"]
+            gpt_output_source = self.fixed_responses[message]["hi"]
+            citations = ["fixed_response"]
+            query_type = "Clinical"
 
-        print("GPT output: ", gpt_output)
+            citations_str = "fixed_response"
 
+            audio_file = "test_audio_output.aac"
 
-        # if msg_type == "text" or msg_type == "interactive":
-        #     audio_msg_id = None
-        #     if gpt_output.strip().startswith("I do not know the answer to your question"):
-        #         gpt_output_source = self.template_messages["idk_response"][row_lt['user_language']]
-        #     else:
-        #         gpt_output_source = self.azure_translate.translate_text(
-        #             gpt_output, "en", row_lt['user_language'], self.app_logger
-        #         )
-        #     sent_msg_id = self.messenger.send_message(
-        #         row_lt['whatsapp_id'], gpt_output_source, msg_id
-        #     )
+            self.azure_translate.text_to_speech(gpt_output_source, "hi-IN", audio_file[:-3] + "wav")
 
-
-
-        if msg_type == "audio" or msg_type == "text" or msg_type == "interactive":
-            if gpt_output.strip().startswith("I do not know the answer to your question"):
-                if msg_type == "audio":
-                    eng_text = self.template_messages["idk_response_audio"][row_lt['user_language']]
-                    #replace <query> with the actual query
-                    eng_text = eng_text.replace("<query>", message)
-                else:
-                    eng_text = self.template_messages["idk_response"]["en"]
-            else:
-                eng_text = gpt_output
-            audio_input_file = "test_audio_input.aac"
-            audio_output_file = "test_audio_output.aac"
-            gpt_output_source = self.azure_translate.text_translate_speech(
-                eng_text,
-                row_lt['user_language'] + "-IN",
-                audio_output_file[:-3] + "wav",
-                self.app_logger,
-            )
-            if gpt_output.strip().startswith("I do not know the answer to your question"):
-                if msg_type == "audio":
-                    gpt_output_source = self.template_messages["idk_response_audio"][row_lt['user_language']]
-                    #replace <query> with the actual query
-                    gpt_output_source = gpt_output_source.replace("<query>", message)
-                else:
-                    gpt_output_source = self.template_messages["idk_response"][row_lt['user_language']]
             subprocess.run(
                 [
                     "ffmpeg",
                     "-y",
                     "-i",
-                    audio_output_file[:-3] + "wav",
+                    audio_file[:-3] + "wav",
                     "-codec:a",
                     "aac",
-                    audio_output_file,
+                    audio_file,
                 ],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
@@ -409,9 +375,83 @@ class WhatsappResponder(BaseResponder):
                 row_lt['whatsapp_id'], gpt_output_source, msg_id
             )
             audio_msg_id = self.messenger.send_audio(
-                audio_output_file, row_lt['whatsapp_id'], msg_id
+                audio_file, row_lt['whatsapp_id'], msg_id
             )
-            utils.remove_extra_voice_files(audio_input_file, audio_output_file)
+
+            utils.remove_extra_voice_files("", audio_file)
+
+
+
+
+        else:
+            gpt_output, citations, query_type = self.knowledge_base.answer_query(
+                self.user_conv_db, self.bot_conv_db, msg_id, self.app_logger
+            )
+            citations = "".join(citations)
+            citations_str = citations
+
+            print("GPT output: ", gpt_output)
+
+
+            # if msg_type == "text" or msg_type == "interactive":
+            #     audio_msg_id = None
+            #     if gpt_output.strip().startswith("I do not know the answer to your question"):
+            #         gpt_output_source = self.template_messages["idk_response"][row_lt['user_language']]
+            #     else:
+            #         gpt_output_source = self.azure_translate.translate_text(
+            #             gpt_output, "en", row_lt['user_language'], self.app_logger
+            #         )
+            #     sent_msg_id = self.messenger.send_message(
+            #         row_lt['whatsapp_id'], gpt_output_source, msg_id
+            #     )
+
+
+
+            if msg_type == "audio" or msg_type == "text" or msg_type == "interactive":
+                if gpt_output.strip().startswith("I do not know the answer to your question"):
+                    if msg_type == "audio":
+                        eng_text = self.template_messages["idk_response_audio"][row_lt['user_language']]
+                        #replace <query> with the actual query
+                        eng_text = eng_text.replace("<query>", message)
+                    else:
+                        eng_text = self.template_messages["idk_response"]["en"]
+                else:
+                    eng_text = gpt_output
+                audio_input_file = "test_audio_input.aac"
+                audio_output_file = "test_audio_output.aac"
+                gpt_output_source = self.azure_translate.text_translate_speech(
+                    eng_text,
+                    row_lt['user_language'] + "-IN",
+                    audio_output_file[:-3] + "wav",
+                    self.app_logger,
+                )
+                if gpt_output.strip().startswith("I do not know the answer to your question"):
+                    if msg_type == "audio":
+                        gpt_output_source = self.template_messages["idk_response_audio"][row_lt['user_language']]
+                        #replace <query> with the actual query
+                        gpt_output_source = gpt_output_source.replace("<query>", message)
+                    else:
+                        gpt_output_source = self.template_messages["idk_response"][row_lt['user_language']]
+                subprocess.run(
+                    [
+                        "ffmpeg",
+                        "-y",
+                        "-i",
+                        audio_output_file[:-3] + "wav",
+                        "-codec:a",
+                        "aac",
+                        audio_output_file,
+                    ],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                sent_msg_id = self.messenger.send_message(
+                    row_lt['whatsapp_id'], gpt_output_source, msg_id
+                )
+                audio_msg_id = self.messenger.send_audio(
+                    audio_output_file, row_lt['whatsapp_id'], msg_id
+                )
+                utils.remove_extra_voice_files(audio_input_file, audio_output_file)
 
         self.user_conv_db.add_query_type(
             message_id=msg_id,
