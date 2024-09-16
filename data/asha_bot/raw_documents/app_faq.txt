@@ -1,0 +1,35 @@
+Sure, here is the translation:
+
+1. How to reset the PIN in the application:
+To reset the PIN, click on "Forgot PIN". After clicking, a "Set/Forgot PIN" page will open where your registered phone number will be displayed. Click on the "Next" button. You will receive an OTP on your number, which you need to enter. After that, a page to set a new PIN will open, where you can set your new PIN.
+
+2. What is the secret code of my Anganwadi?
+For such queries, the team first asks them to obtain the code from their nodal officer. However, if the officer of that area is unable to provide the secret code for any reason, our team can provide the code from here. The team provides the secret code through the dashboard or an Excel sheet.
+
+3. How to register ASHA in the Digital Health Application:
+Ask your area's ANM to register you in the "ANM Digital Application". Only after that, you can register in the ASHA Digital Application. After the ANM adds you, ASHA can register themselves. In the "ANM Application", go to the hamburger sign, click on the sub-center profile, and on the profile page, you will see the "Working ASHA" tab. Click on that tab to see the 'Anganwadi where ASHA is not registered'. Click on "Add ASHA" in front of it to register a new ASHA.
+
+4. Process to add another family in the same house:
+For this process, go to the family register and click on "Add New Family". After clicking, you can add a family in two ways:
+   - The first way is by searching for the beneficiary - here you add by Jan Aadhaar number, Aadhaar number, or phone number.
+   - The second way is to add the beneficiary without searching - here you manually add the names of the beneficiaries you want to survey.
+For the first way, add the Jan Aadhaar number, Aadhaar number, or phone number, and then select the members you want to survey and click on "Proceed". On this page, select the head of the family from the list. Now click on the house number, where you will see a list of already registered houses. Click on the house number where you want to add the new family. The family will be added to the same house with a different family number, and you can complete the survey of the head of the family from here.
+For the second way, click on "Add without searching". A warning message will appear in a box, click "OK" to proceed to the page with the head's information. Click on the house number written there. You will see a list of already registered houses. Click on the house number where you want to add the new family. Similarly, you can add a new family to any house. Now fill in the head's information and proceed to complete the survey and save the data. After saving, you will come to the family information page, where you can see that the family number is also written in the house number. This way, you can add another family in the same house.
+
+5. Data filled by the health worker is not visible:
+If the call was made by ASHA and ANM, sync the data after filling it in your application. Only after syncing the data will it be visible in your and ANM's Digital Health Application. If the call was made by an officer, tell them to ask their ANM to sync the data. Only after syncing the data will it be visible on the dashboard.
+
+6. How to remove multiple submitted geographies:
+If the geography is not approved, you can get your geography deleted and edited by your area's nodal officer. If your nodal officer is facing any issues in this process or is unable to do it, ask them to send a signed letter from their nodal officer. Only then can we edit your geography from here. If the geography is approved, ask them to send a signed letter from their nodal officer. Only then can we delete your geography from here.
+
+7. How to remove a member from the family:
+For this process, first go to the "Family Register" tab, click on the profile of the family from which you want to delete the member, and click on the member's name. You will see the delete option there, but while deleting, you will have to select a reason for deletion. Only after selecting one of the reasons can you delete the member.
+
+8. How to remove 3 families added to the same house number:
+Go to the family register, search for the house number whose family you want to delete, click on that family, go to "Update Family Profile", and you will see the delete option there. While deleting, you will have to select a reason for deletion. After selecting one of the reasons, you can delete the family.
+
+9. How to approve geography and MCHN sessions on the dashboard:
+To approve geography and MCHN sessions on the dashboard, first go to the dashboard and click on the "Hamburger Sign". Then click on the "Reproductive Child Health" tab, and then click on "RI Micro Plan and MCHN Session Summary". A new page will open. To approve new geography on this page, go to the "New Geography Request" tab, search for the geography request of your area, and click on the "Review" button on the right side to approve the geography.
+
+10. Offline ABHA ID has been created but is not showing as successful:
+After creating the ID offline, it will be visible in the ABHA ID in progress tab, and it will take at least 24-48 hours to show as successful. If the ABHA ID fails after 24-48 hours, inform them that the reason is that the person has not filled in their details correctly according to the Aadhaar card.
