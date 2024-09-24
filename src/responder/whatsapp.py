@@ -160,6 +160,7 @@ class WhatsappResponder(BaseResponder):
                 # )
                 return
         if self.check_expiration(row_lt):
+            print("expired")
             return
 
 

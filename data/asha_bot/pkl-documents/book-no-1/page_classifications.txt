@@ -1,0 +1,479 @@
+Page 1:
+Page excluded from classification.
+
+Page 2:
+Page excluded from classification.
+
+Page 3:
+Page excluded from classification.
+
+Page 4:
+Page excluded from classification.
+
+Page 5:
+Page excluded from classification.
+
+Page 6:
+Page excluded from classification.
+
+Page 7:
+Page excluded from classification.
+
+Page 8:
+Page excluded from classification.
+
+Page 9:
+Page excluded from classification.
+
+Page 10:
+Page excluded from classification.
+
+Page 11:
+Page excluded from classification.
+
+Page 12:
+Page excluded from classification.
+
+Page 13:
+Page excluded from classification.
+
+Page 14:
+text
+
+The image contains paragraphs of text that provide information, and there are no figures, scientific content, or tables present.
+
+Page 15:
+text
+
+The image contains paragraphs of text with no tables, figures, or scientific content.
+
+Page 16:
+text
+
+The image consists primarily of paragraphs with text describing the development of a plan for tackling sanitation problems and communication for health behavior change. There are no tables, charts, or figures present.
+
+Page 17:
+(i) text
+
+The image contains a page of text describing various healthcare-related activities and programs.
+
+Page 18:
+text
+
+The image contains paragraphs of text with bullet points, providing information without any scientific figures, tables, or charts.
+
+Page 19:
+(i) text
+
+The image contains a large amount of text discussing various healthcare-related topics such as counseling, escorting patients to a hospital, and the necessary information and skills required. There are no tables or figures present.
+
+Page 20:
+text
+
+The image contains paragraphs of text without any tables or scientific figures.
+
+Page 21:
+text
+
+The image contains paragraphs with bulleted lists which provide textual information without any tables or figures.
+
+Page 22:
+text
+
+The image contains predominantly text explaining concepts related to health, with no tables or figures present.
+
+Page 23:
+text, figures
+
+The image contains paragraphs of text and a simple diagram with annotations that are relevant to healthcare information.
+
+Page 24:
+text
+
+The image contains paragraphs of text explaining how to assess health and ill health, with bullet points discussing specific health indicators and questions for consideration, which qualifies as text content.
+
+Page 25:
+figures, text
+
+The image contains a series of figures related to personal hygiene practices, as well as descriptive text about the importance of personal cleanliness and health.
+
+Page 26:
+text, figures
+
+The PDF image includes a significant amount of text explaining hygiene practices and a figure illustrating the proper way to wash hands.
+
+Page 27:
+text
+
+The image contains paragraphs of text explaining dental hygiene and practices without any tables, scientific figures, or diagrams.
+
+Page 28:
+text
+
+The image contains paragraphs of text with bullet points, providing information that can be read and analyzed. There are no figures, scientific content, or tables present.
+
+Page 29:
+text
+
+The image contains text sections that provide information about water safety at home, the importance of water in health, and how water becomes unsafe. There are no tables or scientific figures that provide healthcare information or data representation.
+
+Page 30:
+text, figures
+
+The image contains text explaining how to make water safe at home and includes a small flowchart as a figure explaining the steps to purify water.
+
+Page 31:
+text, figures
+
+The image contains text and bullet points, as well as a flowchart which is considered a figure for its potential to convey scientific content related to healthcare questions.
+
+Page 32:
+(i) text
+
+The image contains a significant amount of text, which appears to be a page from a book discussing the disposal of wastewater, making it classifiable as text. There are no figures, scientific content, or tables present.
+
+Page 33:
+text, figures
+
+The image contains paragraphs of text and also includes two diagrams (a flowchart and a soak pit construction design) which are considered as figures due to their scientific content related to healthcare questions.
+
+Page 34:
+text
+
+The image contains only text with no figures, tables, or diagrams present.
+
+Page 35:
+text
+
+The image contains several bullet points and paragraphs of text related to healthcare, but no figures or tables are present.
+
+Page 36:
+text
+
+The image contains paragraphs with bullet points, which indicates that it is primarily composed of text.
+
+Page 37:
+text, figures
+
+The image contains text describing various food-related information, and also includes figures in the form of simple illustrations representing different food groups, which can convey scientific content related to healthcare. The diagrams of food are considered figures due to their relevance in conveying information about a balanced diet.
+
+Page 38:
+text
+
+The image contains multiple paragraphs of text with headings, discussing health-related topics such as nutrition and healthy weight.
+
+Page 39:
+text
+
+The image contains bulleted text that discusses various opinions and facts related to health and nutrition.
+
+Page 40:
+text
+
+The image contains multiple paragraphs of text with a heading, discussing organs and systems in the human body, but no figures or tables are present.
+
+Page 41:
+text
+
+The image contains paragraphs of text explaining various body systems and their functions. There are no tables or scientific figures present in the image.
+
+Page 42:
+text
+
+The image contains paragraphs of text without any figures, tables, or diagrams.
+
+Page 43:
+text
+
+The image contains a substantial amount of text explaining reproductive organs and differences in anatomy between men and women, but there are no figures, tables, or scientific content in the form of diagrams or images.
+
+Page 44:
+text
+
+The image contains only text with no figures, tables, or diagrams.
+
+Page 45:
+text, figures
+
+The image contains text discussing women and health, as well as a figure illustrating a woman in a healthcare context. There is no table or scientific content that can be derived to answer healthcare questions, but the image itself is a figure related to healthcare.
+
+Page 46:
+text
+
+The image contains paragraphs of text discussing various women's health issues without any tables or figures.
+
+Page 47:
+text
+
+The image contains paragraphs of text with bullet points, without any tables or scientific figures that would classify it as a figure or table.
+
+Page 48:
+text
+
+The image contains a large amount of text explaining a concept related to organizing a group meeting, which is not a figure or table with scientific content.
+
+Page 49:
+text, figures
+
+The image contains text that appears to be part of a document, as well as a flowchart that is considered a figure because it represents a process that can be used to answer healthcare questions.
+
+Page 50:
+text, figures
+
+The image contains paragraphs of text, bullet points, and an illustration which seems to be a conceptual figure rather than a scientific figure. The text is not merely a caption, and the figure does not appear to be a table or provide scientific content.
+
+Page 51:
+text, figures
+
+The image contains text explaining health services, and a stylized figure of a healthcare worker that is related to the text content, providing a visual context to the healthcare topic discussed.
+
+Page 52:
+text
+
+The image contains paragraphs of text describing various health-related services and roles without any tables, figures, or scientific content.
+
+Page 53:
+text, figures
+
+The image contains text describing the functions and services of a Primary Health Center (PHC), and a figure in the form of a hand-drawn illustration of a PHC, which provides scientific content in a healthcare context.
+
+Page 54:
+text
+
+The image contains paragraphs of text providing information and questions without any scientific figures, tables, or complex diagrams.
+
+Page 55:
+text
+
+The image contains predominantly textual information describing the activities at an Anganwadi Centre, which is not presented in a table format nor does it contain figures with scientific content.
+
+Page 56:
+text, figures
+
+The image contains paragraphs of text and also includes a flowchart, which is considered a figure due to its structure and information content. The flowchart is a visual representation of a process related to healthcare services, thus qualifying as a figure with scientific content.
+
+Page 57:
+text
+
+The image contains bullet points and paragraphs that are typical of textual content. There are no tables, figures, or scientific content that would classify it as a figure or table.
+
+Page 58:
+text
+
+The image contains text discussing the role and practices of a Village Birth Attendant or DAI, along with a section on the lesson's content and the limitations of a Dai. There are no figures or tables present.
+
+Page 59:
+text
+
+The image contains paragraphs of text without any tables or scientific figures.
+
+Page 60:
+text, figures
+
+The image contains text discussing illness and healing along with an illustrated figure that seems to provide visual context to the health-related content, thus meeting the criteria for a figure.
+
+Page 61:
+text, figures
+
+The image contains text explaining medical concepts and a small illustrative figure related to the text content.
+
+Page 62:
+text
+
+The image contains paragraphs of text that discuss health-related topics, such as immunity, vaccines, and illnesses, without any accompanying figures or tables.
+
+Page 63:
+text, figures
+
+The image contains sections of text explaining different healing systems and the allopathic system, as well as a figure on the right side that seems to depict a flowchart related to healthcare.
+
+Page 64:
+text, figures
+
+The image contains paragraphs of text as well as a figure that appears to be a flowchart or diagram related to healthcare information.
+
+Page 65:
+text
+
+The image consists of only text with no figures or tables present.
+
+Page 66:
+text
+
+The image contains a substantial amount of text describing medicinal trees and plants, which is relevant for healthcare information. There are no figures or tables present.
+
+Page 67:
+text, figures
+
+The image contains text describing the use of various herbs for medical purposes and includes images of plants which can be considered as figures in the context of healthcare information.
+
+Page 68:
+text
+
+The image consists of paragraphs describing the use of different plants for healthcare purposes, which is considered text content. There are no tables or figures present.
+
+Page 69:
+text
+
+The image contains text describing various home remedies and their uses, which can be used to derive information about healthcare.
+
+Page 70:
+text
+
+The image contains primarily text providing information about herbal remedies and their uses. There are no figures, tables, or scientific content depicted.
+
+Page 71:
+text
+
+The image contains paragraphs of text that are readable and provide information on the topic of preventing unwanted pregnancies and childbearing effects on women's health.
+
+Page 72:
+text
+
+The image contains paragraphs of text discussing contraceptive needs and methods, which can be used to answer healthcare questions.
+
+Page 73:
+text
+
+The image contains paragraphs of text explaining contraceptive methods and family planning, with bullet points for consideration.
+
+Page 74:
+text, figures
+
+The image contains text explaining the use of condoms and also includes figures illustrating the steps involved in using a condom correctly.
+
+Page 75:
+text
+
+The image contains only text discussing topics related to condom use, with no figures, tables, or scientific content that can be derived to answer healthcare questions.
+
+Page 76:
+text
+
+The image contains predominantly text discussing the topic of "Registration of Pregnant Women" and information about pregnancies and related healthcare information.
+
+Page 77:
+text
+
+The image contains paragraphs of text that appear to be from a healthcare-related document, with no tables or figures visible.
+
+Page 78:
+text
+
+The image contains paragraphs of text explaining the "Janani Suraksha Yojana" without any tables or figures.
+
+Page 79:
+text
+
+The image contains only text describing a healthcare program, with no figures or tables present.
+
+Page 80:
+text
+
+The image contains textual information related to HIV and AIDS which is educational in nature and aimed at healthcare awareness.
+
+Page 81:
+text
+
+The image contains paragraphs of text providing information about HIV/AIDS, including risk factors, the window period, and prevention methods. There are no tables, figures, or diagrams present.
+
+Page 82:
+text
+
+The image contains paragraphs of text discussing healthcare information, which does not fit the criteria for a figure or a table.
+
+Page 83:
+text
+
+The image consists of textual content that provides information on breastfeeding, without any figures, tables, or scientific diagrams.
+
+Page 84:
+text, figures
+
+The image contains both text explaining breastfeeding basics and an illustration (figure) showing the breastfeeding position. The illustration serves as a scientific content related to healthcare.
+
+Page 85:
+text, figures
+
+The image contains textual information about breastfeeding and a simple illustration related to the text, which classifies it as both text and a figure. The figure is not a scientific diagram but is related to healthcare information.
+
+Page 86:
+text
+
+The image contains primarily text discussing infant nutrition and child feeding practices, without any tables or figures.
+
+Page 87:
+text, figures
+
+The image contains bulleted text points that likely provide information and a cartoon figure that seems to illustrate a concept related to the text, possibly in a healthcare context.
+
+Page 88:
+text, figures
+
+The image contains text that discusses immunization and a sidebar that outlines the lesson's content, as well as figures which include a silhouette of a person with a medical symbol and a small illustration related to vaccination.
+
+Page 89:
+text, tables
+
+The image contains paragraphs of text that discuss immunization, and a table that outlines a schedule for immunization and vitamin A administration. There are no scientific figures or diagrams that would be classified as figures.
+
+Page 90:
+text, figures
+
+The image contains text discussing immunization and a figure (illustration) of a healthcare worker with a child, which relates to healthcare information.
+
+Page 91:
+text, figures
+
+The image contains text that explains diarrhea in a healthcare context which is relevant to the classification. It also includes a figure, as the flowchart on the right side provides scientific information related to healthcare questions about dehydration and rehydration in the context of diarrhea.
+
+Page 92:
+text, figures
+
+The image contains text describing guidelines for hydration in children, and it also includes a table and a flowchart, which are considered figures in the context provided.
+
+Page 93:
+text
+
+The image contains paragraphs of text with bullet points, providing information and guidelines, which is considered text content.
+
+Page 94:
+text
+
+The image contains mostly text with no tables or figures that would aid in answering healthcare questions.
+
+Page 95:
+text
+
+The image contains text discussing various aspects of pain relief, when to refer to a hospital, and opinions on pain management. There are no figures, scientific content, or tables present.
+
+Page 96:
+text, figures
+
+The image contains text explaining tuberculosis and a stylized human figure with lines that may represent airflow or pathogen spread, indicative of scientific content related to healthcare.
+
+Page 97:
+text
+
+The image contains several paragraphs of text providing information about tuberculosis (TB), its symptoms, treatment, and precautions, without any tables or scientific figures.
+
+Page 98:
+text
+
+The image contains text that provides information and questions regarding tuberculosis (TB) prevention and treatment.
+
+Page 99:
+text, figures
+
+The image contains text that provides information about snake bites and also includes a stylized figure of a person and a snake, which can be considered a figure in the context of healthcare information. The text is informative and the figure represents a subject related to the content, thus both labels are appropriate.
+
+Page 100:
+text
+
+The image contains multiple paragraphs of text providing information on a specific topic, without any tables or figures present.
+
+Page 101:
+text, tables
+
+The image contains text describing medicines, their actions, dosages, and side effects, and the information is organized into tables with rows and columns.
+

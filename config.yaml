@@ -37,7 +37,7 @@ SUGGESTION_QUESTIONS:
   - 'Tell me about malnutrition.'
   - 'How many iron tablets should be taken during pregnancy?'
 
-COSMOS_DB_NAME: llm-bot-database
+COSMOS_DB_NAME: mmllm-bot-database
 COSMOS_LOGGING_COLLECTION: logs
 AZURE_BLOB_CONTAINER_NAME: asha-bot
 

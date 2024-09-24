@@ -1,0 +1,199 @@
+Page 1:
+Page excluded from classification.
+
+Page 2:
+Page excluded from classification.
+
+Page 3:
+Page excluded from classification.
+
+Page 4:
+Page excluded from classification.
+
+Page 5:
+Page excluded from classification.
+
+Page 6:
+Page excluded from classification.
+
+Page 7:
+Page excluded from classification.
+
+Page 8:
+Page excluded from classification.
+
+Page 9:
+text, figures
+
+The image contains a section of text explaining menstrual cycles and a figure illustrating the menstrual cycle, which is relevant to healthcare.
+
+Page 10:
+text, figures
+
+The image contains text describing reproductive health and also includes figures that illustrate scientific concepts related to human reproduction.
+
+Page 11:
+text
+
+The image contains paragraphs of text which provide information without any embedded tables or figures.
+
+Page 12:
+text
+
+The image contains paragraphs of text explaining care during pregnancy.
+
+Page 13:
+text, figures
+
+The image contains paragraphs of text explaining healthcare procedures and also includes annotated figures (icons and flowchart-like elements) that represent various medical examinations and tests.
+
+Page 14:
+text
+
+The image contains multiple paragraphs of text without any tables, figures, or diagrams.
+
+Page 15:
+text
+
+The image contains paragraphs of text with headings, providing information about health-related topics, but it does not contain figures or tables.
+
+Page 16:
+text
+
+The image contains several bullet points and paragraphs of text explaining the roles and responsibilities of ASHA workers.
+
+Page 17:
+text
+
+The image contains a list of text instructions or guidelines, which is considered as text content. There are no figures or tables present in the image.
+
+Page 18:
+text, figures
+
+The image contains both readable text concerning health care instructions and a symbolic figure related to healthcare, indicating it has scientific content.
+
+Page 19:
+text
+
+The image contains a list of bullet points that represent textual information.
+
+Page 20:
+text, figures
+
+The image contains text describing post-natal care and the roles and responsibilities of ASHA, as well as a highlighted figure or flowchart area that lists symptoms requiring reporting.
+
+Page 21:
+text, figures
+
+The image contains text explaining newborn care and a stylized figure of an adult holding a baby, which represents healthcare-related content.
+
+Page 22:
+text, figures
+
+The image includes text with lists and instructions, and also contains a figure in the form of a colored zone chart related to weighing the baby, which has scientific content relevant to healthcare.
+
+Page 23:
+text, figures
+
+The image contains bullet points with text explaining the roles and responsibilities, and a circular inset with an illustrative figure about newborn care.
+
+Page 24:
+text
+
+The image contains a page with text discussing unsafe abortions and medical termination of pregnancy.
+
+Page 25:
+text
+
+The image contains paragraphs of text that provide information on medical abortion, surgical abortion, and post-abortion care, which doesn't fall into the tables or figures category as defined.
+
+Page 26:
+text
+
+The image contains bullet points and numbered lists that provide information, which is classified as text.
+
+Page 27:
+text, figures
+
+The image includes text that provides information on immunization and a list of vaccine-preventable diseases, as well as an illustration that can be considered a figure as it represents the concept of immunization in a healthcare context.
+
+Page 28:
+tables, figures
+
+The image contains a table displaying a schedule for immunizations, and the content of the table is relevant to healthcare, thus it qualifies as a table and a figure based on the given criteria.
+
+Page 29:
+text
+
+The image contains text detailing the roles and responsibilities of ASHA (Accredited Social Health Activist) related to immunization and guidance for dealing with minor ailments and side effects post-immunization.
+
+Page 30:
+text, figures
+
+The image includes both textual content explaining diarrhea and an illustrative figure of a human form, which appears to be related to the healthcare topic being discussed.
+
+Page 31:
+text, figures
+
+The image contains text that provides information and instructions, as well as figures showing a demonstration of preparation for a healthcare-related task (Oral Rehydration Solution preparation).
+
+Page 32:
+text
+
+The image contains bulleted lists of information, which qualifies as text content. There are no tables, figures, or scientific images present.
+
+Page 33:
+text, figures
+
+The page contains both textual information explaining acute respiratory infections and an illustrative figure of what appears to be a healthcare scenario.
+
+Page 34:
+text
+
+The image consists of text that outlines guidelines and roles and responsibilities, which does not fall under figures or tables.
+
+Page 35:
+text, figures
+
+The image contains a significant amount of text explaining nutrition in infants and a silhouette figure of a woman holding a child, which represents a concept related to the healthcare topic discussed.
+
+Page 36:
+text, figures
+
+The image contains text sections about child feeding and malnutrition, as well as figures illustrating the topics discussed, making it relevant for healthcare information.
+
+Page 37:
+text
+
+The image contains textual information in the form of bullet points and paragraphs without any tables or scientific figures.
+
+Page 38:
+text
+
+The image contains paragraphs of text providing information about micronutrients, vitamin A deficiency, roles and responsibilities of ASHA, and iron deficiency anemia. There are no tables or figures present.
+
+Page 39:
+text
+
+The image contains only textual information providing details about iodine deficiency.
+
+Page 40:
+text, figures
+
+The image contains paragraphs of text explaining fever and a stylized figure of a person which seems to represent the concept of body temperature and fever, which can be considered scientific content related to healthcare.
+
+Page 41:
+text, figures
+
+The image contains both text explaining how to measure fever in adults, and a thermometer illustration which can be considered a figure for its scientific relevance to the healthcare topic.
+
+Page 42:
+text
+
+The image contains paragraphs of text providing information and instructions related to healthcare, such as treatments and remedies for fever.
+
+Page 43:
+text
+
+The image contains text outlining the roles and responsibilities of ASHA, which is a list of guidelines or instructions, without any figures or tables.
+
