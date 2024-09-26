@@ -46,6 +46,7 @@ if len(df) == 0:
     
 df = df[df['query_type'] != 'small-talk']
 df = df[df['message_type'] != 'feedback_response']
+df = df[df['message_type'] != 'onboarding_response']
 df.reset_index(drop=True, inplace=True)
 
 category_to_expert = {}

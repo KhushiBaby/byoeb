@@ -102,3 +102,26 @@ class UserConvDB(BaseDB):
     def get_from_reply_id(self, reply_id):
         user_conv = self.collection.find_one({'reply_id': reply_id})
         return user_conv
+    
+    def get_all_queries_from_user_id(self, user_id):
+        query_types = ['text', 'audio', 'interactive']
+        user_conv = self.collection.find({'$and': [{'user_id': user_id}, {'message_type': {'$in': query_types}}]})
+        user_conv = list(user_conv)
+        return user_conv
+    
+    def get_all_queries_with_message_type(self, message_type):
+        user_conv = self.collection.find({'message_type': message_type})
+        user_conv = list(user_conv)
+        return user_conv
+    
+    def get_all_queries_in_duration(self, from_ts, to_ts):
+        query_types = ['text', 'audio', 'interactive']
+        user_conv = self.collection.find({'$and': [{'message_type': {'$in': query_types}}, {'message_timestamp': {'$gte': from_ts, '$lt': to_ts}}]})
+        user_conv = list(user_conv)
+        return user_conv
+    
+    def get_all_queries(self):
+        query_types = ['text', 'audio', 'interactive']
+        user_conv = self.collection.find({'message_type': {'$in': query_types}})
+        user_conv = list(user_conv)
+        return user_conv

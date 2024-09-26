@@ -70,7 +70,6 @@ class UserDB(BaseDB):
             rows = list(self.collection.find({'$and': [{'user_type':expert_type}, {'test_user':{'$ne':True}}, {'opt out' :{'$ne':True}}]}))
         if len(rows) < numbers_of_experts:
             return rows
-        print(rows)
         #for every expert, find the number of messages sent to them in the last 24 hours
         from_ts = datetime.datetime.now() - datetime.timedelta(hours=24)
         to_ts = datetime.datetime.now()

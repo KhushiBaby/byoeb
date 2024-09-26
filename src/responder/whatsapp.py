@@ -965,6 +965,7 @@ class WhatsappResponder(BaseResponder):
             self.expert_conv_db.insert_row(
                 user_id=expert_row_lt["user_id"],
                 message_type="poll_response",
+                message_modality=msg_object["type"],
                 message_id=msg_object["id"],
                 reply_id=context_id,
                 message="Yes",
@@ -997,6 +998,7 @@ class WhatsappResponder(BaseResponder):
             self.expert_conv_db.insert_row(
                 user_id=expert_row_lt["user_id"],
                 message_type="poll_response",
+                message_modality=msg_object["type"],
                 message_id=msg_object["id"],
                 reply_id=context_id,
                 message="No",
@@ -1093,7 +1095,8 @@ class WhatsappResponder(BaseResponder):
             self.expert_conv_db.insert_row(
                 user_id=expert_row_lt["user_id"],
                 message_id=msg_object["id"],
-                message_type="consensus_response",
+                message_type=f"consensus_response",
+                message_modality=msg_object["type"],
                 message=msg_body,
                 reply_id=context_id,
                 message_timestamp=datetime.now(),
@@ -1163,6 +1166,7 @@ class WhatsappResponder(BaseResponder):
             user_id=expert_row_lt["user_id"],
             message_id=msg_object["id"],
             message_type="correction",
+            message_modality=msg_object["type"],
             message=msg_body,
             reply_id=context_id,
             message_timestamp=datetime.now(),

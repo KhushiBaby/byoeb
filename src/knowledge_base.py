@@ -53,7 +53,7 @@ class KnowledgeBase:
             except Exception as e:
                 print(f"Error in answer_query: {e}")
                 continue
-        return None
+        return "I do not know the answer to your question", "llm-failure-fallback", "Clinical"
 
     def answer_query_helper(
         self,
