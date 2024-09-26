@@ -100,3 +100,11 @@ class BotConvDB(BaseDB):
             bot_conv = self.collection.find({'message_timestamp': {'$gte': start_time, '$lte': end_time}})
         bot_conv = list(bot_conv)
         return bot_conv
+    
+    def find_all(self, message_type=None):
+        if message_type:
+            bot_conv = self.collection.find({'message_type': message_type})
+        else:
+            bot_conv = self.collection.find()
+        bot_conv = list(bot_conv)
+        return bot_conv
