@@ -324,7 +324,41 @@ class WhatsappResponder(BaseResponder):
             last_msg_timestamp = last_query["message_timestamp"]
             time_diff = datetime.now() - last_msg_timestamp
             if time_diff < timedelta(hours=1) and last_query["message_english"] == translated_message:
-                print("Ignoring repeated query")
+                #tag the response to the previous query
+                prev_response = self.bot_conv_db.find_with_transaction_id(last_query["message_id"], 'query_response')
+                if prev_response:
+                    reply_id = prev_response["message_id"]
+                    text = "You have already asked this question. Here is the response to your previous query."
+                    text_src = self.azure_translate.translate_text(
+                        text, "en", row_lt['user_language'], self.app_logger
+                    )
+                    sent_msg_id = self.messenger.send_message(row_lt['whatsapp_id'], text_src, reply_id)
+
+                    self.user_conv_db.insert_row(
+                        user_id=row_lt['user_id'],
+                        message_id=msg_id,
+                        message_type=msg_type,
+                        message_source_lang=message,
+                        source_language=row_lt['user_language'],
+                        message_translated=translated_message,
+                        audio_blob_path=None,
+                        message_timestamp=datetime.now(),
+                    )
+
+                    self.bot_conv_db.insert_row(
+                        receiver_id=row_lt['user_id'],
+                        message_type="repeat_query",
+                        message_id=sent_msg_id,
+                        audio_message_id=None,
+                        message_source_lang=text_src,
+                        message_language=row_lt['user_language'],
+                        message_english=text,
+                        reply_id=reply_id,
+                        citations=None,
+                        message_timestamp=datetime.now(),
+                        transaction_message_id=msg_id,
+                    )
+
                 return
         except Exception as e:
             print(e)

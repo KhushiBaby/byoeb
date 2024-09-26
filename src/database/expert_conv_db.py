@@ -67,4 +67,12 @@ class ExpertConvDB(BaseDB):
         rows = list(rows)
         return rows
     
+    def find_all_with_duration(self, message_type, from_ts, to_ts):
+        if message_type:
+            rows = self.collection.find({'$and': [{'message_type': message_type}, {'message_timestamp': {'$gte': from_ts}}, {'message_timestamp': {'$lt': to_ts}}]})
+        else:
+            rows = self.collection.find({'$and': [{'message_timestamp': {'$gte': from_ts}}, {'message_timestamp': {'$lt': to_ts}}]})
+        rows = list(rows)
+        return rows
+    
     

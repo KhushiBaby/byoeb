@@ -157,6 +157,18 @@ class KnowledgeBase:
 
         """
 
+        schema = {
+            "name": "response_schema",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "response": {"type": "string"},
+                    "query_type": {"type": "string"}
+                },
+                "required": ["response", "query_type"]
+            }
+        }
+
         prompt = [{"role": "system", "content": system_prompt}]
         prompt.append({"role": "user", "content": query_prompt})
         app_logger.add_log(
@@ -167,7 +179,7 @@ class KnowledgeBase:
                 "transaction_id": db_row["message_id"],
             },
         )
-        gpt_output = get_llm_response(prompt)
+        gpt_output = get_llm_response(prompt, schema=schema)
         app_logger.add_log(
             event_name="answer_query_response_gpt4",
             details={
@@ -351,7 +363,7 @@ class KnowledgeBase:
         row_query: dict[str, Any],
         row_response: dict[str, Any],
         row_correction: dict[str, Any],
-        app_loger: AppLogger,
+        app_logger: AppLogger,
     ):
         
         if self.config["API_ACTIVATED"] is False:

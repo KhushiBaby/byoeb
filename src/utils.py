@@ -12,11 +12,11 @@ import time
 from openai import OpenAI, AzureOpenAI
 
 
-def get_llm_response(prompt):
+def get_llm_response(prompt, schema=None):
     openai.api_key = os.environ["OPENAI_API_KEY"].strip()
     openai.api_version = os.environ["OPENAI_API_VERSION"].strip()
 
-    model_engine = "gpt-4"
+    model_engine = "gpt-4o-2024-08-06"
 
     # client = AzureOpenAI(
     #     api_key=os.environ["OPENAI_API_KEY"].strip(),
@@ -33,11 +33,19 @@ def get_llm_response(prompt):
     flag = False
     while not flag:
         try:
-            response = client.chat.completions.create(
-                model=model_engine,
-                messages=prompt,
-                temperature=0,
-            )
+            if schema is None:
+                response = client.chat.completions.create(
+                    model=model_engine,
+                    messages=prompt,
+                    temperature=0,
+                )
+            else:
+                response = client.chat.completions.create(
+                    model=model_engine,
+                    messages=prompt,
+                    temperature=0,
+                    response_format= { "type": "json_schema", "json_schema": schema }
+                )
             flag = True
         except Exception as e:
             print(e)
