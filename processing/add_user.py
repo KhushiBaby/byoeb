@@ -34,17 +34,17 @@ from uuid import uuid4
 user_id = str(uuid4())
 
 phone_numbers2role = {
-    "918837701828": "asha",
+    "916383701983": "Asha",
 }
 
 for i, phone_num in enumerate(phone_numbers2role):
     role = phone_numbers2role[phone_num]
     user = {
         'user_id': str(uuid4()),
-        'user_language': 'hi',
+        'user_language': 'en',
         'whatsapp_id': phone_num,
         'user_type': role
     }
     print(user)
     user_db.insert_row(user['user_id'], user['whatsapp_id'], user['user_type'], user['user_language'])
-    onboard_template(config, logger, user, messenger)
+    # onboard_template(config, logger, user, messenger)

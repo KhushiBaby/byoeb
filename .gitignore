@@ -10,7 +10,7 @@
 scratch/
 
 # the .env file
-.env
+*.env
 
 # the .env file in any subdirectory
 **/.env

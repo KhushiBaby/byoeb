@@ -39,17 +39,18 @@ class KnowledgeBase:
     def __init__(self, config: dict[str, Any]):
         self.config = config
         self.persist_directory = os.path.join(
-            os.path.join(os.environ["APP_PATH"], os.environ["DATA_PATH"]), "vectordb"
+            os.path.join(os.environ["APP_PATH"], os.environ["DATA_PATH"]), "vector_db"
         )
         self.embedding_fn = embedding_functions.OpenAIEmbeddingFunction(
             api_key=os.environ['OPENAI_API_KEY'].strip(),
-            model_name="text-embedding-3-large"
+            model_name=os.environ['OPENAI_API_KEY_EMBED'].strip()
         )
         self.persist_docsotre = os.path.join(
             os.path.join(os.environ["APP_PATH"], os.environ["DATA_PATH"]), "docstore"
         )
-        self.model = AzureChatOpenAI( 
-            model=os.environ['OPENAI_API_CHAT_MODEL'].strip(), 
+        self.model = AzureChatOpenAI(
+            azure_deployment=os.environ['OPENAI_API_CHAT_MODEL'].strip(),
+            model="gpt-4",
             azure_ad_token_provider=token_provider,
             azure_endpoint=os.environ['OPENAI_API_ENDPOINT'].strip(),
             api_version=os.environ['OPENAI_API_VERSION'].strip(),
@@ -73,17 +74,22 @@ class KnowledgeBase:
         app_logger: AppLogger,
         max_retries: int = 5,
     ):
-        for i in range(max_retries):
-            try:
-                gpt_output, citations, query_type = self.answer_query_helper(user_conv_db, bot_conv_db, msg_id, app_logger, 3)
-                if gpt_output.strip().startswith("I do not know the answer to your question"):
-                    print("Retrying with top 7")
-                    gpt_output, citations, query_type = self.answer_query_helper(user_conv_db, bot_conv_db, msg_id, app_logger, 7)
-                return gpt_output, citations, query_type
-            except Exception as e:
-                print(f"Error in answer_query: {e}")
-                continue
-        return None
+        gpt_output, citations, query_type = self.answer_query_helper(user_conv_db, bot_conv_db, msg_id, app_logger, 3)
+        if gpt_output.strip().startswith("I do not know the answer to your question"):
+            print("Retrying with top 7")
+            gpt_output, citations, query_type = self.answer_query_helper(user_conv_db, bot_conv_db, msg_id, app_logger, 7)
+        return gpt_output, citations, query_type
+        # for i in range(max_retries):
+        #     try:
+        #         gpt_output, citations, query_type = self.answer_query_helper(user_conv_db, bot_conv_db, msg_id, app_logger, 3)
+        #         if gpt_output.strip().startswith("I do not know the answer to your question"):
+        #             print("Retrying with top 7")
+        #             gpt_output, citations, query_type = self.answer_query_helper(user_conv_db, bot_conv_db, msg_id, app_logger, 7)
+        #         return gpt_output, citations, query_type
+        #     except Exception as e:
+        #         print(f"Error in answer_query: {e}")
+        #         continue
+        # return None
 
     def answer_query_helper(
         self,
@@ -109,12 +115,12 @@ class KnowledgeBase:
             query_type = "small-talk"
             return (gpt_output, citations, query_type)
         
-        self.collection = self.client.get_collection(
-            name=self.config["PROJECT_NAME"], embedding_function=self.embedding_fn
-        )
+        # self.collection = self.client.get_collection(
+        #     name=self.config["PROJECT_NAME"], embedding_function=self.embedding_fn
+        # )
         
-        collection_count = self.collection.count()
-        print('collection ids count: ', collection_count)
+        # collection_count = self.collection.count()
+        # print('collection ids count: ', collection_count)
 
         db_row = user_conv_db.get_from_message_id(msg_id)
         query = db_row["message_english"]
@@ -123,36 +129,36 @@ class KnowledgeBase:
         if not query.endswith("?"):
             query += "?"
 
-        relevant_chunks = self.collection.query(
-            query_texts=[query],
-            n_results=top_k,
-        )
-        citations: str = "\n".join(
-            [metadata["source"] for metadata in relevant_chunks["metadatas"][0]]
-        )
+        # relevant_chunks = self.collection.query(
+        #     query_texts=[query],
+        #     n_results=top_k,
+        # )
+        # citations: str = "\n".join(
+        #     [metadata["source"] for metadata in relevant_chunks["metadatas"][0]]
+        # )
 
-        relevant_chunks_string = ""
-        relevant_update_chunks_string = ""
-        chunks = []
+        # relevant_chunks_string = ""
+        # relevant_update_chunks_string = ""
+        # chunks = []
 
-        chunk1 = 0
-        chunk2 = 0
-        for chunk, chunk_text in enumerate(relevant_chunks["documents"][0]):
-            if relevant_chunks["metadatas"][0][chunk]["source"].strip() == "KB Updated":
-                relevant_update_chunks_string += (
-                    f"Chunk #{chunk2 + 1}\n{chunk_text}\n\n"
-                )
-                chunk2 += 1
-                chunks.append((chunk_text, relevant_chunks["metadatas"][0][chunk]["source"].strip()))
-            else:
-                relevant_chunks_string += f"Chunk #{chunk1 + 1}\n{chunk_text}\n\n"
-                chunk1 += 1
-                chunks.append((chunk_text, relevant_chunks["metadatas"][0][chunk]["source"].strip()))
+        # chunk1 = 0
+        # chunk2 = 0
+        # for chunk, chunk_text in enumerate(relevant_chunks["documents"][0]):
+        #     if relevant_chunks["metadatas"][0][chunk]["source"].strip() == "KB Updated":
+        #         relevant_update_chunks_string += (
+        #             f"Chunk #{chunk2 + 1}\n{chunk_text}\n\n"
+        #         )
+        #         chunk2 += 1
+        #         chunks.append((chunk_text, relevant_chunks["metadatas"][0][chunk]["source"].strip()))
+        #     else:
+        #         relevant_chunks_string += f"Chunk #{chunk1 + 1}\n{chunk_text}\n\n"
+        #         chunk1 += 1
+        #         chunks.append((chunk_text, relevant_chunks["metadatas"][0][chunk]["source"].strip()))
 
-        app_logger.add_log(
-            event_name="get_citations",
-            details={"query": query, "chunks": chunks, "transaction_id": db_row["message_id"]},
-        )
+        # app_logger.add_log(
+        #     event_name="get_citations",
+        #     details={"query": query, "chunks": chunks, "transaction_id": db_row["message_id"]},
+        # )
 
 
         # take all non empty conversations 
@@ -167,10 +173,12 @@ class KnowledgeBase:
                 conversation_string += f"User: {conv['message_english']}\nBot: {response['message_english']}\n\n"
             else:
                 conversation_string += f"User: {conv['message_english']}\n\n"
+        print("Query: ", query)
         gpt_output = self.multimodal_rag_chain.invoke({
             "question":query, 
             "history":conversation_string
         })
+        # print("GPT Output: ",gpt_output)
         # system_prompt = self.llm_prompts["answer_query"]
         # query_prompt = f"""
         #     Today's date is {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\n\
@@ -211,9 +219,9 @@ class KnowledgeBase:
             },
         )
 
-        json_output = json.loads(gpt_output.strip())
-        bot_response = json_output["response"]
-        query_type = json_output["query_type"]
+        # json_output = json.loads(gpt_output.strip())
+        # bot_response = json_output["response"]
+        # query_type = json_output["query_type"]
 
         # # print('bot response: ', bot_response, 'query type: ', query_type)
 
@@ -245,7 +253,9 @@ class KnowledgeBase:
         #             "transaction_id": db_row["message_id"],
         #         },
         #     )
-        #     return (gpt_output, citations, query_type)
+        citations = ""
+        query_type = None
+        return (gpt_output, citations, query_type)
         
     def answer_query_text(
         self,
@@ -584,11 +594,15 @@ class KnowledgeBase:
         self.vectorstore = Chroma(
             collection_name="asha-bot-mm", embedding_function=self.embedding_fn, persist_directory=self.persist_directory, client=self.client
         )
-            
+        self.vectorstore.delete_collection()  
+        self.vectorstore = Chroma(
+            collection_name="asha-bot-mm", embedding_function=self.embedding_fn, persist_directory=self.persist_directory, client=self.client
+        )
         self.retriever = MultiVectorRetriever(
             vectorstore=self.vectorstore,
             docstore=InMemoryStore(),
             id_key="doc_id",
+            top_k=3
         )
 
     def create_multi_vector_retriever(self):
@@ -602,17 +616,17 @@ class KnowledgeBase:
         # cs = ChromaStore(self.persist_docstore, "mm_rag_docs_ashabot")
         # self.docstore = create_kv_docstore(cs)      
 
-        try:
-            self.client.delete_collection(
-                name=self.config["PROJECT_NAME"],
-            )
-        except:
-            print("Creating new collection.")
+        # try:
+        #     self.client.delete_collection(
+        #         name=self.config["PROJECT_NAME"],
+        #     )
+        # except:
+        #     print("Creating new collection.")
 
-        self.collection = self.client.create_collection(
-            name=self.config["PROJECT_NAME"],
-            embedding_function=self.embedding_fn
-        )
+        # self.collection = self.client.create_collection(
+        #     name=self.config["PROJECT_NAME"],
+        #     embedding_function=self.embedding_fn
+        # )
 
         self.texts = []
         self.text_sources = []
@@ -680,6 +694,8 @@ class KnowledgeBase:
             self.add_documents_to_retriever(self.tables_summaries, self.tables, self.table_sources)
 
         print("Documents added to retriever.")
+        print(len(self.retriever.vectorstore.get()["ids"]))
+        print(len(list(self.retriever.docstore.yield_keys())))
 
         return
     
@@ -747,18 +763,32 @@ class KnowledgeBase:
             text_message = {
                 "type": "text",
                 "text": (
-                    "You are Asha bot. Your purpose is to help Asha healthcare workers with any queries that they might have while doing their Asha duties.\n"
-                    """If the query can be truthfully and factually answered using the knowledge base only, answer it concisely in a polite and professional way. 
-                    If not, then just say \"I do not know the answer to your question\"\n\n"
-                    f"User-provided question: {data_dict['question']}\n\n"""
-                    "Text and / or tables:\n"
-                    f"{formatted_texts}"
+                    f"""You are Asha bot. Your purpose is to help Asha healthcare workers with any queries that they might have while doing their Asha duties.\n\n
+                    If the query can be truthfully and factually answered using the knowledge base only, answer it concisely in a polite and professional way. 
+                    If not, then just say. 'I do not know the answer to your question'\n\n
+                    User-provided question: {data_dict['question']}\n\n
+                    Text and / or tables:\n
+                    {formatted_texts}"""
                 ),
             }
             messages.append(text_message)
             return [HumanMessage(content=messages)]
         
+        def inspect_retrieved_objects(state):
+            # Assuming `state` contains the context or retrieved data
+            retrieved_data = state.get("context", None)  # Access the "context" key
+            if retrieved_data:
+                print(f"Retrieved {len(retrieved_data)} objects from retriever.")
+                # for idx, obj in enumerate(retrieved_data):
+                #     print(f"Object {idx + 1}: {obj}")
+            else:
+                print("No data retrieved.")
+    
+            # You can return the state to proceed with the next step in the chain
+            return state
+        
         def inspect_rag_chain(state):
+
             print(state)
             return state
         
@@ -769,7 +799,8 @@ class KnowledgeBase:
                     "history": RunnablePick("history"),
                     "context": RunnablePick("question") | self.retriever | RunnableLambda(split_image_text_types),
                 })
-            # | RunnableLambda(inspect_rag_chain)
+            | RunnableLambda(inspect_retrieved_objects)
+            | RunnableLambda(inspect_rag_chain)
             | RunnableLambda(img_prompt_func)
             | self.model
             | StrOutputParser()
