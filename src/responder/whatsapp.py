@@ -115,7 +115,7 @@ class WhatsappResponder(BaseResponder):
         user_type, row_lt = self.check_user_type(from_number)
         print("User type: ", user_type, "Row: ", row_lt)
         if user_type is None:
-            if (msg_object.get("text", False) and msg_object["text"].get("body", False) and msg_object["text"]["body"] == 'onboard-asha') \
+            if (msg_object.get("text", False) and msg_object["text"].get("body", False) and msg_object["text"]["body"] in self.template_messages['asha_onboard_request']) \
             or msg_object.get("type", None) == "request_welcome":
                 user_id = str(uuid4())
                 self.user_db.insert_row(
@@ -134,7 +134,7 @@ class WhatsappResponder(BaseResponder):
                 }
                 onboard_wa_helper(self.config, self.app_logger, row_lt, self.messenger)
                 return
-            elif (msg_object.get("text", False) and msg_object["text"].get("body", False) and msg_object["text"]["body"] == 'onboard-anm'):
+            elif (msg_object.get("text", False) and msg_object["text"].get("body", False) and msg_object["text"]["body"] in self.template_messages['anm_onboard_request']):
                 user_id = str(uuid4())
                 self.user_db.insert_row(
                     user_id=user_id,

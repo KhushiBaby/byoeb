@@ -74,6 +74,14 @@
     "anm_consensus_prefix" : {
         "en" : "The ANMs have reached a consensus on the following answer:",
         "hi" : "एएनएम ने निम्नलिखित उत्तर पर सहमति बनाई है:"
-    }
+    },
+    "asha_onboard_request": [
+        "onboard-asha",
+        "में-एक-आशा-हूँ-और-मुझे-आशा-सहेली-बोट-से-जुड़ना-है"
+    ],
+    "anm_onboard_request": [
+        "onboard-anm",
+        "में-एक-नर्सदीदी-हूँ-और-मुझे-आशा-सहेली-बोट-से-जुड़ना-है"
+    ]
  
 }

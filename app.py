@@ -110,7 +110,7 @@ def scheduler():
                 event_name="Running cron_job",
                 details={"command": command},
             )
-            subprocess.run(command, shell=True)
+            subprocess.Popen(command, shell=True)
             if "kb_update" in command:
                 responder.update_kb()
 
