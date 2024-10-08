@@ -531,10 +531,10 @@ class WhatsappResponder(BaseResponder):
             print("Sending suggestions")
             self.send_suggestions(row_lt, row_query, gpt_output)
 
-        if self.config['ESCALATE_MULTIPLE'] and query_type != "small-talk" and gpt_output.strip().startswith("I do not know the answer to your question"):
-            print("Escalating query")
-            is_test_user = row_lt.get("test_user", False)
-            self.escalate_query_multiple(row_query, is_test_user)
+        # if self.config['ESCALATE_MULTIPLE'] and query_type != "small-talk" and gpt_output.strip().startswith("I do not know the answer to your question"):
+        #     print("Escalating query")
+        #     is_test_user = row_lt.get("test_user", False)
+        #     self.escalate_query_multiple(row_query, is_test_user)
 
         
 
