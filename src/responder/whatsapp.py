@@ -313,6 +313,54 @@ class WhatsappResponder(BaseResponder):
 
         self.user_db.update_user_language(row_lt['user_id'], lang_detected)
         return
+    
+    def idk_response_audio(self, message, msg_id, row_lt):
+        eng_text = self.template_messages['idk_response_audio']['en']
+        text = self.template_messages['idk_response_audio'][row_lt['user_language']]
+        text = text.replace("<query>", message)
+        options = self.template_messages['idk_response_audio'][f"{row_lt['user_language']}_options"]
+        audio_file = "test_audio_output.aac"
+        audio_file_src = "test_audio_output.wav"
+        self.azure_translate.text_to_speech(text, f"{row_lt['user_language']}-IN", audio_file_src)
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-i",
+                audio_file_src,
+                "-codec:a",
+                "aac",
+                audio_file,
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        sent_msg_id = self.messenger.send_message_with_options(
+            row_lt['whatsapp_id'], text, ["AUDIO_IDK_IGNORE", "AUDIO_IDK_ESCALATE"], options, msg_id
+        )
+        # audio_msg_id = self.messenger.send_audio(
+        #     audio_file, row_lt['whatsapp_id'], msg_id
+        # )
+
+        self.bot_conv_db.insert_row(
+            receiver_id=row_lt['user_id'],
+            message_type="query_response",
+            message_id=sent_msg_id,
+            audio_message_id=None,
+            message_source_lang=text,
+            message_language=row_lt['user_language'],
+            message_english=eng_text,
+            reply_id=msg_id,
+            citations=None,
+            message_timestamp=datetime.now(),
+            transaction_message_id=msg_id,
+        )
+
+        #mark resolved
+        self.user_conv_db.mark_resolved(msg_id)
+        return
+
+
 
     def answer_query_text(self, msg_id, message, translated_message, msg_type, row_lt, blob_name=None):
         print("Answering query: ", message, translated_message)
@@ -444,9 +492,12 @@ class WhatsappResponder(BaseResponder):
             if msg_type == "audio" or msg_type == "text" or msg_type == "interactive":
                 if gpt_output.strip().startswith("I do not know the answer to your question"):
                     if msg_type == "audio":
-                        eng_text = self.template_messages["idk_response_audio"][row_lt['user_language']]
-                        #replace <query> with the actual query
-                        eng_text = eng_text.replace("<query>", message)
+                        self.user_conv_db.add_query_type(
+                            message_id=msg_id,
+                            query_type=query_type
+                        )
+                        self.idk_response_audio(message, msg_id, row_lt)
+                        return
                     else:
                         eng_text = self.template_messages["idk_response"]["en"]
                 else:
@@ -531,10 +582,10 @@ class WhatsappResponder(BaseResponder):
             print("Sending suggestions")
             self.send_suggestions(row_lt, row_query, gpt_output)
 
-        # if self.config['ESCALATE_MULTIPLE'] and query_type != "small-talk" and gpt_output.strip().startswith("I do not know the answer to your question"):
-        #     print("Escalating query")
-        #     is_test_user = row_lt.get("test_user", False)
-        #     self.escalate_query_multiple(row_query, is_test_user)
+        if self.config['ESCALATE_MULTIPLE'] and query_type != "small-talk" and gpt_output.strip().startswith("I do not know the answer to your question"):
+            print("Escalating query")
+            is_test_user = row_lt.get("test_user", False)
+            self.escalate_query_multiple(row_query, is_test_user)
 
         
 
@@ -652,6 +703,28 @@ class WhatsappResponder(BaseResponder):
         )
         return
 
+    def handle_idk_poll_response(self, msg_object, row_lt):
+        msg_id = msg_object["id"]
+        if msg_object["interactive"]["button_reply"]["id"] == "AUDIO_IDK_IGNORE":
+            text = self.template_messages['audio_idk_ignore_response'][row_lt['user_language']]
+            self.messenger.send_message(
+                row_lt['whatsapp_id'],
+                text,
+                msg_id,
+            )
+        elif msg_object["interactive"]["button_reply"]["id"] == "AUDIO_IDK_ESCALATE":
+            text = self.template_messages['audio_idk_send_to_anm_response'][row_lt['user_language']]
+            self.messenger.send_message(
+                row_lt['whatsapp_id'],
+                text,
+                msg_id,
+            )
+            row_response = self.bot_conv_db.get_from_message_id(msg_object["context"]["id"])
+            self.user_conv_db.mark_unresolved(row_response["transaction_message_id"])
+            row_query = self.user_conv_db.get_from_message_id(row_response["transaction_message_id"])
+            self.escalate_query_multiple(row_query, row_lt.get("test_user", False))
+        return
+
 
     def handle_response_user(self, msg_object, row_lt):
         print("Handling user response")
@@ -672,6 +745,14 @@ class WhatsappResponder(BaseResponder):
             and msg_object["interactive"]["button_reply"]["id"][:8] == "feedback"
         ):
             self.receive_feedback_poll(row_lt, msg_object)
+            return
+        
+        if (
+            msg_object["type"] == "interactive"
+            and msg_object["interactive"]["type"] == "button_reply"
+            and msg_object["interactive"]["button_reply"]["id"][:9] == "AUDIO_IDK"
+        ):
+            self.handle_idk_poll_response(msg_object, row_lt)
             return
 
         if msg_object.get("text") or (
@@ -1382,7 +1463,7 @@ class WhatsappResponder(BaseResponder):
             self.user_conv_db.mark_resolved(row_query["message_id"])
             return
         
-        experts = self.user_db.get_random_expert(self.category_to_expert[row_query["query_type"]], self.config['NUM_ESCALATE_EXPERTS'], self.bot_conv_db, is_test_user)
+        experts = self.user_db.get_random_expert(self.category_to_expert[row_query["query_type"]], self.config['NUM_ESCALATE_EXPERTS'], is_test_user)
         
         previous_poll_receivers = []
         previous_poll_requests = self.bot_conv_db.find_all_with_transaction_id(row_query["message_id"], "response_request")

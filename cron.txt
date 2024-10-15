@@ -4,4 +4,4 @@
 00 14 * * * python3 $APP_PATH/cron_jobs/resend_onboarding.py
 00 03 * * * python3 $APP_PATH/processing/sync_kb.py
 00 03 * * * python3 $APP_PATH/cron_jobs/refresh_video_id.py
-*/15 * * * * python3 $APP_PATH/cron_jobs/find_consensus.py
+*/30 * * * * python3 $APP_PATH/cron_jobs/find_consensus.py
