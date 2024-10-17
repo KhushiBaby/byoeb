@@ -6,4 +6,4 @@
 00 03 * * * python3 $APP_PATH/cron_jobs/refresh_video_id.py
 */30 * * * * python3 $APP_PATH/cron_jobs/find_consensus.py
 30 16 * * 1,4 python3 $APP_PATH/cron_jobs/compile_logs.py
-00 17 * * * 1, 4 python3 $APP_PATH/cron_jobs/send_usage_stats.py
+00 17 * * * 1,4 python3 $APP_PATH/cron_jobs/send_usage_stats.py
