@@ -365,6 +365,11 @@ class WhatsappResponder(BaseResponder):
     def answer_query_text(self, msg_id, message, translated_message, msg_type, row_lt, blob_name=None):
         print("Answering query: ", message, translated_message)
         
+        if message in self.template_messages['asha_onboard_request']:
+            #ignore since the user has already been onboarded
+            return
+
+
         #ignore if the same query is repeated within an hour
         try:
             last_query = self.user_conv_db.get_most_recent_query(row_lt['user_id'])
@@ -1138,7 +1143,9 @@ class WhatsappResponder(BaseResponder):
         #         msg_object["id"],
         #     )
         #     return
-
+        if msg_object["type"] == "text" and msg_object["text"]["body"] in self.template_messages['anm_onboard_request']:
+            #ignore since the user has already been onboarded
+            return
         
 
         if msg_object["type"] == "text":
