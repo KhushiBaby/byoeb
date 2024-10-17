@@ -1,4 +1,4 @@
-00 * * * * python3 $APP_PATH/cron_jobs/escalate_multiple.py
+00 8-20 * * * python3 $APP_PATH/cron_jobs/escalate_multiple.py
 00 * * * * python3 $APP_PATH/cron_jobs/anm_reminder.py
 00 14 * * * python3 $APP_PATH/cron_jobs/user_reminder.py
 00 14 * * * python3 $APP_PATH/cron_jobs/resend_onboarding.py

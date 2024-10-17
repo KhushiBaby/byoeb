@@ -447,6 +447,25 @@ class KnowledgeBase:
         if self.config["API_ACTIVATED"] is False:
             print("API not activated")
             return ["Q1", "Q2", "Q3"]
+        
+        schema = {
+            "name": "follow_up_questions_schema",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "questions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "description": "A follow-up question"
+                        },
+                        "minItems": 3,
+                        "maxItems": 3
+                    }
+                },
+                "required": ["questions"]
+            }
+        }
 
         system_prompt = self.llm_prompts["follow_up_questions"]
         query_prompt = f"""
@@ -459,8 +478,8 @@ class KnowledgeBase:
         prompt = [{"role": "system", "content": system_prompt}]
         prompt.append({"role": "user", "content": query_prompt})
 
-        llm_out = get_llm_response(prompt)
-        next_questions = eval(llm_out.strip("\n"))
+        llm_out = get_llm_response(prompt, schema)
+        next_questions = json.loads(llm_out)["questions"]
 
         app_logger.add_log(
             event_name="gpt4",

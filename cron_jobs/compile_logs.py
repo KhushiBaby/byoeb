@@ -214,6 +214,9 @@ final_anm_df = final_anm_df.rename(columns = {
 
 final_anm_df = final_anm_df[['ANM User ID', 'ASHA Query Source Language', 'ANM Response', 'ANM Response Timestamp', 'ASHA Query English', 'ASHA Query Type', 'ASHA Query Input Type', 'ASHA Query Timestamp']]
 
+#drop if query_source_lang is nan
+final_anm_df = final_anm_df[~final_anm_df['ASHA Query Source Language'].isna()]
+
 #make sure all columns are string
 final_anm_df = final_anm_df.astype(str)
 
