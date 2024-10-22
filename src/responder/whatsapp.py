@@ -190,6 +190,33 @@ class WhatsappResponder(BaseResponder):
     def handle_unsupported_msg_types(self, msg_object, row_lt):
         # data is a dictionary that contains from_number, msg_id, msg_object
         print("Handling unsupported message types")
+
+        if row_lt['user_type'] in self.config["USERS"]:
+            self.user_conv_db.insert_row(
+                user_id=row_lt['user_id'],
+                message_id=msg_object["id"],
+                message_type="unsupported_format",
+                message_source_lang=msg_object["type"],
+                source_language=row_lt['user_language'],
+                message_translated=None,
+                audio_blob_path=None,
+                message_timestamp=datetime.now(),
+                reply_id=msg_object.get("context", {}).get("id", None),
+            )
+
+        elif row_lt['user_type'] in self.config["EXPERTS"]:
+            self.expert_conv_db.insert_row(
+                user_id=row_lt['user_id'],
+                message_type="unsupported_format",
+                message_id=msg_object["id"],
+                message_modality=msg_object["type"],
+                message= msg_object["type"],
+                reply_id=msg_object.get("context", {}).get("id", None),
+                message_timestamp=datetime.now(),
+                transaction_message_id=None,
+            )
+
+
         msg_id = msg_object["id"]
         self.app_logger.add_log(
             event_name="unsupported message format",
@@ -709,6 +736,20 @@ class WhatsappResponder(BaseResponder):
         return
 
     def handle_idk_poll_response(self, msg_object, row_lt):
+
+        self.user_conv_db.insert_row(
+            user_id=row_lt['user_id'],
+            message_id=msg_object["id"],
+            message_type="button_reply",
+            message_source_lang=msg_object["interactive"]["button_reply"]["id"],
+            source_language=row_lt['user_language'],
+            message_translated=None,
+            audio_blob_path=None,
+            message_timestamp=datetime.now(),
+            reply_id=msg_object.get("context", {}).get("id", None),
+        )
+
+
         msg_id = msg_object["id"]
         if msg_object["interactive"]["button_reply"]["id"] == "AUDIO_IDK_IGNORE":
             text = self.template_messages['audio_idk_ignore_response'][row_lt['user_language']]
@@ -875,6 +916,17 @@ class WhatsappResponder(BaseResponder):
                 row_lt['whatsapp_id'], text_src, poll_row["message_id"]
             )
             return
+        
+        self.expert_conv_db.insert_row(
+            user_id=row_lt['user_id'],
+            message_id=msg_object["id"],
+            message_type="request_response",
+            message_modality=msg_object.get("type", None),
+            message=msg_object["button"]["text"],
+            reply_id=reply_id,
+            message_timestamp=datetime.now(),
+            transaction_message_id=transaction_message_id,
+        )
         
 
         self.send_query_expert(row_lt, row_query)
@@ -1541,8 +1593,21 @@ class WhatsappResponder(BaseResponder):
         Share the output in JSON format {{"anm_votes": "xxx", "consensus_explanation": "xxx", "consensus_answer": "xxx"}}, do not include anything else.
         '''
 
+        schema = {
+            "name": "response_schema",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "anm_votes": {"type": "string"},
+                    "consensus_explanation": {"type": "string"},
+                    "consensus_answer": {"type": "string"},
+                },
+                "required": ["anm_votes", "consensus_explanation", "consensus_answer"],
+            }
+        }
+
         prompt.append({"role": "user", "content": str(query_prompt)})
-        response = get_llm_response(prompt)
+        response = get_llm_response(prompt, schema)
         
         print(response)
         response = json.loads(response)

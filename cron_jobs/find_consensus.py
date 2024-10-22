@@ -1,7 +1,6 @@
 import datetime
 import sys
 import yaml
-import json
 import os
 
 local_path = os.environ["APP_PATH"]
@@ -11,24 +10,11 @@ with open(local_path + "/config.yaml") as file:
 sys.path.append(local_path.strip() + "/src")
 
 
-from database import UserDB, UserConvDB, BotConvDB, ExpertConvDB, UserRelationDB
+from database import UserConvDB
 
-
-from messenger import WhatsappMessenger
 from responder import WhatsappResponder
-from conversation_database import (
-    LoggingDatabase
-)
 
-import subprocess
-from utils import get_llm_response, remove_extra_voice_files
-
-MIN_CONSENSUS_RESPONSES = 3
-
-userdb = UserDB(config)
 user_conv_db = UserConvDB(config)
-bot_conv_db = BotConvDB(config)
-expert_conv_db = ExpertConvDB(config)
 
 responder = WhatsappResponder(config)
 
