@@ -85,7 +85,25 @@ def gsheet_api_check(SCOPES, local_path):
             )
     return creds
 
+def is_sheet_present(SCOPES, spreadsheet_id, range_name, local_path):
+    creds = gsheet_api_check(SCOPES, local_path)
+    service = build("sheets", "v4", credentials=creds)
+    sheet_metadata = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
+    sheets = sheet_metadata.get("sheets", "")
+    sheet_names = [sheet["properties"]["title"] for sheet in sheets]
+    return range_name in sheet_names
+def create_sheet(SCOPES, spreadsheet_id, range_name, local_path):
+    creds = gsheet_api_check(SCOPES, local_path)
+    service = build("sheets", "v4", credentials=creds)
+    body = {"requests": [{"addSheet": {"properties": {"title": range_name}}}]}
 
+    response = (
+        service.spreadsheets()
+        .batchUpdate(spreadsheetId=spreadsheet_id, body=body)
+        .execute()
+    )
+    print(f"Sheet {range_name} created.")
+    
 def delete_all_rows(SCOPES, spreadsheet_id, range_name, local_path):
     creds = gsheet_api_check(SCOPES, local_path)
     service = build("sheets", "v4", credentials=creds)
