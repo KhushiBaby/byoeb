@@ -92,6 +92,27 @@ def is_sheet_present(SCOPES, spreadsheet_id, range_name, local_path):
     sheets = sheet_metadata.get("sheets", "")
     sheet_names = [sheet["properties"]["title"] for sheet in sheets]
     return range_name in sheet_names
+
+def delete_sheet(SCOPES, spreadsheet_id, range_name, local_path):
+    creds = gsheet_api_check(SCOPES, local_path)
+    service = build("sheets", "v4", credentials=creds)
+    sheet_metadata = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
+    sheets = sheet_metadata.get("sheets", "")
+    sheet_id = [
+        sheet["properties"]["sheetId"]
+        for sheet in sheets
+        if sheet["properties"]["title"] == range_name
+    ][0]
+
+    body = {"requests": [{"deleteSheet": {"sheetId": sheet_id}}]}
+
+    response = (
+        service.spreadsheets()
+        .batchUpdate(spreadsheetId=spreadsheet_id, body=body)
+        .execute()
+    )
+    print(f"Sheet {range_name} deleted.")
+    
 def create_sheet(SCOPES, spreadsheet_id, range_name, local_path):
     creds = gsheet_api_check(SCOPES, local_path)
     service = build("sheets", "v4", credentials=creds)
