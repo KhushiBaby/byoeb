@@ -16,6 +16,7 @@ from email.mime.text import MIMEText
 import datetime
 import pandas as pd
 import utils
+import re
 import hashlib
 
 # DB key names
@@ -23,6 +24,8 @@ MESSAGE_SOURCE_LANG = 'message_source_lang'
 MESSAGE_ENGLISH = 'message_english'
 MESSAGE_ID = 'message_id'
 REPLY_ID = 'reply_id'
+USER_ID = 'user_id'
+TEST_USER = 'test_user'
 
 # SpreadSheet column names
 QUERY_SOURCE_LANG = 'Query in Source Language (Hindi/Hinglish)'
@@ -54,36 +57,31 @@ def get_prompt(query):
     prompt.append({"role": "user", "content": query})
     return prompt
 
-def convert_to_datetime(data):
-    # Get the header and data rows
-    header = data[0]
-    rows = data[1:]
-
-    # Calculate the number of columns based on the header
-    num_columns = len(header)
-
-    # Process each row
-    processed_rows = []
-    for row in rows:
-        # Calculate the number of missing values
-        missing_values_count = num_columns - len(row)
-        # Prepend empty strings to the row
-        processed_row = row + [''] * missing_values_count
-        processed_rows.append(processed_row)
-
-    # Create the DataFrame
-    df = pd.DataFrame(processed_rows, columns=header)
-    return df
-
-def get_unanswered_questions_from_last_update(local_path):
-    if not utils.is_sheet_present(SCOPES, SPREADSHEET_ID, OLD_RANGE_NAME, local_path):
+def try_get_older_sheet_name(local_path):
+    sheet_names = utils.get_sheet_names(SCOPES, SPREADSHEET_ID, local_path)
+    latest_entry = utils.get_latest_entry(sheet_names)
+    if latest_entry is None:
         return None
-    data = utils.pull_sheet_data(SCOPES, SPREADSHEET_ID, OLD_RANGE_NAME, local_path)
-    df_previous = convert_to_datetime(data)
+    if latest_entry == NEW_RANGE_NAME:
+        return None
+    print(f"Found older range name: {latest_entry}")
+    return latest_entry
+
+def get_unanswered_questions_from_last_update(old_range_name, local_path):
+    if not utils.is_sheet_present(SCOPES, SPREADSHEET_ID, old_range_name, local_path):
+        print("Looking for older sheet")
+        old_range_name = try_get_older_sheet_name(local_path)
+        if old_range_name is None:
+            print("No older sheet found")
+            return None, None
+        
+    data = utils.pull_sheet_data(SCOPES, SPREADSHEET_ID, old_range_name, local_path)
+    df_previous = utils.convert_to_dataframe(data)
     df_unanswered = df_previous[(df_previous[ADD_TO_KB].str.strip().str.upper() != 'YES') & (df_previous[ADD_TO_KB].str.strip().str.upper() != 'NO')]
-    return df_unanswered
+    return df_unanswered, old_range_name
 
 def get_idk_questions():
+    old_range_name = OLD_RANGE_NAME
     question_set = set()
 
     phrases_to_check = [
@@ -93,6 +91,8 @@ def get_idk_questions():
         "Unfortunately, as a chatbot",
         "I'm sorry, but your"
     ]
+
+    user_db = UserDB(config)
     user_conv_db = UserConvDB(config)
     bot_conv_db = BotConvDB(config)
 
@@ -107,8 +107,10 @@ def get_idk_questions():
     bot_conv_df = pd.DataFrame(bot_conv_queries)
 
     questions_with_idks = pd.DataFrame(columns=[QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, ADD_TO_KB, RELEVANT_DOC])
-    previous_unanswered_df = get_unanswered_questions_from_last_update(local_path)
+    previous_unanswered_df, old_range_name = get_unanswered_questions_from_last_update(old_range_name, local_path)
+    
     if previous_unanswered_df is not None:
+        print("unanswered questions from last update: ", len(previous_unanswered_df)) 
         for _, row in previous_unanswered_df.iterrows():
             question_set.add(md5_hash(row[QUERY_ENG]))
     questions_with_idks = pd.concat(
@@ -120,6 +122,10 @@ def get_idk_questions():
     )
 
     for _, row in user_conv_df.iterrows():
+        user_id = row[USER_ID]
+        if user_db.get_from_user_id(user_id)[TEST_USER]:
+            print("Skipping test user")
+            continue
         query_source_lang = row[MESSAGE_SOURCE_LANG]
         query_eng = row[MESSAGE_ENGLISH]
         bot_answer = bot_conv_df[bot_conv_df[REPLY_ID] == row[MESSAGE_ID]].iloc[0][MESSAGE_ENGLISH]
@@ -145,7 +151,7 @@ def get_idk_questions():
                 ignore_index=True
             )
     questions_with_idks.reset_index(drop=True, inplace=True)
-    return questions_with_idks
+    return questions_with_idks, old_range_name
 
 def send_email():
     li = config["EMAIL_LIST"]
@@ -185,7 +191,7 @@ def send_email():
         print(f"Email sent to: {dest}")
 
 
-questions_with_idks = get_idk_questions()
+questions_with_idks, old_range_name = get_idk_questions()
 if utils.is_sheet_present(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path):
     utils.delete_sheet(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path)
 utils.create_sheet(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path)
@@ -193,5 +199,5 @@ utils.add_headers(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, [QUERY_SOURCE_LANG, QU
 utils.append_rows(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, questions_with_idks, local_path)
 utils.set_row_bold(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, 1, local_path)
 send_email()
-if utils.is_sheet_present(SCOPES, SPREADSHEET_ID, OLD_RANGE_NAME, local_path):
-    utils.delete_sheet(SCOPES, SPREADSHEET_ID, OLD_RANGE_NAME, local_path)
+if old_range_name is not None and utils.is_sheet_present(SCOPES, SPREADSHEET_ID, old_range_name, local_path):
+    utils.delete_sheet(SCOPES, SPREADSHEET_ID, old_range_name, local_path)

@@ -1,4 +1,5 @@
 import regex as re
+import pandas as pd
 import datetime
 import os
 import json
@@ -74,6 +75,27 @@ def translate_gpt_en2hi(eng_text):
     response = get_llm_response(prompt)
     return response
 
+def convert_to_dataframe(data):
+    # Get the header and data rows
+    header = data[0]
+    rows = data[1:]
+
+    # Calculate the number of columns based on the header
+    num_columns = len(header)
+
+    # Process each row
+    processed_rows = []
+    for row in rows:
+        # Calculate the number of missing values
+        missing_values_count = num_columns - len(row)
+        # Prepend empty strings to the row
+        processed_row = row + [''] * missing_values_count
+        processed_rows.append(processed_row)
+
+    # Create the DataFrame
+    df = pd.DataFrame(processed_rows, columns=header)
+    return df
+
 def gsheet_api_check(SCOPES, local_path):
     creds = None
     if not creds or not creds.valid:
@@ -103,14 +125,37 @@ def get_sheet_id(SCOPES, spreadsheet_id, sheet_name, local_path):
     print(f"Sheet name '{sheet_name}' not found.")
     return sheet_id
 
-
-def is_sheet_present(SCOPES, spreadsheet_id, range_name, local_path):
+def get_sheet_names(SCOPES, spreadsheet_id, local_path):
     creds = gsheet_api_check(SCOPES, local_path)
     service = build("sheets", "v4", credentials=creds)
     sheet_metadata = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
     sheets = sheet_metadata.get("sheets", "")
     sheet_names = [sheet["properties"]["title"] for sheet in sheets]
+    return sheet_names
+
+def is_sheet_present(SCOPES, spreadsheet_id, range_name, local_path):
+    sheet_names = get_sheet_names(SCOPES, spreadsheet_id, local_path)
     return range_name in sheet_names
+
+
+def extract_date(text):
+    # Extract date using regular expression
+    match = re.search(r'\d{2}-\d{2}-\d{4}', text)
+    if match:
+        return datetime.datetime.strptime(match.group(), '%d-%m-%Y')
+    return None
+
+def get_latest_entry(entries):
+    # Filter out entries without a valid date
+    dated_entries = [(entry, extract_date(entry)) for entry in entries]
+    valid_entries = [(entry, date) for entry, date in dated_entries if date is not None]
+    
+    if not valid_entries:
+        return None  # Return None if there are no valid dates
+
+    # Return the entry with the latest date
+    latest_entry = max(valid_entries, key=lambda x: x[1])
+    return latest_entry[0]
 
 def delete_sheet(SCOPES, spreadsheet_id, range_name, local_path):
     creds = gsheet_api_check(SCOPES, local_path)
