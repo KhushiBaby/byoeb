@@ -25,8 +25,8 @@ MESSAGE_ID = 'message_id'
 REPLY_ID = 'reply_id'
 
 # SpreadSheet column names
-QUERY_SOURCE_LANG = 'Query in Source Language'
-QUERY_ENG = 'Query in English'
+QUERY_SOURCE_LANG = 'Query in Source Language (Hindi/Hinglish)'
+QUERY_ENG = 'Query in English for Knowledge Base'
 RESPONSE = 'GPT Answer/Final Answer for Knowledge Base'
 ADD_TO_KB = 'Add to Knowledge Base (Yes/No)'
 RELEVANT_DOC = 'Relevant document (if needed)'
