@@ -49,12 +49,33 @@ def get_prompt(query):
     prompt.append({"role": "user", "content": query})
     return prompt
 
+def convert_to_datetime(data):
+    # Get the header and data rows
+    header = data[0]
+    rows = data[1:]
+
+    # Calculate the number of columns based on the header
+    num_columns = len(header)
+
+    # Process each row
+    processed_rows = []
+    for row in rows:
+        # Calculate the number of missing values
+        missing_values_count = num_columns - len(row)
+        # Prepend empty strings to the row
+        processed_row = row + [''] * missing_values_count
+        processed_rows.append(processed_row)
+
+    # Create the DataFrame
+    df = pd.DataFrame(processed_rows, columns=header)
+    return df
+
 def get_unanswered_questions_from_previous(local_path):
     if not utils.is_sheet_present(SCOPES, SPREADSHEET_ID, OLD_RANGE_NAME, local_path):
         return None
     data = utils.pull_sheet_data(SCOPES, SPREADSHEET_ID, OLD_RANGE_NAME, local_path)
-    df_previous = pd.DataFrame(data[1:], columns=data[0])
-    df_unanswered = df_previous[(df_previous[ADD_TO_KB].isnull()) | (df_previous[ADD_TO_KB].str.strip().str.upper() == 'NA')]
+    df_previous = convert_to_datetime(data)
+    df_unanswered = df_previous[(df_previous[ADD_TO_KB].str.strip().str.upper() != 'YES') & (df_previous[ADD_TO_KB].str.strip().str.upper() != 'NO')]
     return df_unanswered
 
 question_set = set()
@@ -76,6 +97,7 @@ logger = AppLogger()
 HOURS_TO_SKIP = 2
 DAYS_TO_LOOKBACK = 7
 
+
 end_dt = datetime.datetime.now() - datetime.timedelta(hours=HOURS_TO_SKIP)
 start_dt = end_dt - datetime.timedelta(days=DAYS_TO_LOOKBACK)
 
@@ -88,6 +110,9 @@ bot_conv_df = pd.DataFrame(bot_conv_queries)
 
 questions_with_idks = pd.DataFrame(columns=[QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, ADD_TO_KB, RELEVANT_DOC])
 previous_unanswered_df = get_unanswered_questions_from_previous(local_path)
+if previous_unanswered_df is not None:
+    for index, row in previous_unanswered_df.iterrows():
+        question_set.add(md5_hash(row[QUERY_ENG]))
 questions_with_idks = pd.concat(
     [
         questions_with_idks,
@@ -96,7 +121,6 @@ questions_with_idks = pd.concat(
     ignore_index=True
 )
 
-# print(len(questions_with_idks))
 for index, row in user_conv_df.iterrows():
     query_source_lang = row[MESSAGE_SOURCE_LANG]
     query_eng = row[MESSAGE_ENGLISH]
@@ -110,8 +134,8 @@ for index, row in user_conv_df.iterrows():
                     QUERY_SOURCE_LANG: query_source_lang, 
                     QUERY_ENG: query_eng, 
                     RESPONSE: gpt_response,
-                    ADD_TO_KB: 'NA',
-                    RELEVANT_DOC: 'NA'
+                    ADD_TO_KB: '',
+                    RELEVANT_DOC: ""
                 }
             ]
         )
@@ -124,11 +148,11 @@ for index, row in user_conv_df.iterrows():
         )
 questions_with_idks.reset_index(drop=True, inplace=True)
 if utils.is_sheet_present(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path):
-    utils.delete_all_rows(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path)
-else:
-    utils.create_sheet(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path)
-utils.add_rows(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, questions_with_idks, local_path)
-print(len(questions_with_idks))
+    utils.delete_sheet(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path)
+utils.create_sheet(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path)
+utils.add_headers(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, [QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, ADD_TO_KB, RELEVANT_DOC], local_path)
+utils.append_rows(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, questions_with_idks, local_path)
+utils.set_row_bold(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, 1, local_path)
 
 li = config["EMAIL_LIST"]
 link_to_sheet = config["SHEET_LINK"].strip()
@@ -142,5 +166,6 @@ Best regards, \BYOeB Bot team."
     s.sendmail(config["EMAIL_ID"], dest, message)
     print(dest, li)
     s.quit()
-
-utils.delete_sheet(SCOPES, SPREADSHEET_ID, OLD_RANGE_NAME, local_path)
+    
+if utils.is_sheet_present(SCOPES, SPREADSHEET_ID, OLD_RANGE_NAME, local_path):
+    utils.delete_sheet(SCOPES, SPREADSHEET_ID, OLD_RANGE_NAME, local_path)
