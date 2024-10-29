@@ -11,6 +11,8 @@ sys.path.append(local_path + "/src")
 from database import UserDB, UserConvDB, BotConvDB, ExpertConvDB, AppLogger
 from messenger.whatsapp import WhatsappMessenger
 from tabulate import tabulate
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 import datetime
 import pandas as pd
 import utils
@@ -32,7 +34,10 @@ RELEVANT_DOC = 'Relevant document (if needed)'
 NEW_RANGE_NAME = 'KB_Update_' + datetime.datetime.now().strftime("%d-%m-%Y")
 OLD_RANGE_NAME = 'KB_Update_' + (datetime.datetime.now() - datetime.timedelta(days=7)).strftime("%d-%m-%Y")
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-SPREADSHEET_ID = '1OBCVwvKC6xBl-FEfCNnJa8C36w8hlT49iGXzYya7s3s'
+SPREADSHEET_ID = config["SPREADSHEET_ID"].strip()
+
+HOURS_TO_SKIP = 2
+DAYS_TO_LOOKBACK = 7
 
 
 def md5_hash(input_string: str) -> str:
@@ -70,7 +75,7 @@ def convert_to_datetime(data):
     df = pd.DataFrame(processed_rows, columns=header)
     return df
 
-def get_unanswered_questions_from_previous(local_path):
+def get_unanswered_questions_from_last_update(local_path):
     if not utils.is_sheet_present(SCOPES, SPREADSHEET_ID, OLD_RANGE_NAME, local_path):
         return None
     data = utils.pull_sheet_data(SCOPES, SPREADSHEET_ID, OLD_RANGE_NAME, local_path)
@@ -78,94 +83,115 @@ def get_unanswered_questions_from_previous(local_path):
     df_unanswered = df_previous[(df_previous[ADD_TO_KB].str.strip().str.upper() != 'YES') & (df_previous[ADD_TO_KB].str.strip().str.upper() != 'NO')]
     return df_unanswered
 
-question_set = set()
+def get_idk_questions():
+    question_set = set()
 
-phrases_to_check = [
-    "I'm sorry for the inconvenience",
-    "I'm sorry, but as a chatbot",
-    "I do not know the answer",
-    "Unfortunately, as a chatbot",
-    "I'm sorry, but your"
-]
+    phrases_to_check = [
+        "I'm sorry for the inconvenience",
+        "I'm sorry, but as a chatbot",
+        "I do not know the answer",
+        "Unfortunately, as a chatbot",
+        "I'm sorry, but your"
+    ]
+    user_conv_db = UserConvDB(config)
+    bot_conv_db = BotConvDB(config)
 
-user_db = UserDB(config)
-user_conv_db = UserConvDB(config)
-bot_conv_db = BotConvDB(config)
-expert_conv_db = ExpertConvDB(config)
-logger = AppLogger()
+    end_dt = datetime.datetime.now() - datetime.timedelta(hours=HOURS_TO_SKIP)
+    start_dt = end_dt - datetime.timedelta(days=DAYS_TO_LOOKBACK)
 
-HOURS_TO_SKIP = 2
-DAYS_TO_LOOKBACK = 7
+    user_conv_queries = user_conv_db.get_all_queries_in_duration(start_dt, end_dt)
+    user_conv_df = pd.DataFrame(user_conv_queries)
+    user_conv_df = user_conv_df[user_conv_df['query_type'] == 'Clinical']
+
+    bot_conv_queries = bot_conv_db.find_all_with_duration(start_dt, end_dt + datetime.timedelta(hours=HOURS_TO_SKIP))
+    bot_conv_df = pd.DataFrame(bot_conv_queries)
+
+    questions_with_idks = pd.DataFrame(columns=[QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, ADD_TO_KB, RELEVANT_DOC])
+    previous_unanswered_df = get_unanswered_questions_from_last_update(local_path)
+    if previous_unanswered_df is not None:
+        for _, row in previous_unanswered_df.iterrows():
+            question_set.add(md5_hash(row[QUERY_ENG]))
+    questions_with_idks = pd.concat(
+        [
+            questions_with_idks,
+            previous_unanswered_df
+        ],
+        ignore_index=True
+    )
+
+    for _, row in user_conv_df.iterrows():
+        query_source_lang = row[MESSAGE_SOURCE_LANG]
+        query_eng = row[MESSAGE_ENGLISH]
+        bot_answer = bot_conv_df[bot_conv_df[REPLY_ID] == row[MESSAGE_ID]].iloc[0][MESSAGE_ENGLISH]
+        if any(phrase in bot_answer for phrase in phrases_to_check) and md5_hash(query_eng) not in question_set:
+            question_set.add(md5_hash(query_eng))
+            gpt_response = utils.get_llm_response(get_prompt(query_eng))
+            new_entry_df = pd.DataFrame(
+                [
+                    {
+                        QUERY_SOURCE_LANG: query_source_lang, 
+                        QUERY_ENG: query_eng, 
+                        RESPONSE: gpt_response,
+                        ADD_TO_KB: '',
+                        RELEVANT_DOC: ""
+                    }
+                ]
+            )
+            questions_with_idks = pd.concat(
+                [
+                    questions_with_idks,
+                    new_entry_df
+                ],
+                ignore_index=True
+            )
+    questions_with_idks.reset_index(drop=True, inplace=True)
+    return questions_with_idks
+
+def send_email():
+    li = config["EMAIL_LIST"]
+    link_to_sheet = config["SHEET_LINK"].strip()
+    date_today = datetime.datetime.now()
+    for dest in li:
+        # Create the email message
+        msg = MIMEMultipart()
+        msg['From'] = config["EMAIL_ID"]
+        msg['To'] = dest
+        msg['Subject'] = f"ASHABot Knowledge Base Update for {date_today.strftime('%d-%m-%Y')}"
+
+        # Create the HTML message body
+        message = f"""
+        <html>
+            <body>
+                <p>Hi Dr. Rohini and Dr. Ruchit,</p>
+                <p>Here is a link to today's <a href="{link_to_sheet}">Knowledge base update sheet</a>.</p>
+                <p>For each row, please mention YES/NO in the <i>"Add to Knowledge Base"</i> column.<br>
+                If YES, please edit <i>"Query in English for Knowledge Base"</i> and <i>"GPT Answer/Final Answer for Knowledge Base"</i> if needed.<br>
+                Please link other resources in <i>"Relevant document (if needed)."</i></p>
+                <p>We will add the rows marked "YES" to ASHABot's knowledge base on {(date_today + datetime.timedelta(days=3)).strftime('%d-%m-%Y')}, at 10PM PST.</p>
+                <p>Best regards,<br>BYOeB Bot team.</p>
+            </body>
+        </html>
+        """
+
+        # Attach the HTML message to the email
+        msg.attach(MIMEText(message, 'html'))
+
+        # Send the email
+        with smtplib.SMTP("smtp.gmail.com", 587) as s:
+            s.starttls()
+            s.login(config["EMAIL_ID"], config["EMAIL_PASS"].strip())
+            s.sendmail(config["EMAIL_ID"], dest, msg.as_string())
+
+        print(f"Email sent to: {dest}")
 
 
-end_dt = datetime.datetime.now() - datetime.timedelta(hours=HOURS_TO_SKIP)
-start_dt = end_dt - datetime.timedelta(days=DAYS_TO_LOOKBACK)
-
-user_conv_queries = user_conv_db.get_all_queries_in_duration(start_dt, end_dt)
-user_conv_df = pd.DataFrame(user_conv_queries)
-user_conv_df = user_conv_df[user_conv_df['query_type'] == 'Clinical']
-
-bot_conv_queries = bot_conv_db.find_all_with_duration(start_dt, end_dt + datetime.timedelta(hours=HOURS_TO_SKIP))
-bot_conv_df = pd.DataFrame(bot_conv_queries)
-
-questions_with_idks = pd.DataFrame(columns=[QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, ADD_TO_KB, RELEVANT_DOC])
-previous_unanswered_df = get_unanswered_questions_from_previous(local_path)
-if previous_unanswered_df is not None:
-    for index, row in previous_unanswered_df.iterrows():
-        question_set.add(md5_hash(row[QUERY_ENG]))
-questions_with_idks = pd.concat(
-    [
-        questions_with_idks,
-        previous_unanswered_df
-    ],
-    ignore_index=True
-)
-
-for index, row in user_conv_df.iterrows():
-    query_source_lang = row[MESSAGE_SOURCE_LANG]
-    query_eng = row[MESSAGE_ENGLISH]
-    bot_answer = bot_conv_df[bot_conv_df[REPLY_ID] == row[MESSAGE_ID]].iloc[0][MESSAGE_ENGLISH]
-    if any(phrase in bot_answer for phrase in phrases_to_check) and md5_hash(query_eng) not in question_set:
-        question_set.add(md5_hash(query_eng))
-        gpt_response = utils.get_llm_response(get_prompt(query_eng))
-        new_entry_df = pd.DataFrame(
-            [
-                {
-                    QUERY_SOURCE_LANG: query_source_lang, 
-                    QUERY_ENG: query_eng, 
-                    RESPONSE: gpt_response,
-                    ADD_TO_KB: '',
-                    RELEVANT_DOC: ""
-                }
-            ]
-        )
-        questions_with_idks = pd.concat(
-            [
-                questions_with_idks,
-                new_entry_df
-            ],
-            ignore_index=True
-        )
-questions_with_idks.reset_index(drop=True, inplace=True)
+questions_with_idks = get_idk_questions()
 if utils.is_sheet_present(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path):
     utils.delete_sheet(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path)
 utils.create_sheet(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path)
 utils.add_headers(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, [QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, ADD_TO_KB, RELEVANT_DOC], local_path)
 utils.append_rows(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, questions_with_idks, local_path)
 utils.set_row_bold(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, 1, local_path)
-
-li = config["EMAIL_LIST"]
-link_to_sheet = config["SHEET_LINK"].strip()
-date_today = datetime.datetime.now().strftime("%d-%m-%Y")
-for dest in li:
-    s = smtplib.SMTP("smtp.gmail.com", 587)
-    s.starttls()
-    s.login(config["EMAIL_ID"], config["EMAIL_PASS"].strip())
-    message = f"Subject: BYOeB log {date_today}. \n\nHello team, \nHere is a link to today's BYOeB log: {link_to_sheet}. \n\nPlease update the column 'To Update Knowledge Base' with a YES/NO depending upon the expert's correction. \n\n\
-Best regards, \BYOeB Bot team."
-    s.sendmail(config["EMAIL_ID"], dest, message)
-    print(dest, li)
-    s.quit()
-    
+send_email()
 if utils.is_sheet_present(SCOPES, SPREADSHEET_ID, OLD_RANGE_NAME, local_path):
     utils.delete_sheet(SCOPES, SPREADSHEET_ID, OLD_RANGE_NAME, local_path)
