@@ -163,12 +163,12 @@ def send_email():
         <html>
             <body>
                 <p>Hi Dr. Rohini and Dr. Ruchit,</p>
-                <p>Here is a link to today's <a href="{link_to_sheet}">Knowledge base update sheet</a>.</p>
+                <p>Here is the <a href="{link_to_sheet}">Knowledge base update sheet</a>.</p>
                 <p>For each row, please mention YES/NO in the <i>"Add to Knowledge Base"</i> column.<br>
                 If YES, please edit <i>"Query in English for Knowledge Base"</i> and <i>"GPT Answer/Final Answer for Knowledge Base"</i> if needed.<br>
-                Please link other resources in <i>"Relevant document (if needed)."</i></p>
+                You can link other resources in <i>"Relevant document (if needed)."</i></p>
                 <p>We will add the rows marked "YES" to ASHABot's knowledge base on {(date_today + datetime.timedelta(days=3)).strftime('%d-%m-%Y')}, at 10PM PST.</p>
-                <p>Best regards,<br>BYOeB Bot team.</p>
+                <p>Best regards,<br>ASHABot team.</p>
             </body>
         </html>
         """
@@ -185,13 +185,13 @@ def send_email():
         print(f"Email sent to: {dest}")
 
 
-questions_with_idks = get_idk_questions()
-if utils.is_sheet_present(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path):
-    utils.delete_sheet(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path)
-utils.create_sheet(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path)
-utils.add_headers(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, [QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, ADD_TO_KB, RELEVANT_DOC], local_path)
-utils.append_rows(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, questions_with_idks, local_path)
-utils.set_row_bold(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, 1, local_path)
+# questions_with_idks = get_idk_questions()
+# if utils.is_sheet_present(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path):
+#     utils.delete_sheet(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path)
+# utils.create_sheet(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path)
+# utils.add_headers(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, [QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, ADD_TO_KB, RELEVANT_DOC], local_path)
+# utils.append_rows(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, questions_with_idks, local_path)
+# utils.set_row_bold(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, 1, local_path)
 send_email()
-if utils.is_sheet_present(SCOPES, SPREADSHEET_ID, OLD_RANGE_NAME, local_path):
-    utils.delete_sheet(SCOPES, SPREADSHEET_ID, OLD_RANGE_NAME, local_path)
+# if utils.is_sheet_present(SCOPES, SPREADSHEET_ID, OLD_RANGE_NAME, local_path):
+#     utils.delete_sheet(SCOPES, SPREADSHEET_ID, OLD_RANGE_NAME, local_path)
