@@ -92,3 +92,8 @@ class UserDB(BaseDB):
             users = self.collection.find({'user_type': user_type})
         users = list(users)
         return users
+    
+    def get_test_users(self,):
+        users = self.collection.find({"test_user" : True})
+        users = list(users)
+        return users
