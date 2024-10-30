@@ -199,6 +199,6 @@ utils.create_sheet(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path)
 utils.add_headers(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, [QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, ADD_TO_KB, RELEVANT_DOC], local_path)
 utils.append_rows(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, questions_with_idks, local_path)
 utils.set_row_bold(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, 1, local_path)
-# send_email()
+send_email()
 if old_range_name is not None and utils.is_sheet_present(SCOPES, SPREADSHEET_ID, old_range_name, local_path):
     utils.delete_sheet(SCOPES, SPREADSHEET_ID, old_range_name, local_path)
