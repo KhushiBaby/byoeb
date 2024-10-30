@@ -155,6 +155,8 @@ def get_idk_questions():
     return questions_with_idks, old_range_name
 
 def send_email():
+    email_id = os.environ["EMAIL_ID"].strip()
+    email_pass = os.environ["EMAIL_PASS"].strip()
     li = config["EMAIL_LIST"]
     link_to_sheet = config["SHEET_LINK"].strip()
     date_today = datetime.datetime.now()
@@ -186,8 +188,8 @@ def send_email():
         # Send the email
         with smtplib.SMTP("smtp.gmail.com", 587) as s:
             s.starttls()
-            s.login(config["EMAIL_ID"], config["EMAIL_PASS"].strip())
-            s.sendmail(config["EMAIL_ID"], dest, msg.as_string())
+            s.login(email_id, email_pass)
+            s.sendmail(email_id, dest, msg.as_string())
 
         print(f"Email sent to: {dest}")
 
