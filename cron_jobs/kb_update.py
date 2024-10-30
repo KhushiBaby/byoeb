@@ -178,7 +178,7 @@ def update_kb(is_created, updated_date, last_update_request_date):
         knowledge_base = KnowledgeBase(config)
         try:
             knowledge_base.update_kb_wa()
-            msg = f"KB updated successfully on {updated_date} for update requests on {last_update_request_date}"
+            msg = f"KB updated successfully on {updated_date} for update requested on {last_update_request_date}"
             print("KB updated successfully")
             return msg, None
         except Exception as e:

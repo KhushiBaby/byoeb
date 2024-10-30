@@ -541,14 +541,10 @@ class KnowledgeBase:
         print("metadatas: ", metadatas)
 
         print("texts: ", self.texts)
-        self.collection.add(
+        collection.add(
             ids=[str(index + collection_count) for index in range(len(self.texts))],
             metadatas=[{"source": source} for source in self.sources],
             documents=self.texts,
-        )
-
-        client = chromadb.PersistentClient(
-            path=self.persist_directory, settings=Settings(anonymized_telemetry=False)
         )
 
         collection = client.get_collection(
