@@ -45,7 +45,10 @@ def add_update_timestamps(df, update_request_date, updated_date):
     df = df[[UPDATE_REQUEST_DATE, UPDATED_DATE, QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, ADD_TO_KB, RELEVANT_DOC]]
     df.reset_index(drop=True, inplace=True)
     return df
+
 def send_email(process_message):
+    email_id = os.environ["EMAIL_ID"].strip()
+    email_pass = os.environ["EMAIL_PASS"].strip()
     li = config["EMAIL_LIST"]
     link_to_sheet = config["SHEET_LINK"].strip()
     date_today = datetime.datetime.now()
@@ -74,8 +77,8 @@ def send_email(process_message):
         # Send the email
         with smtplib.SMTP("smtp.gmail.com", 587) as s:
             s.starttls()
-            s.login(config["EMAIL_ID"], config["EMAIL_PASS"].strip())
-            s.sendmail(config["EMAIL_ID"], dest, msg.as_string())
+            s.login(email_id, email_pass)
+            s.sendmail(email_id, dest, msg.as_string())
 
         print(f"Email sent to: {dest}")
 
@@ -179,8 +182,8 @@ def update_kb(is_created, updated_date, last_update_request_date):
             print("KB updated successfully")
             return msg, None
         except Exception as e:
-            msg = f"Error updating KB: {e}"
-            print(f"Error updating KB: {e}")
+            msg = f"Error updating KB for update request date {last_update_request_date}: {e}"
+            print(f"Error updating KB for update request date {last_update_request_date}: {e}")
             return msg, e
     msg = f"No new updates to KB on {updated_date} for update requests on {last_update_request_date}"
     print("No new updates to KB")
@@ -188,9 +191,12 @@ def update_kb(is_created, updated_date, last_update_request_date):
 
 last_update_range_name = LAST_UPDATE_RANGE_NAME
 df_yes_to_update, df_no_to_update, last_update_range_name = get_answered_questions_from_last_update(last_update_range_name, local_path)
+
 if last_update_range_name is None:
-    print("No update sheet found")
+    msg = "No update sheet found"
+    send_email(msg)
     sys.exit()
+
 print(f"Last update sheet found: {last_update_range_name}")
 last_update_request_date = utils.extract_date(last_update_range_name).strftime("%d-%m-%Y")
 updated_date = datetime.datetime.now().strftime("%d-%m-%Y")
@@ -213,4 +219,4 @@ utils.append_rows(SCOPES, SPREADSHEET_ID, STORE_RANGE_NAME, df_answered, local_p
 
 create_or_add_to_raw_kb_update_file(df_answered, local_path)
 
-# send_email(msg)
+send_email(msg)
