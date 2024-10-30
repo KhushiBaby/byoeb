@@ -39,6 +39,12 @@ RELEVANT_DOC = 'Relevant document (if needed)'
 UPDATE_REQUEST_DATE = 'Update Request Date'
 UPDATED_DATE = 'Updated Date'
 
+def add_update_timestamps(df, update_request_date, updated_date):
+    df[UPDATE_REQUEST_DATE] = update_request_date
+    df[UPDATED_DATE] = updated_date
+    df = df[[UPDATE_REQUEST_DATE, UPDATED_DATE, QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, ADD_TO_KB, RELEVANT_DOC]]
+    df.reset_index(drop=True, inplace=True)
+    return df
 def send_email(process_message):
     li = config["EMAIL_LIST"]
     link_to_sheet = config["SHEET_LINK"].strip()
@@ -122,6 +128,7 @@ def create_or_add_to_raw_kb_update_file(df, local_path):
     df_yes_to_update = df[(df[ADD_TO_KB].str.strip().str.upper() == 'YES')]
     df_no_to_update = df[(df[ADD_TO_KB].str.strip().str.upper() == 'NO')]
     file = open(os.path.join(local_path, os.environ['DATA_PATH'], RAW_DOCUMENTS_FOLDER_NAME, "KB Updated.txt"), "a")
+
     df_yes_to_update.reset_index(drop=True, inplace=True)
     with open(file_path, "a") as file:
         for i in tqdm(range(len(df_yes_to_update))):
@@ -170,10 +177,14 @@ def update_kb(is_created, updated_date, last_update_request_date):
             knowledge_base.update_kb_wa()
             msg = f"KB updated successfully on {updated_date} for update requests on {last_update_request_date}"
             print("KB updated successfully")
+            return msg, None
         except Exception as e:
             msg = f"Error updating KB: {e}"
+            print(f"Error updating KB: {e}")
+            return msg, e
     msg = f"No new updates to KB on {updated_date} for update requests on {last_update_request_date}"
-    return msg
+    print("No new updates to KB")
+    return msg, None
 
 last_update_range_name = LAST_UPDATE_RANGE_NAME
 df_yes_to_update, df_no_to_update, last_update_range_name = get_answered_questions_from_last_update(last_update_range_name, local_path)
@@ -183,15 +194,18 @@ if last_update_range_name is None:
 print(f"Last update sheet found: {last_update_range_name}")
 last_update_request_date = utils.extract_date(last_update_range_name).strftime("%d-%m-%Y")
 updated_date = datetime.datetime.now().strftime("%d-%m-%Y")
-df_answered = pd.concat([df_yes_to_update, df_no_to_update])
-df_answered[UPDATE_REQUEST_DATE] = last_update_request_date
-df_answered[UPDATED_DATE] = updated_date
-df_answered = df_answered[[UPDATE_REQUEST_DATE, UPDATED_DATE, QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, ADD_TO_KB, RELEVANT_DOC]]
-df_answered.reset_index(drop=True, inplace=True)
 
 is_created = create_kb_update_file(df_yes_to_update, local_path)
-msg = update_kb(is_created, updated_date, last_update_request_date)
+msg, err = update_kb(is_created, updated_date, last_update_request_date)
 
+df_no_to_update = add_update_timestamps(df_no_to_update, last_update_request_date, None)
+if err is not None:
+    df_yes_to_update = add_update_timestamps(df_yes_to_update, last_update_request_date, None)
+else:
+    df_yes_to_update = add_update_timestamps(df_yes_to_update, last_update_request_date, updated_date)
+
+df_answered = pd.concat([df_yes_to_update, df_no_to_update])
+df_answered.reset_index(drop=True, inplace=True)
 if not utils.is_sheet_present(SCOPES, SPREADSHEET_ID, STORE_RANGE_NAME, local_path):
     utils.create_sheet(SCOPES, SPREADSHEET_ID, STORE_RANGE_NAME, local_path)
     utils.add_headers(SCOPES, SPREADSHEET_ID, STORE_RANGE_NAME, [UPDATE_REQUEST_DATE, UPDATED_DATE, QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, ADD_TO_KB, RELEVANT_DOC], local_path)
