@@ -42,7 +42,7 @@ UPDATED_DATE = 'Updated Date'
 def add_update_timestamps(df, update_request_date, updated_date):
     df[UPDATE_REQUEST_DATE] = update_request_date
     df[UPDATED_DATE] = updated_date
-    df = df[[UPDATE_REQUEST_DATE, UPDATED_DATE, QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, ADD_TO_KB, RELEVANT_DOC]]
+    df = df[[UPDATE_REQUEST_DATE, UPDATED_DATE, ADD_TO_KB, QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, RELEVANT_DOC]]
     df.reset_index(drop=True, inplace=True)
     return df
 
@@ -214,7 +214,7 @@ df_answered = pd.concat([df_yes_to_update, df_no_to_update])
 df_answered.reset_index(drop=True, inplace=True)
 if not utils.is_sheet_present(SCOPES, SPREADSHEET_ID, STORE_RANGE_NAME, local_path):
     utils.create_sheet(SCOPES, SPREADSHEET_ID, STORE_RANGE_NAME, local_path)
-    utils.add_headers(SCOPES, SPREADSHEET_ID, STORE_RANGE_NAME, [UPDATE_REQUEST_DATE, UPDATED_DATE, QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, ADD_TO_KB, RELEVANT_DOC], local_path)
+    utils.add_headers(SCOPES, SPREADSHEET_ID, STORE_RANGE_NAME, [UPDATE_REQUEST_DATE, UPDATED_DATE, ADD_TO_KB, QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, RELEVANT_DOC], local_path)
 utils.append_rows(SCOPES, SPREADSHEET_ID, STORE_RANGE_NAME, df_answered, local_path)
 
 create_or_add_to_raw_kb_update_file(df_answered, local_path)
