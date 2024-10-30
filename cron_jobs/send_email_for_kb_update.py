@@ -2,12 +2,16 @@ import yaml
 import os
 import smtplib
 
+
+
 local_path = os.environ["APP_PATH"]
 with open(os.path.join(local_path, "config.yaml")) as file:
     config = yaml.load(file, Loader=yaml.FullLoader)
 import sys
+sys.path.append(local_path + "/processing")
 sys.path.append(local_path + "/src")
 
+from get_secrets import get_emails_list
 from database import UserDB, UserConvDB, BotConvDB, ExpertConvDB, AppLogger
 from messenger.whatsapp import WhatsappMessenger
 from tabulate import tabulate
@@ -157,7 +161,8 @@ def get_idk_questions():
 def send_email():
     email_id = os.environ["EMAIL_ID"].strip()
     email_pass = os.environ["EMAIL_PASS"].strip()
-    li = config["EMAIL_LIST"]
+    li = get_emails_list()
+    # li = config["EMAIL_LIST"]
     link_to_sheet = config["SHEET_LINK"].strip()
     date_today = datetime.datetime.now()
     for dest in li:
@@ -192,7 +197,6 @@ def send_email():
             s.sendmail(email_id, dest, msg.as_string())
 
         print(f"Email sent to: {dest}")
-
 
 questions_with_idks, old_range_name = get_idk_questions()
 if utils.is_sheet_present(SCOPES, SPREADSHEET_ID, NEW_RANGE_NAME, local_path):

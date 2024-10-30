@@ -8,6 +8,10 @@ from azure.keyvault.secrets import SecretClient
 credential = DefaultAzureCredential()
 client = SecretClient(vault_url=os.environ['AZ_KEY_VAULT_URL'].strip(), credential=credential)
 
+def get_emails_list():
+    key = "logging-email-list"
+    secret = client.get_secret(key)
+    return secret.value
 
 secret = client.get_secret("google-sheets-api")
 
