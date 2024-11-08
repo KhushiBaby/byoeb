@@ -38,9 +38,9 @@ print("Date: ", datetime.datetime.now())
 # 3 days in seconds: 3 days * 24 hours/day * 60 minutes/hour * 60 seconds/minute
 three_days_ttl = 3 * 24 * 60 * 60  # 259200 seconds
 # users = user_db.get_all_users(user_type="Asha")
-users = [user_db.get_from_whatsapp_id('918837701828')]
-print("Total users: ", len(users))
-user_df = pd.DataFrame(users)
+# users = [user_db.get_from_whatsapp_id('918837701828')]
+# print("Total users: ", len(users))
+# user_df = pd.DataFrame(users)
 q_n_a_df = pd.read_csv(local_path + "/data/asha_bot/question_of_the_week/q_n_a.csv")
 questions_df = q_n_a_df[[GUID, QUESTION]]
 questions_df.set_index(GUID, inplace=True)
@@ -61,7 +61,7 @@ def get_next_question(user_row, questions_df):
     user_qow_guids.append(next_qow_guid)
     return questions_df.loc[next_qow_guid][QUESTION], user_qow_guids
 
-def send_question():
+def send_question(user_df):
     for i, user_row in user_df.iterrows():
 
         if user_row.get("opt out", False) and not pd.isna(user_row["opt out"]):
@@ -125,5 +125,10 @@ def get_suggested_questions(
     cache[guid] = (title, list_title, questions_source)
     return title, list_title, questions_source
 
+def send_question_of_week_to_Asha():
+    users = user_db.get_all_users(user_type="Asha")
+    user_df = pd.DataFrame(users)
+    send_question(user_df)
+
 if __name__ == "__main__":
-    send_question()
+    send_question_of_week_to_Asha()
