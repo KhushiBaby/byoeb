@@ -23,7 +23,7 @@ import pandas as pd
 three_days_ttl = 3 * 24 * 60 * 60  # 259200 seconds
 cache = TTLCache(ttl=three_days_ttl, maxsize=1000)
 
-DID_YOU_KNOW = "did_you_know"
+DID_YOU_KNOW = "did_you_know_test"
 GUID = 'GUID'
 FACT = 'Did you know - Hindi'
 FACT_GUID_KEY = 'dyk_guids'
