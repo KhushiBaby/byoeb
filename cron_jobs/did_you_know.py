@@ -44,7 +44,7 @@ print("Date: ", datetime.datetime.now())
 
 def get_next_fact(user_row, facts_df):
     fact_guids = facts_df.index.tolist()
-    user_fact_guids_dict = user_row.get(FACT_GUID_KEY, [])
+    user_fact_guids_dict = user_row.get(FACT_GUID_KEY, {FACT_GUID_KEY: []})
     user_fact_guids = user_fact_guids_dict[FACT_GUID_KEY]
     print("User fact guids: ", user_fact_guids)
     remaining_guids = list(set(fact_guids) - set(user_fact_guids))
@@ -69,7 +69,7 @@ def send_fact(users_df, facts_df):
             [fact],
             None
         )
-        user_db.update_user_dyk_guids(user_row["user_id"], {"dyk_guids": user_fact_guids})
+        user_db.update_user_dyk_guids(user_row["user_id"], {FACT_GUID_KEY: user_fact_guids})
 
         bot_conv_db.insert_row(
             receiver_id=user_row["user_id"],

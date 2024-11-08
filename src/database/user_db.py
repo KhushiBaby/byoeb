@@ -57,6 +57,15 @@ class UserDB(BaseDB):
         )
         return
     
+    def update_user_qow_guids(self, user_id, qow_guids):
+        self.collection.update_one(
+            {'user_id': user_id},
+            {'$set': {
+                'qow_guids': qow_guids
+            }}
+        )
+        return
+    
     def mark_user_opted_out(self, user_id):
         self.collection.update_one(
             {'user_id': user_id},

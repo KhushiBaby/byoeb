@@ -22,7 +22,8 @@ class BotConvDB(BaseDB):
         citations,
         message_timestamp,
         transaction_message_id,
-        did_you_know_id=None):
+        did_you_know_id=None,
+        question_id=None):
 
         bot_conv = {
             'receiver_id': receiver_id,
@@ -36,7 +37,8 @@ class BotConvDB(BaseDB):
             'citations': citations,
             'message_timestamp': message_timestamp,
             'transaction_message_id': transaction_message_id,
-            'did_you_know_id': did_you_know_id
+            'did_you_know_id': did_you_know_id,
+            'question_id': question_id
         }
 
         db_id = self.collection.insert_one(bot_conv)
