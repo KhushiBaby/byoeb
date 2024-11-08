@@ -23,10 +23,11 @@ import pandas as pd
 three_days_ttl = 3 * 24 * 60 * 60  # 259200 seconds
 cache = TTLCache(ttl=three_days_ttl, maxsize=1000)
 
-DID_YOU_KNOW = "did_you_know_test"
+DID_YOU_KNOW = "did_you_know"
 GUID = 'GUID'
 FACT = 'Did you know - Hindi'
 FACT_GUID_KEY = 'dyk_guids'
+EVENT_NAME = "did_you_know"
 template_name = "did_you_know"
 
 user_db = UserDB(config)
@@ -40,13 +41,17 @@ print("Date: ", datetime.datetime.now())
 
 # users = [user_db.get_from_whatsapp_id('918837701828')]
 # print("Total users: ", len(users))
-
+facts_df = pd.read_csv(local_path + "/data/asha_bot/did_you_know/did_you_know.csv", encoding='utf-8')
+facts_df.set_index(GUID, inplace=True)
 
 def get_next_fact(user_row, facts_df):
     fact_guids = facts_df.index.tolist()
-    user_fact_guids_dict = user_row.get(FACT_GUID_KEY, {FACT_GUID_KEY: []})
+    user_fact_guids_dict = None
+    if pd.isna(user_row.get(FACT_GUID_KEY)) or user_row[FACT_GUID_KEY] is None:
+        user_fact_guids_dict = {FACT_GUID_KEY: []}
+    else:
+        user_fact_guids_dict = user_row.get(FACT_GUID_KEY)
     user_fact_guids = user_fact_guids_dict[FACT_GUID_KEY]
-    print("User fact guids: ", user_fact_guids)
     remaining_guids = list(set(fact_guids) - set(user_fact_guids))
     if remaining_guids == []:
         remaining_guids = fact_guids
@@ -57,48 +62,51 @@ def get_next_fact(user_row, facts_df):
 
 def send_fact(users_df, facts_df):
     for _, user_row in users_df.iterrows():
-
         if user_row.get("opt out", False) and not pd.isna(user_row["opt out"]):
             print("User opted out: ", user_row["whatsapp_id"], user_row["opt out"])
             continue
-        fact, user_fact_guids = get_next_fact(user_row, facts_df)
-        sent_msg_id = messenger.send_template(
-            user_row["whatsapp_id"],
-            template_name,
-            user_row["user_language"],
-            [fact],
-            None
-        )
-        user_db.update_user_dyk_guids(user_row["user_id"], {FACT_GUID_KEY: user_fact_guids})
+        try:
+            fact, user_fact_guids = get_next_fact(user_row, facts_df)
+            sent_msg_id = messenger.send_template(
+                user_row["whatsapp_id"],
+                template_name,
+                user_row["user_language"],
+                [fact],
+                None
+            )
+            user_db.update_user_dyk_guids(user_row["user_id"], {FACT_GUID_KEY: user_fact_guids})
 
-        bot_conv_db.insert_row(
-            receiver_id=user_row["user_id"],
-            message_type=DID_YOU_KNOW,
-            message_id=sent_msg_id,
-            audio_message_id=None,
-            message_source_lang="en",
-            message_language=user_row["user_language"],
-            message_english=fact,
-            reply_id=None,
-            citations=None,
-            message_timestamp=datetime.datetime.now(),
-            transaction_message_id=None,
-            did_you_know_id=user_fact_guids[-1],
-        )
+            bot_conv_db.insert_row(
+                receiver_id=user_row["user_id"],
+                message_type=DID_YOU_KNOW,
+                message_id=sent_msg_id,
+                audio_message_id=None,
+                message_source_lang="en",
+                message_language=user_row["user_language"],
+                message_english=fact,
+                reply_id=None,
+                citations=None,
+                message_timestamp=datetime.datetime.now(),
+                transaction_message_id=None,
+                did_you_know_id=user_fact_guids[-1],
+            )
+        except Exception as e:
+            print("Error in sending fact: ", str(e))
+            app_logger.add_log(event_name=EVENT_NAME, details={"message": f"Error in sending fact: {str(e)} for user: {user_row['user_id']}"})
 
 def get_suggested_questions_based_on_fact(
     id,
     row_lt,
-    facts_df,
     knowledge_base: KnowledgeBase,
     onboarding_questions,
 ):
     if id in cache:
         return cache[id]
-    fact = facts_df.iloc[id]["Fact"]
+    fact = facts_df.loc[id][FACT]
     source_lang = row_lt["user_language"]
+    fact_en = azure_translate.translate_text(fact, "hi", "en", app_logger)
     next_questions = knowledge_base.follow_up_questions(
-        fact, "ignore chatbot answer", row_lt['user_type'], app_logger
+        fact_en, "ignore chatbot answer", row_lt['user_type'], app_logger
     )
     questions_source = []
     for question in next_questions:
@@ -116,14 +124,14 @@ def get_suggested_questions_based_on_fact(
 def send_fact_to_Asha():
     users = user_db.get_all_users(user_type="Asha")
     user_df = pd.DataFrame(users)
-    facts_df = pd.read_csv(local_path + "/data/asha_bot/did_you_know/did_you_know.csv", encoding='utf-8')
-    facts_df.set_index(GUID, inplace=True)
-    app_logger.add_log(event_name="did_you_know", details={"message": f"Total users: {len(users)}"})
+
+    app_logger.add_log(event_name=EVENT_NAME, details={"message": f"Total users: {len(users)}"})
     try:
         send_fact(user_df, facts_df)
-        app_logger.add_log(event_name="did_you_know", details={"message": "Successfully sent facts to Asha"})
+        app_logger.add_log(event_name=EVENT_NAME, details={"message": "Successfully sent facts to Asha"})
     except Exception as e:
-        app_logger.add_log(event_name="did_you_know", details={"message": f"Error in sending facts to Asha: {str(e)}"})
+        print("Error in sending facts to Asha: ", str(e))
+        app_logger.add_log(event_name=EVENT_NAME, details={"message": f"Error in sending facts to Asha: {str(e)}"})
     
 if __name__ == "__main__":
     send_fact_to_Asha()

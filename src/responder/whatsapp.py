@@ -12,6 +12,7 @@ from knowledge_base import KnowledgeBase
 from conversation_database import (
     LoggingDatabase,
 )
+from cron_jobs.did_you_know import DID_YOU_KNOW, get_suggested_questions_based_on_fact
 from cron_jobs.question_of_the_week import QUESTION_OF_THE_WEEK, get_answer, get_suggested_questions
 from database import UserDB, UserConvDB, BotConvDB, ExpertConvDB, UserRelationDB, AppLogger
 from messenger import WhatsappMessenger
@@ -172,7 +173,6 @@ class WhatsappResponder(BaseResponder):
         if msg_object.get("context", False) and msg_object["context"].get("id", False):
             reply_id = msg_object["context"]["id"]
             context_row = self.bot_conv_db.get_from_message_id(reply_id)
-            print("Message type: ", context_row["message_type"])
             if context_row is not None:
                 if context_row['message_type'] == 'Asha_onboarding_template' or \
                     context_row['message_type'] == 'ANM_onboarding_template':
@@ -186,6 +186,10 @@ class WhatsappResponder(BaseResponder):
                 if context_row['message_type'] == QUESTION_OF_THE_WEEK:
                     self.send_question_of_the_week_answer(msg_object, row_lt)
                     return
+                
+                if context_row['message_type'] == DID_YOU_KNOW:
+                    self.send_did_you_know_response(msg_object, row_lt)
+                    return
 
         if user_type in self.config["USERS"]:
             self.handle_response_user(msg_object, row_lt)
@@ -193,6 +197,24 @@ class WhatsappResponder(BaseResponder):
             self.handle_response_expert(msg_object, row_lt)
         return
     
+    def send_did_you_know_response(
+        self,
+        msg_object,
+        row_lt
+    ):
+        reply_id = msg_object["context"]["id"]
+        last_query = self.bot_conv_db.get_from_message_id(reply_id)
+        fact_id = last_query['did_you_know_id']
+        title, list_title, questions_source = get_suggested_questions_based_on_fact(
+            fact_id,
+            row_lt,
+            self.knowledge_base,
+            self.onboarding_questions,
+        )
+        suggested_ques_msg_id = self.messenger.send_suggestions(
+            row_lt['whatsapp_id'], title, list_title, questions_source
+        )
+
     def send_question_of_the_week_answer(
         self,
         msg_object,
