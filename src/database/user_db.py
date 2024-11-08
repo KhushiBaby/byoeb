@@ -48,6 +48,15 @@ class UserDB(BaseDB):
             }}
         )
 
+    def update_user_dyk_guids(self, user_id, dyk_guids):
+        self.collection.update_one(
+            {'user_id': user_id},
+            {'$set': {
+                'dyk_guids': dyk_guids
+            }}
+        )
+        return
+    
     def mark_user_opted_out(self, user_id):
         self.collection.update_one(
             {'user_id': user_id},
