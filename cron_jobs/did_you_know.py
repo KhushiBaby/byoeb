@@ -44,7 +44,7 @@ print("Date: ", datetime.datetime.now())
 facts_df = pd.read_csv(local_path + "/data/asha_bot/did_you_know/did_you_know.csv", encoding='utf-8')
 facts_df.set_index(GUID, inplace=True)
 
-def get_next_fact(user_row, facts_df):
+def get_next_fact(user_row):
     fact_guids = facts_df.index.tolist()
     user_fact_guids_dict = None
     if pd.isna(user_row.get(FACT_GUID_KEY)) or user_row[FACT_GUID_KEY] is None:
@@ -60,13 +60,13 @@ def get_next_fact(user_row, facts_df):
     user_fact_guids.append(next_fact_guid)
     return facts_df.loc[next_fact_guid][FACT], user_fact_guids
 
-def send_fact(users_df, facts_df):
+def send_fact(users_df):
     for _, user_row in users_df.iterrows():
         if user_row.get("opt out", False) and not pd.isna(user_row["opt out"]):
             print("User opted out: ", user_row["whatsapp_id"], user_row["opt out"])
             continue
         try:
-            fact, user_fact_guids = get_next_fact(user_row, facts_df)
+            fact, user_fact_guids = get_next_fact(user_row)
             sent_msg_id = messenger.send_template(
                 user_row["whatsapp_id"],
                 template_name,
@@ -127,7 +127,7 @@ def send_fact_to_Asha():
 
     app_logger.add_log(event_name=EVENT_NAME, details={"message": f"Total users: {len(users)}"})
     try:
-        send_fact(user_df, facts_df)
+        send_fact(user_df)
         app_logger.add_log(event_name=EVENT_NAME, details={"message": "Successfully sent facts to Asha"})
     except Exception as e:
         print("Error in sending facts to Asha: ", str(e))

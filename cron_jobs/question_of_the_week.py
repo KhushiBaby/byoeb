@@ -45,7 +45,7 @@ answer_df = q_n_a_df[[GUID, ANSWER]]
 answer_df.set_index(GUID, inplace=True)
 cache = TTLCache(ttl=three_days_ttl, maxsize=1000)
 
-def get_next_question(user_row, questions_df):
+def get_next_question(user_row):
     qow_guids = questions_df.index.tolist()
     user_qow_guids_dict = None
     if pd.isna(user_row.get(QUESTION_GUID_KEY)) or user_row[QUESTION_GUID_KEY] is None:
@@ -69,7 +69,7 @@ def send_question(user_df):
             print("User opted out: ", user_row["whatsapp_id"], user_row["opt out"])
             continue
         try:
-            qow, user_qow_guids = get_next_question(user_row, questions_df)
+            qow, user_qow_guids = get_next_question(user_row)
             sent_msg_id = messenger.send_template(
                 user_row["whatsapp_id"],
                 template_name,
