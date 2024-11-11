@@ -25,6 +25,10 @@
         "hi": "आपने मुझे यह सवाल पुछा: *<query>*\n\nक्या मैंने आपके सवाल को गलत समझा? यदि हां, तो कृपया फिर से स्पष्ट रूप से पूछें। अन्यथा, मैं ANMs से इसका जवान पूछूँगी और इसे आपके साथ साझा करुँगी।",
         "hi_options": ["मैं फिर से पूछूँगी।", "ANMs को भेजें"]
     },
+    "response_audio": {
+        "en": "You asked: <query>\n\nAnswer: <answer>",
+        "hi": "आपने पूछा: <query>\n\nउत्तर: <answer>"
+    },
     "audio_idk_ignore_response": {
         "en": "Please ask your question again. If you have already asked it again, please ignore this message.",
         "hi": "कृपया सवाल दोबारा पूछें।। अगर आपने इसे पहले ही दोबारा पूछा है, तो कृपया इस सवाल को अनदेखा करें।"

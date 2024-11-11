@@ -610,8 +610,13 @@ class WhatsappResponder(BaseResponder):
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
+                ans = gpt_output_source
+                if msg_type == "audio":
+                    ans = self.template_messages["response_audio"][row_lt['user_language']]
+                    ans = ans.replace("<query>", message)
+                    ans = ans.replace("<answer>", gpt_output_source)
                 sent_msg_id = self.messenger.send_message(
-                    row_lt['whatsapp_id'], gpt_output_source, msg_id
+                    row_lt['whatsapp_id'], ans, msg_id
                 )
                 audio_msg_id = self.messenger.send_audio(
                     audio_output_file, row_lt['whatsapp_id'], msg_id
