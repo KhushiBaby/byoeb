@@ -41,17 +41,14 @@ print("Date: ", datetime.datetime.now())
 
 # users = [user_db.get_from_whatsapp_id('918837701828')]
 # print("Total users: ", len(users))
-facts_df = pd.read_csv(local_path + "/data/asha_bot/did_you_know/did_you_know.csv", encoding='utf-8')
+facts_df = pd.read_csv(local_path + "/data/asha_bot/did_you_know/dyk_v1.csv", encoding='utf-8')
 facts_df.set_index(GUID, inplace=True)
 
 def get_next_fact(user_row):
     fact_guids = facts_df.index.tolist()
-    user_fact_guids_dict = None
-    if pd.isna(user_row.get(FACT_GUID_KEY)) or user_row[FACT_GUID_KEY] is None:
-        user_fact_guids_dict = {FACT_GUID_KEY: []}
-    else:
-        user_fact_guids_dict = user_row.get(FACT_GUID_KEY)
-    user_fact_guids = user_fact_guids_dict[FACT_GUID_KEY]
+    user_fact_guids = user_row.get(FACT_GUID_KEY, [])
+    if not isinstance(user_fact_guids, list):
+        user_fact_guids = []
     remaining_guids = list(set(fact_guids) - set(user_fact_guids))
     if remaining_guids == []:
         remaining_guids = fact_guids
@@ -74,7 +71,7 @@ def send_fact(users_df):
                 [fact],
                 None
             )
-            user_db.update_user_dyk_guids(user_row["user_id"], {FACT_GUID_KEY: user_fact_guids})
+            user_db.update_user(user_row["user_id"], {FACT_GUID_KEY: user_fact_guids})
 
             bot_conv_db.insert_row(
                 receiver_id=user_row["user_id"],

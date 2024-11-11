@@ -13,7 +13,7 @@ from conversation_database import (
     LoggingDatabase,
 )
 from cron_jobs.did_you_know import DID_YOU_KNOW, get_suggested_questions_based_on_fact
-from cron_jobs.question_of_the_week import QUESTION_OF_THE_WEEK, get_answer, get_suggested_questions
+from cron_jobs.question_of_the_week import QUESTION_OF_THE_WEEK, try_send_answer, get_suggested_questions
 from database import UserDB, UserConvDB, BotConvDB, ExpertConvDB, UserRelationDB, AppLogger
 from messenger import WhatsappMessenger
 import utils
@@ -223,16 +223,7 @@ class WhatsappResponder(BaseResponder):
         reply_id = msg_object["context"]["id"]
         last_query = self.bot_conv_db.get_from_message_id(reply_id)
         guid = last_query['question_id']
-        answer = get_answer(guid)
-        print (answer)
-        self.messenger.send_message(row_lt['whatsapp_id'], answer, reply_id)
-        self.app_logger.add_log(
-            event_name="question_of_the_week",
-            sender_id=row_lt['whatsapp_id'],
-            receiver_id="bot",
-            message_id=msg_object["id"],
-            details={"text": answer, "reply_to": reply_id},
-        )
+        try_send_answer(row_lt, guid, reply_id)
         title, list_title, questions_source = get_suggested_questions(
             guid,
             row_lt,

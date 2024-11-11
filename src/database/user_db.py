@@ -48,6 +48,13 @@ class UserDB(BaseDB):
             }}
         )
 
+    def update_user(self, user_id, update_obj):
+        self.collection.update_one(
+            {'user_id': user_id},
+            {'$set': update_obj}
+        )
+        return
+    
     def update_user_dyk_guids(self, user_id, dyk_guids):
         self.collection.update_one(
             {'user_id': user_id},
