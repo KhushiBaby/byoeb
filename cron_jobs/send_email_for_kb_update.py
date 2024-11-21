@@ -2,15 +2,15 @@ import yaml
 import os
 import smtplib
 
-
-
 local_path = os.environ["APP_PATH"]
 with open(os.path.join(local_path, "config.yaml")) as file:
     config = yaml.load(file, Loader=yaml.FullLoader)
 import sys
 sys.path.append(local_path + "/processing")
 sys.path.append(local_path + "/src")
+sys.path.append(local_path + "/cron_jobs")
 
+from azure.storage.blob import BlobServiceClient
 from get_secrets import get_emails_list
 from database import UserDB, UserConvDB, BotConvDB, ExpertConvDB, AppLogger
 from messenger.whatsapp import WhatsappMessenger
@@ -22,6 +22,7 @@ import pandas as pd
 import utils
 import re
 import hashlib
+import kb_update
 
 app_logger = AppLogger()
 
@@ -47,7 +48,20 @@ SPREADSHEET_ID = os.environ["KB_UPDATE_SHEET_ID"].strip()
 
 HOURS_TO_SKIP = 2
 DAYS_TO_LOOKBACK = 7
+TEMP_CSV_FILE = "kb_update/temp.csv"
 
+def add_temp_csv_file(df):
+    df.to_csv(TEMP_CSV_FILE, index=False)
+connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING").strip()
+            blob_service_client = BlobServiceClient.from_connection_string(connect_str)
+            container_name = self.config["AZURE_BLOB_CONTAINER_NAME"].strip()
+
+            blob_name = "queries/" + str(datetime.now()) + "_" + str(row_lt['user_id']) + ".ogg"
+            blob_client = blob_service_client.get_blob_client(
+                container=container_name, blob=blob_name
+            )
+            with open(file=audio_input_file, mode="rb") as data:
+                blob_client.upload_blob(data)
 
 def md5_hash(input_string: str) -> str:
     # Create an MD5 hash object
@@ -74,6 +88,23 @@ def try_get_older_sheet_name(local_path):
     )
     print(f"Found older range name: {latest_entry}")
     return latest_entry
+
+def update_late_answered_questions_from_last_update(old_range_name, local_path):
+    if not utils.is_sheet_present(SCOPES, SPREADSHEET_ID, old_range_name, local_path):
+        print("Looking for older sheet")
+        app_logger.add_log(
+            event_name="kb_update",
+            details={"message": "Looking for older sheet"}
+        )
+        old_range_name = try_get_older_sheet_name(local_path)
+        if old_range_name is None:
+            print("No older sheet found")
+            app_logger.add_log(
+                event_name="kb_update",
+                details={"message": "No older sheet found"}
+            )
+            return None
+    kb_update.process_expert_responses_to_update_kb(old_range_name, local_path)
 
 def get_unanswered_questions_from_last_update(old_range_name, local_path):
     if not utils.is_sheet_present(SCOPES, SPREADSHEET_ID, old_range_name, local_path):
@@ -121,7 +152,8 @@ def get_idk_questions():
 
     bot_conv_queries = bot_conv_db.find_all_with_duration(start_dt, end_dt + datetime.timedelta(hours=HOURS_TO_SKIP))
     bot_conv_df = pd.DataFrame(bot_conv_queries)
-
+    
+    update_late_answered_questions_from_last_update(old_range_name, local_path)
     questions_with_idks = pd.DataFrame(columns=[QUERY_SOURCE_LANG, QUERY_ENG, RESPONSE, ADD_TO_KB, RELEVANT_DOC])
     previous_unanswered_df, old_range_name = get_unanswered_questions_from_last_update(old_range_name, local_path)
     
