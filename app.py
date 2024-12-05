@@ -202,6 +202,13 @@ def process_queue():
             for message in messages:
                 try:
                     # print("Message received", message.content)
+                    if message.dequeue_count > 1:
+                        app_logger.add_log(
+                            event_name="app_error",
+                            details={"message": message.content, "error": "Dequeue count exceeded"},
+                        )
+                        queue_client.delete_message(message)
+                        continue
                     body = json.loads(message.content)
                     responder.response(body)
                     queue_client.delete_message(message)

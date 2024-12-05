@@ -89,6 +89,7 @@ class WhatsappResponder(BaseResponder):
         self.knowledge_base = KnowledgeBase(self.config)
 
     def response(self, body):
+        print(body)
         if (
             body.get("object")
             and body.get("entry")
@@ -98,6 +99,27 @@ class WhatsappResponder(BaseResponder):
             and body["entry"][0]["changes"][0]["value"]["messages"][0]
         ):
             pass
+        elif (
+            body["entry"][0]["changes"][0]["value"].get("statuses")
+            and body["entry"][0]["changes"][0]["value"]["statuses"][0]
+             
+        ):
+            print("status update")
+            message_id = body["entry"][0]["changes"][0]["value"]["statuses"][0]["id"]
+            status = body["entry"][0]["changes"][0]["value"]["statuses"][0]["status"]
+            phone_number_id = body["entry"][0]["changes"][0]["value"]["statuses"][0]["recipient_id"]
+            user = self.user_db.get_from_whatsapp_id(phone_number_id)
+            self.app_logger.add_log(
+                event_name="Status update",
+                details={
+                    "message_id": message_id,
+                    "status": status,
+                    "phone_number_id": phone_number_id,
+                    "user_type": user["user_type"],
+                    "test_user": user["test_user"],
+                }
+            )
+            return
         else:
             return
 
