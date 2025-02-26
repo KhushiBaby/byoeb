@@ -3,7 +3,7 @@ import asyncio
 import json
 import hashlib
 import traceback
-import byoeb.utils.utils as b_utils
+import byoeb.utils.utils as utils
 import byoeb.services.chat.constants as constants
 from datetime import datetime, timezone
 from pydantic import BaseModel
@@ -125,11 +125,11 @@ class MessageConsmerService:
         start_time = datetime.now(timezone.utc).timestamp()
         conversations = await self.__create_conversations(byoeb_messages)
         end_time = datetime.now(timezone.utc).timestamp()
-        b_utils.log_to_text_file(f"Conversations created in: {end_time - start_time} seconds")
+        utils.log_to_text_file(f"Conversations created in: {end_time - start_time} seconds")
         task = []
         for conversation in conversations:
             conversation.user.activity_timestamp = str(int(datetime.now(timezone.utc).timestamp()))
-            # b_utils.log_to_text_file("Processing message: " + json.dumps(conversation.model_dump()))
+            # utils.log_to_text_file("Processing message: " + json.dumps(conversation.model_dump()))
             if conversation.user.user_type == self._regular_user_type:
                 task.append(self.__process_byoebuser_conversation(conversation))
             elif self.__is_expert_user_type(conversation.user.user_type):
@@ -147,7 +147,7 @@ class MessageConsmerService:
             self._message_db_service.execute_queries(message_queries)
         )
         end_time = datetime.now(timezone.utc).timestamp()
-        b_utils.log_to_text_file(f"DB queries executed in: {end_time - start_time} seconds")
+        utils.log_to_text_file(f"DB queries executed in: {end_time - start_time} seconds")
         return successfully_processed_messages
 
     async def __process_byoebuser_conversation(self, byoeb_message):

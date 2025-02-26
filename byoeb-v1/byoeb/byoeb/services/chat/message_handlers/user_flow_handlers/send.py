@@ -1,7 +1,7 @@
 import asyncio
-from byoeb.models.message_category import MessageCategory
 import byoeb.services.chat.constants as constants
 import byoeb.utils.utils as utils
+from byoeb.models.message_category import MessageCategory
 from datetime import datetime, timezone
 from byoeb.chat_app.configuration.config import app_config
 from byoeb.services.chat import utils as chat_utils

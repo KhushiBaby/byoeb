@@ -212,7 +212,8 @@ class ByoebUserGenerateResponse(Handler):
             reply_type=message.message_context.message_type,
             reply_english_text=message.message_context.message_english_text,
             reply_source_text=message.message_context.message_source_text,
-            media_info=message.message_context.media_info
+            media_info=message.message_context.media_info,
+            additional_info=message.message_context.additional_info
         )
 
     async def __create_source_audio(
@@ -254,18 +255,24 @@ class ByoebUserGenerateResponse(Handler):
     async def __create_user_message(
         self,
         message: ByoebMessageContext,
-        response_text: str,
         query_type: str,
+        response_en: str,
+        response_source: str = None,
         related_questions: List[str] = None,
         emoji = None,
         status = None,
     ) -> ByoebMessageContext:
         start_time = datetime.now(timezone.utc).timestamp()
-        message_source_text, options, send_related_questions = await self.__create_source_text(
-            message=message,
-            response_text=response_text,
-            query_type=query_type,
-        )
+        if response_source is None:
+            message_source_text, options, send_related_questions = await self.__create_source_text(
+                message=message,
+                response_text=response_en,
+                query_type=query_type,
+            )
+        else:
+            message_source_text = response_source
+            options = None
+            send_related_questions = True
         print("Options: ", options)
         end_time = datetime.now(timezone.utc).timestamp()
         utils.log_to_text_file(f"Translated response message in {end_time - start_time} seconds")
@@ -290,7 +297,7 @@ class ByoebUserGenerateResponse(Handler):
         interactive_list_additional_info = {}
         text_additional_info = {}
         idk_status = self.__get_idk_status(message, query_type)
-        if utils.is_idk(response_text) and message.message_context.message_type == MessageTypes.REGULAR_AUDIO.value:
+        if utils.is_idk(response_en) and message.message_context.message_type == MessageTypes.REGULAR_AUDIO.value:
             message_type = MessageTypes.INTERACTIVE_BUTTON.value
             message_category = MessageCategory.AUDIO_IDK.value
             button_reply_additional_info = {
@@ -301,7 +308,7 @@ class ByoebUserGenerateResponse(Handler):
             idk_status = {
                 constants.STATUS: constants.PENDING
             }
-        elif (utils.is_idk(response_text)
+        elif (utils.is_idk(response_en)
               and (
                     message.message_context.message_type == MessageTypes.REGULAR_TEXT.value
                     or message.message_context.message_type == MessageTypes.INTERACTIVE_LIST.value
@@ -348,7 +355,7 @@ class ByoebUserGenerateResponse(Handler):
             message_context=MessageContext(
                 message_type=message_type,
                 message_source_text=message_source_text,
-                message_english_text=response_text,
+                message_english_text=response_en,
                 additional_info={
                     **media_info,
                     **button_reply_additional_info,
@@ -418,41 +425,46 @@ class ByoebUserGenerateResponse(Handler):
     )
     async def agenerate_answer(
         self,
-        question,
+        query,
+        query_type,
         retrieved_chunks: List[Chunk],
     ):
-        def parse_response(response_text):
-            # Regular expressions to extract the response and relevance
-            response_pattern = r"<RESPONSE>(.*?)</RESPONSE>"
-            query_type_pattern = r"<QUERY TYPE>(.*?)</QUERY TYPE>"
+        def parse_response_xml(xml_string: str):
+            # Patterns for extracting response_en and response_hi
+            patterns = {
+                "response_en": r"<response_en\s*>(.*?)</response_en\s*>",
+                "response_hi": r"<response_hi\s*>(.*?)</response_hi\s*>",
+            }
 
-            # Extract the response
-            response_match = re.search(response_pattern, response_text, re.DOTALL)
-            response = response_match.group(1).strip() if response_match else None
+            extracted_data = {}
+            for key, pattern in patterns.items():
+                match = re.search(pattern, xml_string, re.DOTALL | re.IGNORECASE)  # Supports multiline and case-insensitive matches
+                extracted_data[key] = match.group(1).strip() if match else None  # Strip removes extra spaces and newlines
 
-            # Extract the relevance
-            query_type_match = re.search(query_type_pattern, response_text, re.DOTALL)
-            query_type = query_type_match.group(1).strip() if query_type_match else None
-            return response, query_type
+            return extracted_data["response_en"], extracted_data["response_hi"]
         
-        chunks_list = [chunk.text for chunk in retrieved_chunks]
+        update_kb = [chunk.text for chunk in retrieved_chunks if "KB Updated" in chunk.metadata.source]
+        raw_kb = [chunk.text for chunk in retrieved_chunks if "KB Updated" not in chunk.metadata.source]
+        update_kb_list = ", ".join(update_kb)
+        raw_kb_list = ", ".join(raw_kb)
+
         system_prompt = bot_config["llm_response"]["answer_prompts"]["system_prompt"]
         template_user_prompt = bot_config["llm_response"]["answer_prompts"]["user_prompt"]
         # Replace placeholders with actual values
-        chunks = ", ".join(chunks_list)
-        user_prompt = template_user_prompt.replace("<CHUNKS>", chunks).replace("<QUESTION>", question)
+        
+        user_prompt = template_user_prompt.replace("<QUERY_TYPE>", query_type).replace("<QUERY_EN_ADDCONTEXT>", query).replace("<RAW_KB>", raw_kb_list).replace("<NEW_KB>", update_kb_list)
         augmented_prompts = self.__augment(system_prompt, user_prompt)
         start_time = datetime.now(timezone.utc).timestamp()
         llm_response, response_text = await llm_client.agenerate_response(augmented_prompts)
         tokens = llm_client.get_response_tokens(llm_response)
-        answer, query_type = parse_response(response_text)
+        response_en, response_source = parse_response_xml(response_text)
         end_time = datetime.now(timezone.utc).timestamp()
         utils.log_to_text_file(f"Generated answer tokens and response in {end_time - start_time} seconds: {str(tokens)} {response_text}")
-        print("Generated answer: ", answer)
+        print("Generated answer: ", response_en)
         print("Query type: ", query_type)
-        if answer is None or query_type is None:
+        if response_en is None or query_type is None:
             raise ValueError("Parsing failed, response or query_type is None.")
-        return answer, query_type
+        return response_en, response_source
     
     @retry(
         stop=stop_after_attempt(3),  # Retry up to 3 times
@@ -508,7 +520,8 @@ class ByoebUserGenerateResponse(Handler):
             related_questions = message.reply_context.additional_info.get(constants.RELATED_QUESTIONS)
             byoeb_user_message = await self.__create_user_message(
                 message=message,
-                response_text=constants.IDK,
+                response_en=constants.IDK,
+                response_source=None,
                 query_type=message.reply_context.additional_info.get(constants.QUERY_TYPE),
                 emoji=self.USER_PENDING_EMOJI,
                 status=constants.PENDING,
@@ -516,12 +529,14 @@ class ByoebUserGenerateResponse(Handler):
             )
         else:
             message_english = message.message_context.message_english_text
+            query_type = message.message_context.additional_info.get(constants.QUERY_TYPE)
             retrieved_chunks = await self.__aretrieve_chunks(message_english, k=3)
-            answer, query_type = await self.agenerate_answer(message_english, retrieved_chunks)
+            response_en, response_source = await self.agenerate_answer(message_english, query_type, retrieved_chunks)
             related_questions = self.get_follow_up_questions(message.user.user_language, retrieved_chunks)
             byoeb_user_message = await self.__create_user_message(
                 message=message,
-                response_text=answer,
+                response_en=response_en,
+                response_source=response_source,
                 query_type=query_type,
                 emoji=self.USER_PENDING_EMOJI,
                 status=constants.PENDING,

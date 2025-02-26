@@ -13,7 +13,8 @@ def get_git_root_path():
         return None
     
 def log_to_text_file(text):
-    file_path = "log.txt"
+    git_root = get_git_root_path()
+    file_path = os.path.join(git_root, "byoeb-v1/byoeb/log.txt")
     with open(file_path, "a") as file:
         file.write(text + "\n")
 

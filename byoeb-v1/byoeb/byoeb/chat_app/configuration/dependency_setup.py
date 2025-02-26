@@ -142,6 +142,13 @@ llm_client = AsyncLLamaIndexOpenAILLM(
     organization=env_config.env_openai_org_id
 )
 
+llm_translate_and_rewrite_client = AsyncLLamaIndexOpenAILLM(
+    model=app_config["llms"]["openai"]["model"],
+    api_key=env_config.env_openai_api_key,
+    api_version=app_config["llms"]["openai"]["api_version"],
+    organization=env_config.env_openai_org_id
+)
+
 
 # Process user message Chain of Responsibility
 from byoeb.services.chat.message_handlers import (

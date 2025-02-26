@@ -138,6 +138,7 @@ class WhatsAppService(BaseChannelService):
                     reply_source_text=byoeb_user_message.reply_context.reply_source_text,
                     reply_english_text=byoeb_user_message.reply_context.reply_english_text,
                     media_info=byoeb_user_message.reply_context.media_info,
+                    additional_info=byoeb_user_message.reply_context.additional_info
                 ),
                 incoming_timestamp=byoeb_user_message.incoming_timestamp,
                 outgoing_timestamp=str(int(datetime.now(timezone.utc).timestamp()))
