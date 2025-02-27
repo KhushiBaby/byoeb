@@ -12,6 +12,7 @@ from byoeb_integrations.message_queue.azure.async_azure_storage_queue import Asy
 class QueueConsumer:
 
     _az_storage_queue: BaseQueue = None
+    _dlq_client: BaseQueue = None
     def __init__(
         self,
         account_url: str,
@@ -30,6 +31,19 @@ class QueueConsumer:
         self._user_db_service = user_db_service
         self._message_db_service = message_db_service
         self._channel_client_factory = channel_client_factory
+    
+    async def __get_or_create_dead_letter_queue_client(
+        self
+    ) -> BaseQueue:
+        from azure.identity import DefaultAzureCredential
+        default_credential = DefaultAzureCredential()
+        dlq_name = self._config["message_queue"]["azure"]["dead_letter_queue"]
+        self._dlq_client = await AsyncAzureStorageQueue.aget_or_create(
+            account_url=self._account_url,
+            queue_name=dlq_name,
+            credentials=default_credential
+        )
+        return self._dlq_client
     
     async def __get_or_create_az_storage_queue_client(
         self,
@@ -93,11 +107,17 @@ class QueueConsumer:
             message_db_service=self._message_db_service,
             channel_client_factory=self._channel_client_factory
         )
+        queue_retry_count = self._config["app"]["queue_retry_count"]
+        dlq_client = await self.__get_or_create_dead_letter_queue_client()
         self._logger.info(f"Queue info: {self._az_storage_queue}")
         while True:
             messages = await self.__areceive()
             message_content = []
             for message in messages:
+                if message.dequeue_count > queue_retry_count:
+                    await dlq_client.asend_message(message.content)
+                    await self.__delete_message([message])
+                    continue
                 message_content.append(message.content)
             if len(messages) == 0:
                 await asyncio.sleep(0.5)
@@ -125,6 +145,8 @@ class QueueConsumer:
         self._logger.info(self._az_storage_queue)
         if isinstance(self._az_storage_queue, AsyncAzureStorageQueue):
             await self._az_storage_queue._close()
+        if isinstance(self._dlq_client, AsyncAzureStorageQueue):
+            await self._dlq_client._close()
             self._logger.info("Closed the Azure storage queue client")
         else:
             self._logger.info("No queue client to close")  

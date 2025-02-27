@@ -3,6 +3,7 @@
         "batch_size": 5,
         "azure_cognitive_endpoint": "https://cognitiveservices.azure.com/.default",
         "queue_provider": "azure_storage_queue",
+        "queue_retry_count": 3,
         "db_provider": "azure_cosmos_mongo_db",
         "history_length": 3,
         "max_last_active_duration_seconds": 86400
@@ -70,7 +71,7 @@
             "account_url": "https://khushibabyashastorage.queue.core.windows.net",
             "queue_status": "statusmessages",
             "queue_bot": "botmessages",
-            "queue_channel": "channelmessages",
+            "dead_letter_queue": "deadletterqueue",
             "messages_per_page": 5,
             "visibility_timeout": 120,
             "time_to_live": 604800

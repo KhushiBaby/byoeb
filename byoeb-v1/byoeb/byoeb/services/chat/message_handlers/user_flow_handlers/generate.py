@@ -28,7 +28,7 @@ class ByoebUserGenerateResponse(Handler):
     USER_PENDING_EMOJI = app_config["channel"]["reaction"]["user"]["pending"]
     _expert_user_types = bot_config["expert"]
     _regular_user_type = bot_config["regular"]["user_type"]
-    _clinical = "clinical"
+    _asha_work_related = "asha_work_related"
     _small_talk = "small_talk"
     _incomprehensible = "incomprehensible"
 
@@ -111,7 +111,7 @@ class ByoebUserGenerateResponse(Handler):
         print("IDK Message source text: ", source_text)
         print("IDK Query type: ", query_type)
         template_idk = bot_config["template_messages"]["user"]["audio"]["idk"][query_type]
-        if query_type != self._incomprehensible and query_type != self._clinical:
+        if query_type != self._incomprehensible and query_type != self._asha_work_related:
             return {}
         if message.reply_context.message_category == MessageCategory.AUDIO_IDK.value:
             user_lang = message.user.user_language
@@ -160,7 +160,7 @@ class ByoebUserGenerateResponse(Handler):
             if query == options[1]:
                 return template_idk["send"][user_language], None, True
             return template_idk["pending"][user_language], None, True
-        if query_type == self._incomprehensible or query_type == self._clinical:
+        if query_type == self._incomprehensible or query_type == self._asha_work_related:
             if modality == self.AUDIO_MODALITY:
                 options = template_idk["interactive"]["options"][user_language]
                 text = template_idk["interactive"]["text"][user_language].replace(
@@ -269,6 +269,12 @@ class ByoebUserGenerateResponse(Handler):
                 response_text=response_en,
                 query_type=query_type,
             )
+        elif utils.is_idk(response_en):
+            message_source_text, options, send_related_questions = self.__get_idk_response(
+                message=message,
+                response_text=response_en,
+                query_type=query_type,
+            )
         else:
             message_source_text = response_source
             options = None
@@ -314,7 +320,7 @@ class ByoebUserGenerateResponse(Handler):
                     or message.message_context.message_type == MessageTypes.INTERACTIVE_LIST.value
               )
         ):
-            if query_type == self._clinical:
+            if query_type == self._asha_work_related:
                 idk_status = {
                     constants.STATUS: constants.WAITING
                 }
