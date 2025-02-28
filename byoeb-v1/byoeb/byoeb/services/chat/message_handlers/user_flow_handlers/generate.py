@@ -19,7 +19,7 @@ from byoeb_core.models.byoeb.message_context import (
 from byoeb_integrations.vector_stores.azure_vector_search.azure_vector_search import AzureVectorSearchType
 from byoeb_core.models.byoeb.user import User
 from byoeb.services.chat.message_handlers.base import Handler
-from byoeb.chat_app.configuration.dependency_setup import llm_client
+from byoeb.chat_app.configuration.dependency_setup import llm_client, app_insights_logger
 
 class ByoebUserGenerateResponse(Handler):
     AUDIO_MODALITY = "audio"
@@ -191,6 +191,7 @@ class ByoebUserGenerateResponse(Handler):
             options = template_idk["interactive"]["options"][user_language]
             reply_id = message.reply_context.reply_id
             status = message.reply_context.additional_info.get(constants.STATUS, None)
+            message.reply_context.additional_info[constants.TRACK_MESSAGE_ID] = message.message_context.message_id
             if status == constants.PENDING and query == options[0]:
                 message.reply_context.additional_info[constants.STATUS] = constants.RESOLVED
             elif status == constants.PENDING and query == options[1]:
@@ -289,6 +290,13 @@ class ByoebUserGenerateResponse(Handler):
             user_language=user_language
         )
         end_time = datetime.now(timezone.utc).timestamp()
+        app_insights_logger.add_log(
+            event_name="text_to_audio",
+            details={
+                "message_id": message.message_context.message_id,
+                "time_taken": end_time - start_time
+            }
+        )
         utils.log_to_text_file(f"Created audio response message in {end_time - start_time} seconds")
         description = bot_config["template_messages"]["user"]["follow_up_questions_description"][user_language]
         message_type = None
@@ -470,7 +478,7 @@ class ByoebUserGenerateResponse(Handler):
         print("Query type: ", query_type)
         if response_en is None or query_type is None:
             raise ValueError("Parsing failed, response or query_type is None.")
-        return response_en, response_source
+        return response_en, response_source, tokens
     
     @retry(
         stop=stop_after_attempt(3),  # Retry up to 3 times
@@ -536,9 +544,29 @@ class ByoebUserGenerateResponse(Handler):
         else:
             message_english = message.message_context.message_english_text
             query_type = message.message_context.additional_info.get(constants.QUERY_TYPE)
+            start_time = datetime.now(timezone.utc).timestamp()
             retrieved_chunks = await self.__aretrieve_chunks(message_english, k=3)
-            response_en, response_source = await self.agenerate_answer(message_english, query_type, retrieved_chunks)
+            end_time = datetime.now(timezone.utc).timestamp()
+            app_insights_logger.add_log(
+                event_name="retrieve_chunks",
+                details={
+                    "message_id": message.message_context.message_id,
+                    "time_taken": end_time - start_time
+                }
+            )
+            start_time = datetime.now(timezone.utc).timestamp()
+            response_en, response_source, tokens = await self.agenerate_answer(message_english, query_type, retrieved_chunks)
             related_questions = self.get_follow_up_questions(message.user.user_language, retrieved_chunks)
+            end_time = datetime.now(timezone.utc).timestamp()
+            app_insights_logger.add_log(
+                event_name="generate_answer_and_related_questions",
+                details={
+                    "message_id": message.message_context.message_id,
+                    "time_taken": end_time - start_time,
+                    "completion_tokens": tokens.get("completion_tokens"),
+                    "prompt_tokens": tokens.get("prompt_tokens")
+                }
+            )
             byoeb_user_message = await self.__create_user_message(
                 message=message,
                 response_en=response_en,

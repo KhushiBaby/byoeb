@@ -14,6 +14,7 @@ from byoeb.chat_app.configuration.config import bot_config
 from byoeb_core.models.byoeb.user import User
 from byoeb.services.databases.mongo_db import UserMongoDBService, MessageMongoDBService
 from byoeb_core.models.byoeb.message_context import ByoebMessageContext
+from byoeb.chat_app.configuration.dependency_setup import app_insights_logger
 
 class Conversation(BaseModel):
     user_message: Optional[ByoebMessageContext]
@@ -74,6 +75,7 @@ class MessageConsmerService:
         self,
         messages: List[ByoebMessageContext]
     ) -> List[ByoebMessageContext]:
+        start_time = datetime.now(timezone.utc).timestamp()
         phone_numbers = list(set([message.user.phone_number_id for message in messages]))
         user_ids = list(set([hashlib.md5(number.encode()).hexdigest() for number in phone_numbers]))
         byoeb_users = await self._user_db_service.get_users(user_ids)
@@ -81,6 +83,7 @@ class MessageConsmerService:
             set(message.reply_context.reply_id for message in messages if message.reply_context.reply_id is not None)
         )
         bot_messages = await self._message_db_service.get_bot_messages_by_ids(bot_message_ids)
+        end_time = datetime.now(timezone.utc).timestamp()
         conversations = []
         for message in messages:
             user = self.__get_user(byoeb_users,message.user.phone_number_id)
@@ -91,6 +94,13 @@ class MessageConsmerService:
             elif self.__is_expert_user_type(user.user_type):
                 conversation.message_category = MessageCategory.EXPERT_TO_BOT.value
             conversation.user = user
+            app_insights_logger.add_log(
+                event_name="create_conversations",
+                details={
+                    "message_id": message.message_context.message_id,
+                    "time_taken": end_time - start_time
+                }
+            )
             if bot_message is None:
                 conversations.append(conversation)
                 continue
@@ -111,45 +121,7 @@ class MessageConsmerService:
                 conversation.reply_context.reply_type = bot_message.reply_context.reply_type
             conversations.append(conversation)
         return conversations
-        
-    async def consume(
-        self,
-        messages: list
-    ) -> List[ByoebMessageContext]:
-        byoeb_messages = []
-        successfully_processed_messages = []
-        for message in messages:
-            json_message = json.loads(message)
-            byoeb_message = ByoebMessageContext.model_validate(json_message)
-            byoeb_messages.append(byoeb_message)
-        start_time = datetime.now(timezone.utc).timestamp()
-        conversations = await self.__create_conversations(byoeb_messages)
-        end_time = datetime.now(timezone.utc).timestamp()
-        utils.log_to_text_file(f"Conversations created in: {end_time - start_time} seconds")
-        task = []
-        for conversation in conversations:
-            conversation.user.activity_timestamp = str(int(datetime.now(timezone.utc).timestamp()))
-            # utils.log_to_text_file("Processing message: " + json.dumps(conversation.model_dump()))
-            if conversation.user.user_type == self._regular_user_type:
-                task.append(self.__process_byoebuser_conversation(conversation))
-            elif self.__is_expert_user_type(conversation.user.user_type):
-                task.append(self.__process_byoebexpert_conversation(conversation))
-        results = await asyncio.gather(*task)
-        for queries, processed_message, err in results:
-            if err is not None or queries is None:
-                continue
-            successfully_processed_messages.append(processed_message)
-        start_time = datetime.now(timezone.utc).timestamp()
-        user_queries = self._user_db_service.aggregate_queries(results)
-        message_queries = self._message_db_service.aggregate_queries(results)
-        await asyncio.gather(
-            self._user_db_service.execute_queries(user_queries),
-            self._message_db_service.execute_queries(message_queries)
-        )
-        end_time = datetime.now(timezone.utc).timestamp()
-        utils.log_to_text_file(f"DB queries executed in: {end_time - start_time} seconds")
-        return successfully_processed_messages
-
+    
     async def __process_byoebuser_conversation(self, byoeb_message):
         from byoeb.chat_app.configuration.dependency_setup import byoeb_user_process
         byoeb_message_copy = byoeb_message.model_copy(deep=True)
@@ -190,3 +162,56 @@ class MessageConsmerService:
             print("Error processing expert message: ", e)
             traceback.print_exc()
             return None, byoeb_message_copy, e
+        
+    async def consume(
+        self,
+        messages: list
+    ) -> List[ByoebMessageContext]:
+        byoeb_messages: List[ByoebMessageContext] = []
+        successfully_processed_messages = []
+        for message in messages:
+            json_message = json.loads(message)
+            byoeb_message = ByoebMessageContext.model_validate(json_message)
+            byoeb_messages.append(byoeb_message)
+        start_time = datetime.now(timezone.utc).timestamp()
+        conversations = await self.__create_conversations(byoeb_messages)
+        end_time = datetime.now(timezone.utc).timestamp()
+        utils.log_to_text_file(f"Conversations created in: {end_time - start_time} seconds")
+        task = []
+        for conversation in conversations:
+            conversation.user.activity_timestamp = str(int(datetime.now(timezone.utc).timestamp()))
+            # utils.log_to_text_file("Processing message: " + json.dumps(conversation.model_dump()))
+            if conversation.user.user_type == self._regular_user_type:
+                task.append(self.__process_byoebuser_conversation(conversation))
+            elif self.__is_expert_user_type(conversation.user.user_type):
+                task.append(self.__process_byoebexpert_conversation(conversation))
+        results = await asyncio.gather(*task)
+        for queries, processed_message, err in results:
+            if err is not None or queries is None:
+                continue
+            successfully_processed_messages.append(processed_message)
+        start_time = datetime.now(timezone.utc).timestamp()
+        user_queries = self._user_db_service.aggregate_queries(results)
+        message_queries = self._message_db_service.aggregate_queries(results)
+        await asyncio.gather(
+            self._user_db_service.execute_queries(user_queries),
+            self._message_db_service.execute_queries(message_queries)
+        )
+        end_time = datetime.now(timezone.utc).timestamp()
+        for message in byoeb_messages:
+            app_insights_logger.add_log(
+                event_name="write_to_db",
+                details={
+                    "message_id": message.message_context.message_id,
+                    "time_taken": end_time - start_time
+                }
+            )
+            app_insights_logger.add_log(
+                event_name="overall_response_time",
+                details={
+                    "message_id": message.message_context.message_id,
+                    "time_taken": end_time - message.incoming_timestamp
+                }
+            )
+        utils.log_to_text_file(f"DB queries executed in: {end_time - start_time} seconds")
+        return successfully_processed_messages

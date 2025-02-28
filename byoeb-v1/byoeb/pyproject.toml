@@ -10,6 +10,8 @@ python = "^3.10"
 fastapi = "^0.115.5"
 aiocache = "0.12.3"
 byoeb-integrations = {git = "https://github.com/KhushiBaby/byoeb.git", branch = "rash598/reboot_ashabotv1_dev", subdirectory = "byoeb-v1/byoeb-integrations"}
+azure-monitor-opentelemetry = "1.6.5"
+azure-monitor-events-extension = "0.1.0"
 
 [build-system]
 requires = ["poetry-core"]

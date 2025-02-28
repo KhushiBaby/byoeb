@@ -12,6 +12,7 @@ from byoeb.services.channel.base import BaseChannelService, MessageReaction
 from byoeb.services.databases.mongo_db import UserMongoDBService, MessageMongoDBService
 from byoeb.services.chat.message_handlers.base import Handler
 from byoeb.services.channel.base import MessageReaction
+from byoeb.chat_app.configuration.dependency_setup import app_insights_logger
 
 class ByoebUserSendResponse(Handler):
     __max_last_active_duration_seconds: int = app_config["app"]["max_last_active_duration_seconds"]
@@ -196,6 +197,10 @@ class ByoebUserSendResponse(Handler):
         read_receipt_messages = chat_utils.get_read_receipt_byoeb_messages(messages)
         byoeb_user_messages = chat_utils.get_user_byoeb_messages(messages)
         byoeb_user_message = byoeb_user_messages[0]
+        track_message_id = byoeb_user_message.reply_context.reply_id
+        if byoeb_user_message.reply_context.message_category == MessageCategory.AUDIO_IDK.value:
+            track_message_id = byoeb_user_message.message_context.additional_info.get(constants.TRACK_MESSAGE_ID)
+        start_time = datetime.now(timezone.utc).timestamp()
         channel_service = self.get_channel_service(byoeb_user_message.channel_type)
         mark_read_task = channel_service.amark_read(read_receipt_messages)
         user_task = self.__handle_user(channel_service, byoeb_user_message)
@@ -220,6 +225,14 @@ class ByoebUserSendResponse(Handler):
         bot_to_user_convs = channel_service.create_conv(
             byoeb_user_message,
             user_responses
+        )
+        end_time = datetime.now(timezone.utc).timestamp()
+        app_insights_logger.add_log(
+            event_name="message_send_workflow",
+            details={
+                "message_id": track_message_id,
+                "time_taken": end_time - start_time
+            }
         )
         # byoeb_expert_verification_status = byoeb_expert_message.message_context.additional_info.get(verification_status)
         # byoeb_expert_message.message_context.additional_info = {

@@ -9,6 +9,7 @@ from typing import Dict, Any, List
 from byoeb_core.models.byoeb.message_context import ByoebMessageContext, MessageTypes
 from byoeb.services.chat.message_handlers.base import Handler
 from byoeb.models.message_category import MessageCategory
+from byoeb.chat_app.configuration.dependency_setup import app_insights_logger
 
 class ByoebUserProcess(Handler):
 
@@ -82,7 +83,7 @@ class ByoebUserProcess(Handler):
             raise Exception("LLM response is not in expected format")
         end_time = datetime.now(timezone.utc).timestamp()
         utils.log_to_text_file(f"Query rewritting and transcribe in {end_time - start_time} seconds: {str(tokens)} {response_text}")
-        return query_en, query_en_addcontext, query_type
+        return query_en, query_en_addcontext, query_type, tokens
 
     async def __handle_process_message_workflow(
         self,
@@ -109,8 +110,15 @@ class ByoebUserProcess(Handler):
             audio_to_text = await speech_translator_whisper.aspeech_to_text(audio_message_wav, source_language)
             message.message_context.message_source_text = audio_to_text
             end_time = datetime.now(timezone.utc).timestamp()
+            app_insights_logger.add_log(
+                event_name="audio_to_text",
+                details={
+                    "message_id": message.message_context.message_id,
+                    "time_taken": end_time - start_time
+                }
+            )
             utils.log_to_text_file(f"Time taken for audio to text transcribe: {end_time - start_time} seconds")
-            query_en, query_en_addcontext, query_type = await self.llm_translation_and_query_rewritting(message)
+            # query_en, query_en_addcontext, query_type = await self.llm_translation_and_query_rewritting(message)
             # print("audio_to_text", audio_to_text)
             # translated_en_text = await text_translator.atranslate_text(
             #     input_text=audio_to_text,
@@ -119,10 +127,19 @@ class ByoebUserProcess(Handler):
             # )
             message.message_context.media_info.media_type = audio_message.mime_type
         
-        else:
-            # source_text = message.message_context.message_source_text
-            if message.reply_context.message_category != MessageCategory.AUDIO_IDK.value:
-                query_en, query_en_addcontext, query_type = await self.llm_translation_and_query_rewritting(message)
+        if message.reply_context.message_category != MessageCategory.AUDIO_IDK.value:
+                start_time = datetime.now(timezone.utc).timestamp()
+                query_en, query_en_addcontext, query_type, tokens = await self.llm_translation_and_query_rewritting(message)
+                end_time = datetime.now(timezone.utc).timestamp()
+                app_insights_logger.add_log(
+                    event_name="query_rewritting",
+                    details={
+                        "message_id": message.message_context.message_id,
+                        "time_taken": end_time - start_time,
+                        "completion_tokens": tokens.get("completion_tokens"),
+                        "prompt_tokens": tokens.get("prompt_tokens")
+                    }
+                )
                 # translated_en_text = await text_translator.atranslate_text(
                 #     input_text=source_text,
                 #     source_language=source_language,

@@ -47,6 +47,7 @@ QUESTION = "question"
 ANSWER = "answer"
 AUDIO_MESSAGE_ID = "audio_message_id"
 TEXT_MESSAGE_ID = "text_message_id"
+TRACK_MESSAGE_ID = "track_message_id"
 
 MESSAGE_DB_QUERIES = "message_db_queries"
 USER_DB_QUERIES = "user_db_queries"

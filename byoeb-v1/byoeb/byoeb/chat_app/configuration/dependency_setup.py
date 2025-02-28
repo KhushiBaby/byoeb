@@ -12,10 +12,16 @@ from byoeb.handler import (
 )
 import byoeb.chat_app.configuration.config as env_config
 from byoeb.chat_app.configuration.config import app_config
-from byoeb.listener.message_consumer import QueueConsumer
 from byoeb.services.databases.mongo_db import UserMongoDBService, MessageMongoDBService
 
 SINGLETON = "singleton"
+
+# App logger
+from byoeb.application_logger.azure_app_insights import AzureAppInsightsLogger
+app_insights_logger = AzureAppInsightsLogger(
+    logger_name=app_config["app_logger"]["azure"]["logger_name"],
+    connection_string=env_config.env_appinsights_connection_string
+)
 
 # channel
 channel_register_factory = ChannelRegisterFactory()
@@ -46,6 +52,9 @@ message_producer_handler = QueueProducerHandler(
     config=app_config,
     queue_producer_factory=queue_producer_factory
 )
+
+# message consumer
+from byoeb.listener.message_consumer import QueueConsumer
 message_consumer = QueueConsumer(
     config=app_config,
     account_url=app_config["message_queue"]["azure"]["account_url"],

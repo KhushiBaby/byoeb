@@ -104,5 +104,10 @@
             "service_name": "khushi-baby-asha-search",
             "doc_index_name": "khushi-baby-asha-doc-index"
         }
+    },
+    "app_logger": {
+        "azure": {
+            "logger_name": "khushi-baby-asha-logger"
+        }
     }
 }

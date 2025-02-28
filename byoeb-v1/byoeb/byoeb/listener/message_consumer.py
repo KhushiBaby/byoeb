@@ -1,13 +1,14 @@
 import logging
 import asyncio
 import byoeb.utils.utils as utils
-import threading
+import uuid
 from datetime import datetime
 from byoeb_core.message_queue.base import BaseQueue
 from byoeb.factory import ChannelClientFactory
 from byoeb.services.chat.message_consumer import MessageConsmerService
 from byoeb.services.databases.mongo_db import UserMongoDBService, MessageMongoDBService
 from byoeb_integrations.message_queue.azure.async_azure_storage_queue import AsyncAzureStorageQueue
+from byoeb.chat_app.configuration.dependency_setup import app_insights_logger
 
 class QueueConsumer:
 
@@ -21,7 +22,7 @@ class QueueConsumer:
         user_db_service: UserMongoDBService,
         message_db_service: MessageMongoDBService,
         channel_client_factory: ChannelClientFactory,
-        consuemr_type: str = None,
+        consuemr_type: str = None
     ):
         self._logger = logging.getLogger(__name__)
         self._consumer_type = consuemr_type
@@ -126,6 +127,7 @@ class QueueConsumer:
             try:
                 self._logger.info(f"Received {len(messages)} messages")
                 successfully_processed_messages =  await message_consumer_svc.consume(message_content)
+                self._logger.info(f"Successfully processed {len(successfully_processed_messages)} messages")
                 utils.log_to_text_file(f"Successfully processed {len(successfully_processed_messages)} messages")
                 processed_ids = {message.message_context.message_id for message in successfully_processed_messages}
                 remove_messages = [msg for msg in messages if any(processed_id in msg.content for processed_id in processed_ids)]
@@ -135,6 +137,18 @@ class QueueConsumer:
                 self._logger.error(f"Error consuming messages: {e}")
             end_time = datetime.now()
             duration = (end_time - start_time).seconds
+            try:
+                app_insights_logger.add_log(
+                    event_name="batch_message_consumer",
+                    details={
+                        "batch_id": str(uuid.uuid4()),
+                        "duration": duration,
+                        "message_count": len(messages),
+                        "success_count": len(successfully_processed_messages)
+                    }
+                )
+            except Exception as e:
+                self._logger.error(f"Error logging to app insights: {e}")
             self._logger.info(f"Processing time: {duration} seconds")
             utils.log_to_text_file(f"Processed {len(messages)} message in: {duration} seconds")
             await asyncio.sleep(0.5)
