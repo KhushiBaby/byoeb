@@ -56,14 +56,16 @@ if __name__ == '__main__':
         log_config_path = os.path.join(current_dir, 'logging.yaml')
         log_config_path = os.path.normpath(log_config_path)
         log_config = None
+        module_name = os.path.splitext(os.path.basename(__file__))[0]
         with open(log_config_path, 'r') as file:
             log_config = yaml.safe_load(file)
         logging.config.dictConfig(log_config)
         logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.CRITICAL)
         uvicorn.run(
-            app,
+            f"{module_name}:app",
             host="0.0.0.0",
-            port=8000
+            port=8000,
+            workers=2
         )
     else:
         module_name = os.path.splitext(os.path.basename(__file__))[0]
@@ -71,6 +73,5 @@ if __name__ == '__main__':
         uvicorn.run(
             f"{module_name}:app",
             host="127.0.0.1",
-            port=5000,
-            workers=4
+            port=5000
         )

@@ -229,7 +229,7 @@ class ByoebUserGenerateResponse(Handler):
         )
         return {
             constants.DATA: translated_audio_message,
-            constants.MIME_TYPE: "audio/wav",
+            constants.MIME_TYPE: "audio/ogg",
         }
          
     async def __create_source_text(
