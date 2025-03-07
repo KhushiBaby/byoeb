@@ -30,7 +30,7 @@ def get_whatsapp_text_request_from_byoeb_message(
     return text_message.model_dump()
 
 def get_whatsapp_audio_request_from_byoeb_message(
-    byoeb_message: ByoebMessageContext
+    byoeb_message: ByoebMessageContext,
 ):
     def convert_audio_to_whatsapp_supported_format(audio_data):
         """
@@ -60,6 +60,7 @@ def get_whatsapp_audio_request_from_byoeb_message(
 
             
     audio_data = byoeb_message.message_context.additional_info["data"]
+    mime_type = byoeb_message.message_context.additional_info.get("mime_type", None)
     phone_number_id = byoeb_message.user.phone_number_id
     messaging_product = "whatsapp"
     context = None
@@ -69,7 +70,12 @@ def get_whatsapp_audio_request_from_byoeb_message(
             message_id=reply_id
         )
     try:
-        audio, mime_type = convert_audio_to_whatsapp_supported_format(audio_data)
+        audio = None
+        if mime_type is None:
+            audio, mime_type = convert_audio_to_whatsapp_supported_format(audio_data)
+        elif mime_type == WhatsAppMessageTypes:
+            audio = audio_data
+            mime_type = wa_media.FileMediaType.AUDIO_OGG.value
         audio_message = wa_requests.WhatsAppMediaMessage(
             messaging_product=messaging_product,
             to=phone_number_id,

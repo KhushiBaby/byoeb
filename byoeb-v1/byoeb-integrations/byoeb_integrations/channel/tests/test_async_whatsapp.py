@@ -245,10 +245,29 @@ async def atest_mark_as_read():
     await whatsapp_client._close()
 
 async def atest_batch_send_audio_message():
+    from byoeb_integrations.translators.speech.azure.async_azure_speech_translator import AsyncAzureSpeechTranslator
+    from azure.identity import get_bearer_token_provider, DefaultAzureCredential
+    speech_translator_resource_id = os.getenv('SPEECH_TRANSLATOR_RESOURCE_ID')
+    speech_translator_region = os.getenv('SPEECH_TRANSLATOR_REGION')
+    token_provider = get_bearer_token_provider(
+        DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
+    )
     message_type = wa_media.WhatsAppMediaTypes.AUDIO.value
-    audio_bytes = ac.text_to_wav_bytes("अंतरा एक गर्भनिरोधक इंजेक्शन है जो जन्म नियंत्रण के लिए उपयोग किया जाता है। यह एक प्रतिवर्ती गर्भनिरोधक विधि है जो सरकारी स्वास्थ्य केंद्रों और अस्पतालों में मुफ्त में उपलब्ध है।")
-    audio_bytes = ac.convert_wav_bytes_to_aac(audio_bytes)
-    media_type=wa_media.FileMediaType.AUDIO_AAC.value
+    text = "नमस्कार क्या हालचाल हैं?"
+    async_azure_speech_translator = AsyncAzureSpeechTranslator(
+        region=speech_translator_region,
+        token_provider=token_provider,
+        resource_id=speech_translator_resource_id,
+    )
+    audio_bytes = await async_azure_speech_translator.atext_to_speech(
+        input_text=text,
+        source_language="hi",
+    )
+    with open("test_audio.ogg", "wb") as f:
+        f.write(audio_bytes)
+    # audio_bytes = ac.text_to_wav_bytes("अंतरा एक गर्भनिरोधक इंजेक्शन है जो जन्म नियंत्रण के लिए उपयोग किया जाता है। यह एक प्रतिवर्ती गर्भनिरोधक विधि है जो सरकारी स्वास्थ्य केंद्रों और अस्पतालों में मुफ्त में उपलब्ध है।")
+    # audio_bytes = ac.convert_wav_bytes_to_aac(audio_bytes)
+    media_type=wa_media.FileMediaType.AUDIO_OGG.value
     whatsapp_client = AsyncWhatsAppClient(
         phone_number_id=WHATSAPP_PHONE_NUMBER_ID,
         bearer_token=WHATSAPP_AUTH_TOKEN,
@@ -268,7 +287,7 @@ async def atest_batch_send_audio_message():
         batch_request.append(whatsapp_media_message.model_dump())
     whatsapp_responses = await whatsapp_client.asend_batch_messages(batch_request, message_type)
     media_id = whatsapp_responses[0].media_message.id
-    print(media_id)
+    print(whatsapp_responses)
     # ack = await whatsapp_client.adelete_media(media_id)
     # assert ack.success is True
     await whatsapp_client._close()

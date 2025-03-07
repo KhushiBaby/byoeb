@@ -104,8 +104,12 @@ class AsyncAzureSpeechTranslator(BaseSpeechTranslator):
     def __get_speech_config(self) -> speechsdk.SpeechConfig:
         if self.__token_provider:
             auth_token = "aad#" + self.__resource_id + "#" + self.__token_provider()
-            return speechsdk.SpeechConfig(auth_token=auth_token, region=self.__region)
-        return speechsdk.SpeechConfig(subscription=self.__key, region=self.__region)
+            speech_config = speechsdk.SpeechConfig(auth_token=auth_token, region=self.__region)
+            speech_config.set_speech_synthesis_output_format(speechsdk.SpeechSynthesisOutputFormat.Ogg48Khz16BitMonoOpus)
+            return speech_config
+        speech_config = speechsdk.SpeechConfig(subscription=self.__key, region=self.__region)
+        speech_config.set_speech_synthesis_output_format(speechsdk.SpeechSynthesisOutputFormat.Ogg48Khz16BitMonoOpus)
+        return speech_config
 
     def change_speech_voice(self, speech_voice: str):
         """Changes the speech voice and clears cached synthesizers."""
