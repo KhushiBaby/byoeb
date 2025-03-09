@@ -1,6 +1,7 @@
-from typing import Any
 import azure.cognitiveservices.speech as speechsdk
 import asyncio
+import datetime
+from typing import Any
 from byoeb_core.translators.speech.base import BaseSpeechTranslator
 
 class AsyncAzureSpeechTranslator(BaseSpeechTranslator):
@@ -47,6 +48,7 @@ class AsyncAzureSpeechTranslator(BaseSpeechTranslator):
 
         self.__synthesizers = {}  # Cache for SpeechSynthesizer instances
         self.__lock = asyncio.Lock()  # Ensures thread-safe access
+        self.__ttl = 3600
 
     def speech_to_text(self, audio_file: str, source_language: str, **kwargs) -> Any:
         raise NotImplementedError
@@ -87,17 +89,27 @@ class AsyncAzureSpeechTranslator(BaseSpeechTranslator):
         key = (source_language, self.__speech_voice)
 
         async with self.__lock:
-            if key not in self.__synthesizers:
-                speech_config = self.__get_speech_config()
-                voice_name = self.__voice_dict[self.__speech_voice][source_language + self.__country_code]
-                speech_config.speech_synthesis_voice_name = voice_name
+            current_time = datetime.datetime.now(datetime.timezone.utc).timestamp()
+            if key in self.__synthesizers:
+                synthesizer, timestamp = self.__synthesizers[key]
+                if current_time - timestamp > self.__ttl:
+                    # Expired, remove from cache
+                    del self.__synthesizers[key]
+                else:
+                    return synthesizer
+                
+            # Create a new synthesizer
+            speech_config = self.__get_speech_config()
+            voice_name = self.__voice_dict[self.__speech_voice][source_language + self.__country_code]
+            speech_config.speech_synthesis_voice_name = voice_name
 
-                pull_stream = speechsdk.audio.PullAudioOutputStream()
-                audio_config = speechsdk.audio.AudioOutputConfig(stream=pull_stream)
+            pull_stream = speechsdk.audio.PullAudioOutputStream()
+            audio_config = speechsdk.audio.AudioOutputConfig(stream=pull_stream)
 
-                self.__synthesizers[key] = speechsdk.SpeechSynthesizer(
-                    speech_config=speech_config, audio_config=audio_config
-                )
+            synthesizer = speechsdk.SpeechSynthesizer(
+                speech_config=speech_config, audio_config=audio_config
+            )
+            self.__synthesizers[key] = (synthesizer, current_time)  # Store with timestamp
 
         return self.__synthesizers[key]
 
