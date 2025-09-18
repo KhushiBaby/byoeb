@@ -1,4 +1,7 @@
 import os
+from byoeb.constants.onboarding_text import ONBOARD_WELCOME_MESSAGE_DICT
+from byoeb.constants.user_enums import LanguageCode
+from urllib.parse import unquote
 from pathlib import Path
 
 def get_git_root_path():
@@ -38,11 +41,13 @@ def is_idk(
     return any(idk in text for idk in idks)  # Check if any phrase exists in text
 
 def is_onboard(
-    text: str
+    text: str,
+    lang: str = LanguageCode.ENGLISH.value
 ):
-    idks = [
-        "onboard-asha",
-        "onboard asha"
-    ]
-    text = text.lower()
-    return any(idk in text for idk in idks)  # Check if any phrase exists in text
+    if lang not in ONBOARD_WELCOME_MESSAGE_DICT:
+        # TODO: we should probably raise a ValueError than returning False for
+        # unexpected languages.
+        return False
+    text = unquote(text)  # "%20%" -> " "
+    text = text.lower().replace("-", " ")  # "onboard-asha" -> "onboard asha"
+    return any(phrase in text for phrase in ONBOARD_WELCOME_MESSAGE_DICT[lang])  # Check if any phrase exists in text

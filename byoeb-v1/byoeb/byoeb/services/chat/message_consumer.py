@@ -106,7 +106,7 @@ class MessageConsmerService:
                 continue
             bot_message = self.__get_bot_message(bot_messages, message.reply_context.reply_id)
             conversation = ByoebMessageContext.model_validate(message)
-            if user.user_type == self._regular_user_type:
+            if user.user_type in self._regular_user_type:
                 conversation.message_category = MessageCategory.USER_TO_BOT.value
             elif self.__is_expert_user_type(user.user_type):
                 conversation.message_category = MessageCategory.EXPERT_TO_BOT.value
@@ -232,7 +232,7 @@ class MessageConsmerService:
         for conversation in conversations:
             conversation.user.activity_timestamp = str(int(datetime.now(timezone.utc).timestamp()))
             # utils.log_to_text_file("Processing message: " + json.dumps(conversation.model_dump()))
-            if conversation.user.user_type == self._regular_user_type:
+            if conversation.user.user_type in self._regular_user_type:
                 task.append(self.__process_byoebuser_conversation(conversation))
             elif self.__is_expert_user_type(conversation.user.user_type):
                 task.append(self.__process_byoebexpert_conversation(conversation))

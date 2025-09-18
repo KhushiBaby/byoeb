@@ -600,7 +600,7 @@ class ByoebUserGenerateResponse(Handler):
                 status=constants.PENDING,
                 related_questions=related_questions
             )
-        elif utils.is_onboard(message.message_context.message_english_text):
+        elif utils.is_onboard(message.message_context.message_source_text, message.user.user_language):
             print("Is onboard message")
             query_type = "asha_work_related"
             query = "antara injection, tobacco, chaaya goli"

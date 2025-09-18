@@ -94,6 +94,13 @@ THANK_YOU_DICT = {
     },
 }
 
+ONBOARD_WELCOME_MESSAGE_DICT = {
+    LanguageCode.HINDI.value: ["में एक आशा हूँ और मुझे आशा सहेली बोट से जुड़ना है"],
+    LanguageCode.ENGLISH.value: ["onboard asha"],
+    LanguageCode.MARATHI.value: ["मी आशा आहे आणि मला आशा सहेली बॉटमध्ये सामील व्हायचे आहे"],
+    LanguageCode.TELUGU.value: ["నేను ఆశాను మరియు ఆశా సహేలి బాట్‌లో చేరాలనుకుంటున్నాను"],
+}
+
 # Suggested questions list text + items
 RELATED_QUESTIONS = {
     "description": {

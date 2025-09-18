@@ -148,6 +148,7 @@ class QueueConsumer:
                 self._logger.info(f"Deleted {len(remove_messages)} messages")
             except Exception as e:
                 self._logger.error(f"Error consuming messages: {e}")
+                successfully_processed_messages = []
             end_time = datetime.now()
             duration = (end_time - start_time).seconds
             try:
