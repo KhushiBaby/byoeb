@@ -35,42 +35,58 @@ class QueueProducerHandler:
         message
     ) -> Any:
         is_whatsapp, message_type = wa_validator.validate_whatsapp_message(message)
+        print("message_type", message_type)
         if is_whatsapp:
             return "whatsapp", message_type
         return False, None
             
         
-    async def handle(
-        self,
-        message
-    ):
+    async def handle(self, message):
+        print("[handle] ▶ start")
+        print(f"[handle]   in  message={message}")
+
+        print("[handle] → __validate_channel_and_get_message_type")
         channel, message_type = await self.__validate_channel_and_get_message_type(message)
+        print(f"[handle] ← __validate...  out channel={channel}, message_type={message_type}")
+
         if message_type == "status":
+            print("[handle] ↳ branch: status → return OK('status update')")
             return ByoebResponseModel(
                 status_code=ByoebStatusCodes.OK,
                 message="status update"
             )
+
         if not channel:
+            print("[handle] ↳ branch: invalid channel → return BAD_REQUEST('Invalid channel')")
             return ByoebResponseModel(
                 status_code=ByoebStatusCodes.BAD_REQUEST,
                 message="Invalid channel"
             )
-        message_producer_service = None
+
         try:
+            print(f"[handle] → __get_or_create_message_producer(message_type={message_type})")
             message_producer_service = await self.__get_or_create_message_producer(message_type)
+            print(f"[handle] ← __get_or_create... out producer={type(message_producer_service).__name__}")
         except Exception as e:
+            print(f"[handle] ✖ producer init failed: {e}")
             traceback.print_exc()
             return ByoebResponseModel(
                 status_code=ByoebStatusCodes.INTERNAL_SERVER_ERROR,
-                message= f"Invalid producer type: {str(e)}"
+                message=f"Invalid producer type: {str(e)}"
             )
-        
+
+        print("[handle] → apublish_message(message, channel)", message)
         response, err = await message_producer_service.apublish_message(message, channel)
+        print(f"[handle] ← apublish_message out response={response}, err={err}")
+
         if err is not None:
+            print("[handle] ↳ branch: publish error → return 500")
             return ByoebResponseModel(
                 status_code=ByoebStatusCodes.INTERNAL_SERVER_ERROR,
                 message=err
             )
+
+        print("[handle] ◀ return OK(response)")
         return ByoebResponseModel(
             status_code=ByoebStatusCodes.OK,
             message=response

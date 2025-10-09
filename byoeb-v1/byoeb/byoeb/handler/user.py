@@ -69,6 +69,7 @@ class UsersHandler:
         user_svc = await self.get_or_create_user_service()
         byoeb_users = []
         byoeb_messages = []
+        
         for user in data:
             byoeb_user = User(**user)
             expert_numbers = user_utils.get_experts_numbers(byoeb_user.experts)
@@ -147,11 +148,111 @@ class UsersHandler:
             message=results
         )
     
+   # async def aupdate(
+   #     self,
+   #     data: str
+   # ):
+   #     user_collection_client = await self.get_collection_client()
+   #     return ByoebResponseModel(
+   #         status_code=ByoebStatusCodes.OK.value,
+   #         message=results
+   #     )
     async def aupdate(
         self,
-        data: str
-    ):
-        user_collection_client = await self.get_collection_client()
+        data: list
+    ) -> ByoebResponseModel:
+        """
+        Update existing user records.
+
+        Args:
+            data (list): List of user dictionaries to update.
+
+        Returns:
+            ByoebResponseModel: Status and messages.
+        """
+        if not isinstance(data, list):
+            return ByoebResponseModel(
+                status_code=ByoebStatusCodes.BAD_REQUEST.value,
+                message="Input data must be a list of user objects."
+            )
+
+        user_svc = await self.get_or_create_user_service()
+        byoeb_messages = []
+        updated_users = []
+        phone_number_ids=[]
+        for i in data:
+        	phone_number_ids.append(i["phone_number_id"])
+        results = await user_svc.aget(
+            phone_number_ids=phone_number_ids)
+        print("start",results, "end")
+        response={}
+        for x in results:
+        	response[x["phone_number_id"]]=x
+
+        for x in range(len(response)):
+        	if data[x]["phone_number_id"] in response.keys():
+        		data[x]["user_id"]=str(response[data[x]["phone_number_id"]]["user_id"])
+        		for i in response[data[x]["phone_number_id"]]:
+        			if i not in data[x]:
+        	        	        	data[x][i]=response[data[x]["phone_number_id"]][i]
+        	else:
+        		byoeb_messages.append(
+                        user_utils.get_register_message(
+                            byoeb_user,
+                            ErrorMessage.PHONE_NUMBER_NOT_PRESENT.value
+                        )
+                    )
+       
+        for user_data in data:
+            try:
+                byoeb_user = User(**user_data)
+                if byoeb_user.phone_number_id is None:
+                    byoeb_messages.append(
+                        user_utils.get_register_message(
+                            byoeb_user,
+                            ErrorMessage.PHONE_NUMBER_ID_REQUIRED.value
+                        )
+                    )
+                    continue
+                if len(results)==0:
+                    byoeb_messages.append(
+                        user_utils.get_register_message(
+                            byoeb_user,
+                            ErrorMessage.PHONE_NUMBER_NOT_PRESENT.value
+                        )
+                    )
+                    continue
+
+                # Validation: phone_number_id is mandatory
+                if byoeb_user.phone_number_id is None:
+                    byoeb_messages.append(
+                        user_utils.get_register_message(
+                            byoeb_user,
+                            ErrorMessage.PHONE_NUMBER_ID_REQUIRED.value
+                        )
+                    )
+                    continue
+                await user_svc.aupdate(byoeb_user)
+                updated_users.append(byoeb_user.phone_number_id)
+
+            except Exception as e:
+                byoeb_messages.append({
+                    "phone_number_id": user_data.get("phone_number_id", None),
+                    "message": f"Error updating user: {str(e)}"
+                })
+
+        # Return aggregated response
+        if byoeb_messages:
+            return ByoebResponseModel(
+                status_code=ByoebStatusCodes.BAD_REQUEST.value,
+                message=byoeb_messages
+            )
+
+        return ByoebResponseModel(
+            status_code=ByoebStatusCodes.OK.value,
+            message=f"Successfully updated users: {updated_users}"
+        )
+
         
     async def aget(
         self,

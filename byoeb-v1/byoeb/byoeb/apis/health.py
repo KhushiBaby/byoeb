@@ -14,3 +14,11 @@ async def webhook():
     """
     _logger.debug("Request for index page received")
     return JSONResponse(content="Chat bot is running", status_code=200)
+
+def health_mcps_router(mcp):
+    @mcp.tool
+    def asha_service_health():
+        """
+        Health check route to confirm the bot is running.
+        """
+        return "Chat bot is running"

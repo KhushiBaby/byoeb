@@ -9,12 +9,14 @@ class AzureAppInsightsLogger:
     def __init__(
         self,
         logger_name,
-        connection_string
+        connection_string,
+        instrumentations
     ):
 
         configure_azure_monitor(
             logger_name=logger_name,
             connection_string=connection_string,
+            instrumentations=instrumentations
         )
 
     def add_log(self,

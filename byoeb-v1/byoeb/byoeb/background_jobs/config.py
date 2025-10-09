@@ -7,13 +7,13 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 app_config_path = os.path.join(current_dir, 'app_config.json')
 app_config_path = os.path.normpath(app_config_path)
 app_config = None
-with open(app_config_path, 'r') as file:
+with open(app_config_path, 'r', encoding="utf-8") as file:
     app_config = json.load(file)
 
 bot_config_path = os.path.join(current_dir, 'bot_config.json')
 bot_config_path = os.path.normpath(bot_config_path)
 bot_config = None
-with open(bot_config_path, 'r') as file:
+with open(bot_config_path, 'r', encoding="utf-8") as file:
     bot_config = json.load(file)
 
 environment_path = os.path.join(current_dir, '../../..', 'keys.env')

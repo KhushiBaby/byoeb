@@ -41,6 +41,10 @@ class ByoebUserSendResponse(Handler):
         convs: List[ByoebMessageContext],
         byoeb_user_message: ByoebMessageContext,
     ):
+        # Safety check for None user message
+        if byoeb_user_message is None:
+            print("[send] __prepare_db_queries: byoeb_user_message is None, returning empty queries")
+            return {}
         if byoeb_user_message.reply_context.message_category == MessageCategory.AUDIO_IDK.value:
             message_db_queries = {
                 constants.UPDATE: self._message_db_service.audio_idk_status_update_query(byoeb_user_message)
@@ -200,39 +204,77 @@ class ByoebUserSendResponse(Handler):
         messages: List[ByoebMessageContext]
     ):
         # verification_status = constants.VERIFICATION_STATUS
+        print("[send] __handle_message_send_workflow: start messages_count=", len(messages) if messages else 0)
         read_receipt_messages = chat_utils.get_read_receipt_byoeb_messages(messages)
+        print("[send] read_receipt_messages_count=", len(read_receipt_messages) if read_receipt_messages else 0)
         byoeb_user_messages = chat_utils.get_user_byoeb_messages(messages)
+        print("byoeb_user_messages", byoeb_user_messages)
+        print("[send] byoeb_user_messages_count=", len(byoeb_user_messages) if byoeb_user_messages else 0)
+
+        if not byoeb_user_messages:
+            print("[send] ERROR: No user messages found, cannot proceed")
+            return [], None
         byoeb_user_message = byoeb_user_messages[0]
+        print("[send] byoeb_user_message_type=", type(byoeb_user_message).__name__)
+        print("[send] about to access reply_context on byoeb_user_message")
+
         track_message_id = byoeb_user_message.reply_context.reply_id
+        print("[send] track_message_id(initial)=", track_message_id)
         if byoeb_user_message.reply_context.message_category == MessageCategory.AUDIO_IDK.value:
+            print("[send] AUDIO_IDK detected; using TRACK_MESSAGE_ID from additional_info")
             track_message_id = byoeb_user_message.message_context.additional_info.get(constants.TRACK_MESSAGE_ID)
+        print("[send] track_message_id(final)=", track_message_id)
+
         start_time = datetime.now(timezone.utc).timestamp()
+        print("[send] start_time=", start_time)
+        print("[send] channel_type=", getattr(byoeb_user_message, "channel_type", None))
         channel_service = self.get_channel_service(byoeb_user_message.channel_type)
+        print("[send] channel_service_resolved=", type(channel_service).__name__ if channel_service else None)
+        print("[send] scheduling amark_read for", len(read_receipt_messages) if read_receipt_messages else 0, "messages")
         mark_read_task = channel_service.amark_read(read_receipt_messages)
+        print("[send] scheduling user_task")
         user_task = self.__handle_user(channel_service, byoeb_user_message)
+
         byoeb_expert_messages = chat_utils.get_expert_byoeb_messages(messages)
+        print("[send] byoeb_expert_messages_count=", len(byoeb_expert_messages) if byoeb_expert_messages else 0)
         if byoeb_expert_messages is None or len(byoeb_expert_messages) == 0:
             byoeb_expert_message = None
+            print("[send] byoeb_expert_message=None")
         else:
             byoeb_expert_message = byoeb_expert_messages[0]
+            print("[send] byoeb_expert_message set (index 0)")
+
+        print("[send] scheduling expert_task")
         expert_task = self.__handle_expert(channel_service, byoeb_expert_message)
+
+        print("[send] awaiting asyncio.gather for mark_read_task, user_task, expert_task")
         _, user_responses, expert_responses = await asyncio.gather(mark_read_task, user_task, expert_task)
+        print("[send] gather done; user_responses_len=", len(user_responses) if user_responses else 0, "expert_responses_len=", len(expert_responses) if expert_responses else 0)
 
         # byoeb_user_verification_status = byoeb_expert_message.message_context.additional_info.get(verification_status)
+        print("[send] extracting additional_info fields (ROW_TEXTS, QUERY_TYPE, STATUS)")
         related_questions = byoeb_user_message.message_context.additional_info.get(constants.ROW_TEXTS)
         query_type = byoeb_user_message.message_context.additional_info.get(constants.QUERY_TYPE)
         status = byoeb_user_message.message_context.additional_info.get(constants.STATUS)
+        print("[send] related_questions=", related_questions)
+        print("[send] query_type=", query_type)
+        print("[send] status=", status)
+
         byoeb_user_message.message_context.additional_info = {
             # verification_status: byoeb_user_verification_status,
             constants.RELATED_QUESTIONS: related_questions,
             constants.QUERY_TYPE: query_type,
             constants.STATUS: status
         }
+        print("[send] creating bot_to_user_convs via channel_service.create_conv")
         bot_to_user_convs = channel_service.create_conv(
             byoeb_user_message,
             user_responses
         )
+        print("[send] bot_to_user_convs_count=", len(bot_to_user_convs) if bot_to_user_convs else 0)
+
         end_time = datetime.now(timezone.utc).timestamp()
+        print("[send] end_time=", end_time, "duration=", end_time - start_time)
         app_insights_logger.add_log(
             event_name="message_send_workflow",
             details={
@@ -240,6 +282,8 @@ class ByoebUserSendResponse(Handler):
                 "time_taken": end_time - start_time
             }
         )
+        print("[send] app_insights_logger.add_log called for message_send_workflow")
+
         # byoeb_expert_verification_status = byoeb_expert_message.message_context.additional_info.get(verification_status)
         # byoeb_expert_message.message_context.additional_info = {
         #     verification_status: byoeb_expert_verification_status
@@ -251,6 +295,7 @@ class ByoebUserSendResponse(Handler):
         #     expert_responses
         # )
         # return bot_to_user_convs + bot_to_expert_cross_convs, byoeb_user_message
+        print("[send] returning from __handle_message_send_workflow")
         return bot_to_user_convs, byoeb_user_message
     
     async def handle(
@@ -262,6 +307,10 @@ class ByoebUserSendResponse(Handler):
         try:
             start_time = datetime.now(timezone.utc).timestamp()
             convs, byoeb_user_message = await self.__handle_message_send_workflow(messages)
+            # Check if we have a valid user message to process
+            if byoeb_user_message is None:
+                print("[send] No user message to process, returning empty queries")
+                return {}
             db_queries = self.__prepare_db_queries(convs, byoeb_user_message)
             end_time = datetime.now(timezone.utc).timestamp()
             utils.log_to_text_file(f"E2E for send workflow {end_time - start_time} seconds")

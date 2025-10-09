@@ -43,6 +43,23 @@ def get_user_type(choice):
     elif choice in anm:
         return "anm"
 
+def _log_reply_context(rc: ReplyContext, where: str):
+    try:
+        print(
+            f"[ReplyContext@{where}] reply_id={rc.reply_id!r}, "
+            f"message_category={rc.message_category!r}"
+        )
+    except Exception as e:
+        print(f"[ReplyContext@{where}] <print failed: {e!r}>")
+
+def make_reply_context(from_message: ByoebMessageContext, where: str) -> ReplyContext:
+    rc = ReplyContext(
+        reply_id=from_message.message_context.message_id,
+        message_category=from_message.message_category,
+    )
+    _log_reply_context(rc, where)
+    return rc
+
 def create_user_selection_message(
     message: ByoebMessageContext,
     user_lang: str = None
@@ -80,10 +97,7 @@ def create_user_selection_message(
             message_source_text=text_message,
             additional_info=button_additional_info,
         ),
-        reply_context=ReplyContext(
-            reply_id=message.message_context.message_id,
-            message_category=message.message_category,
-        ),
+        reply_context=make_reply_context(message, "create_user_selection_message"),
     )
 
 def create_language_selection_message(
@@ -105,10 +119,7 @@ def create_language_selection_message(
             message_source_text=text_message,
             additional_info=interactive_list_additional_info,
         ),
-        reply_context=ReplyContext(
-            reply_id=message.message_context.message_id,
-            message_category=message.message_category,
-        ),
+        reply_context=make_reply_context(message, "create_language_selection_message"),
     )
 
 def create_consent_message(
@@ -168,10 +179,7 @@ def create_consent_message(
             message_source_text=text_message,
             additional_info=button_additional_info,
         ),
-        reply_context=ReplyContext(
-            reply_id=message.message_context.message_id,
-            message_category=message.message_category,
-        ),
+        reply_context=make_reply_context(message, "create_consent_message"),
     )
 
 def create_audio(
@@ -255,10 +263,7 @@ def create_initial_message(
                     chat_const.MIME_TYPE: audio_type,
                 }
             ),
-            reply_context=ReplyContext(
-                reply_id=message.message_context.message_id,
-                message_category=message.message_category,
-            ),
+            reply_context=make_reply_context(message, "create_initial_message[ANM]"),
         )
     return ByoebMessageContext(
         channel_type=message.channel_type,
@@ -274,10 +279,7 @@ def create_initial_message(
                 chat_const.MIME_TYPE: audio_type,
             }
         ),
-        reply_context=ReplyContext(
-            reply_id=message.message_context.message_id,
-            message_category=message.message_category,
-        ),
+        reply_context=make_reply_context(message, "create_initial_message[non-ANM]"),
     )
 
 def create_user(
@@ -294,7 +296,7 @@ def create_user(
         additional_info={
             user_const.CONSENT: consent,
         },
-        test_user=False,
+        test_user=(user_type == "others"),
         experts={},
         audience=[],
         created_timestamp=int(datetime.now(timezone.utc).timestamp()),
@@ -307,13 +309,14 @@ async def handle_unknown_user(
     user_db_service: UserMongoDBService,
     channel_factory: ChannelClientFactory,
 ):
-    print("onboarding message")
+    print("handle_unknown_user")
     channel_service = WhatsAppService(channel_client_factory=channel_factory)
     if not isinstance(channel_service, WhatsAppService):
         raise ValueError("Invalid channel service type")
     for message in messages:
+        print("message.reply_context", message.reply_context)
         if message.reply_context is None or message.reply_context.reply_id is None:
-            # print(f"onboarding message: {message}")
+            print(f"onboarding message: {message}")
             byoeb_message = create_language_selection_message(message)
             requests = channel_service.prepare_requests(byoeb_message)
             responses, message_ids = await channel_service.send_requests(requests)
@@ -332,6 +335,7 @@ async def handle_unknown_user(
             except Exception as e:
                 print(f"Error in onboarding message: {e}")
         elif message.reply_context.message_category == chat_const.LANGUAGE_SELECTION:
+            print("Language Selection")
             text = message.message_context.message_source_text
             code = get_language_code(text)
             update_user = create_user(
@@ -351,6 +355,7 @@ async def handle_unknown_user(
             await message_db_service.execute_queries(message_db_queries)
             await user_db_service.execute_queries(user_db_queries)
         elif message.reply_context.message_category == chat_const.USER_TYPE:
+            print("User Type")
             text = message.message_context.message_source_text
             user_type = get_user_type(text)
             update_user = create_user(
@@ -371,6 +376,7 @@ async def handle_unknown_user(
             await message_db_service.execute_queries(message_db_queries)
             await user_db_service.execute_queries(user_db_queries)
         elif message.reply_context.message_category == chat_const.CONSENT:
+            print("Consent")
             text = message.message_context.message_source_text
             consent = get_consent(text)
             print(f"consent: {consent}")
