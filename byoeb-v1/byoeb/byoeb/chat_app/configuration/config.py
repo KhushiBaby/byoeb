@@ -8,13 +8,13 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 app_config_path = os.path.join(current_dir, '..', 'app_config.json')
 app_config_path = os.path.normpath(app_config_path)
 app_config = None
-with open(app_config_path, 'r') as file:
+with open(app_config_path, 'r', encoding="utf-8") as file:
     app_config = json.load(file)
 
 bot_config_path = os.path.join(current_dir, '..', 'bot_config.json')
 bot_config_path = os.path.normpath(bot_config_path)
 bot_config = None
-with open(bot_config_path, 'r') as file:
+with open(bot_config_path, 'r', encoding="utf-8") as file:
     bot_config = json.load(file)
 
 environment_path = os.path.join(current_dir, '../../..', 'keys.env')
@@ -42,4 +42,14 @@ env_appinsights_connection_string = os.getenv("APPINSIGHTS_CONNECTION_STRING")
 
 # Azure Storage
 env_azure_storage_connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+
+# Azure Cognitive Services
+env_azure_cognitive_key = os.getenv("AZURE_COGNITIVE_KEY")
+
+#Azure Speech Key
+env_azure_speech_key= os.getenv("AZURE_SPEECH_KEY")
+env_azure_openai_whisper_key= os.getenv("AZURE_OPENAI_WHISPER_KEY")
+
+# Azure Search
+env_azure_search_api_key = os.getenv("AZURE_SEARCH_API_KEY")
 

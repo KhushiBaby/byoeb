@@ -56,11 +56,15 @@ def validate_status_message(original_message):
 
 def validate_whatsapp_message(original_message):
     if validate_regular_message(original_message):
+        print("regular")
         return True, "regular"
     if validate_template_message(original_message):
+        print("template")
         return True, "template"
     if validate_interactive_message(original_message):
+        print("interactive")
         return True, "interactive"
     if validate_status_message(original_message):
+        print("status")
         return True, "status"
     return False, None

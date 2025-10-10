@@ -1,8 +1,10 @@
 import os
+import re
 from byoeb.constants.onboarding_text import ONBOARD_WELCOME_MESSAGE_DICT
 from byoeb.constants.user_enums import LanguageCode
 from urllib.parse import unquote
 from pathlib import Path
+from fastmcp.server.dependencies import get_http_request
 
 def get_git_root_path():
     current_dir = os.path.abspath(__file__)
@@ -26,6 +28,17 @@ def log_to_text_file(text):
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(text + "\n")
+
+def mcp_get_phone_number() -> str:
+    request = get_http_request()
+    if "phone_number" not in request.query_params:
+        raise ValueError("Cannot proceed with request due to missing 'phone_number' param")
+
+    phone_number = request.query_params["phone_number"]
+    if not re.fullmatch(r"\d{10,13}", phone_number):
+        raise ValueError("Cannot proceed with request due to malformed 'phone_number' param")
+
+    return phone_number
 
 def is_idk(
     text: str

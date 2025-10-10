@@ -24,7 +24,7 @@ COPY . .
 RUN poetry install --no-root --no-interaction --no-ansi
 
 # Expose the port (Render expects 10000 internally, but you can set 5000)
-EXPOSE 5000
+EXPOSE 8000
 
 # Command to run your FastAPI app
-CMD ["poetry", "run", "uvicorn", "byoeb.chat_app.run:app", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["poetry", "run", "python3", "-m", "byoeb.chat_app.run", "--host", "0.0.0.0", "--port", "8000"]

@@ -11,10 +11,27 @@ from byoeb_core.models.whatsapp.requests import interactive_message_request as w
 from byoeb_core.models.whatsapp.requests import template_message_request as wa_template
 from byoeb_core.models.whatsapp.requests import media_request as wa_media
 from byoeb_core.models.whatsapp.message_context import WhatsappMessageReplyContext
-from byoeb_integrations.channel.whatsapp.meta.async_whatsapp_client import AsyncWhatsAppClient, WhatsAppMessageTypes
+from byoeb_integrations.channel.whatsapp.meta.async_whatsapp_client import AsyncWhatsAppClient, StatusCode, WhatsAppMessageTypes
 from byoeb_integrations import test_environment_path
 from dotenv import load_dotenv
-
+from byoeb_core.models.whatsapp.response.message_response import (
+    WhatsAppResponse, 
+    WhatsAppResponseStatus, 
+    MediaMessage,
+    Contact,
+    Message
+)
+from byoeb_core.models.whatsapp.requests import (
+    WhatsAppMessage,
+    WhatsAppInteractiveMessage,
+    WhatsAppTemplateMessage,
+    WhatsAppMediaMessage, 
+    WhatsAppAudio,
+    WhatsAppVideo,
+    WhatsAppReadMessage,
+    MediaData
+)
+from byoeb_core.models.whatsapp.response.acknowledment_response import WhatsAppAcknowledgment
 from types import SimpleNamespace
 
 DUMMY_TOKEN = "dummy_auth_token_123456789"
@@ -450,6 +467,494 @@ def test_batch_send_audio_message(event_loop):
 
 def test_audio_download(event_loop):
     event_loop.run_until_complete(atest_audio_download())
+import pytest
+import json
+import byoeb_integrations.channel.whatsapp.validate_message as wa_validate
+from types import SimpleNamespace
+
+# 1. Invalid JSON input (should trigger json.loads)
+def test_validate_regular_message_invalid_json(monkeypatch):
+    # valid JSON string, but wrong structure for model_validate
+    invalid_json_message = '{"foo": "bar"}'
+    result = wa_validate.validate_regular_message(invalid_json_message)
+    assert result is False
+
+
+# 2. Regular message with unsupported type (should return False)
+def test_validate_regular_message_unsupported_type():
+    message = {
+        "entry": [{"changes": [{"value": {"messages": [{"type": "unsupported"}]}}]}]
+    }
+    assert wa_validate.validate_regular_message(message) is False
+
+# 3. Regular message raising exception (simulate model_validate raising)
+def test_validate_regular_message_exception(monkeypatch):
+    monkeypatch.setattr(
+        "byoeb_integrations.channel.whatsapp.validate_message.incoming_message.WhatsAppRegularMessageBody",
+        SimpleNamespace(model_validate=lambda x: (_ for _ in ()).throw(Exception("fail")))
+    )
+    message = {"any": "data"}
+    assert wa_validate.validate_regular_message(message) is False
+
+# 4. Template message invalid type
+def test_validate_template_message_invalid_type():
+    message = {
+        "entry": [{"changes": [{"value": {"messages": [{"type": "text"}]}}]}]
+    }
+    assert wa_validate.validate_template_message(message) is False
+
+# 5. Interactive message invalid type
+def test_validate_interactive_message_invalid_type():
+    message = {
+        "entry": [{"changes": [{"value": {"messages": [{"type": "text"}]}}]}]
+    }
+    assert wa_validate.validate_interactive_message(message) is False
+
+# 6. Status message missing statuses
+def test_validate_status_message_none_statuses():
+    message = {
+        "entry": [{"changes": [{"value": {"statuses": None}}]}]
+    }
+    assert wa_validate.validate_status_message(message) is False
+
+# 7. validate_whatsapp_message fallback to False
+def test_validate_whatsapp_message_unknown_type():
+    message = {
+        "entry": [{"changes": [{"value": {"messages": [{"type": "unknown"}]}}]}]
+    }
+    is_valid, message_type = wa_validate.validate_whatsapp_message(message)
+    assert is_valid is False
+    assert message_type is None
+
+# 8. JSON string input for validate_regular_message
+def test_validate_regular_message_json_string():
+    message_dict = {
+        "entry": [{"changes": [{"value": {"messages": [{"type": "text"}]}}]}]
+    }
+    message_json = json.dumps(message_dict)
+    assert wa_validate.validate_regular_message(message_json) is True
+
+import aiohttp
+@pytest.mark.asyncio
+async def test_prepare_data():
+    client = AsyncWhatsAppClient(
+        phone_number_id=WHATSAPP_PHONE_NUMBER_ID,
+        bearer_token=WHATSAPP_AUTH_TOKEN,
+        reuse_client=True
+    )
+    data = {"key1": "value1", "key2": "value2"}
+    file_content = b"file bytes"
+    files = {
+        "file1": ["test.txt", file_content, "text/plain"]
+    }
+    
+    # Call private method
+    form_data = client._AsyncWhatsAppClient__prepare_data(data, files)
+
+    # Check that form_data is indeed aiohttp.FormData
+    assert isinstance(form_data, aiohttp.FormData)
+
+    # Extract field names
+    field_names = [field[0].get("name") for field in form_data._fields]
+
+    # Assert that all keys are present
+    assert "key1" in field_names
+    assert "key2" in field_names
+    assert "file1" in field_names
+@pytest.mark.asyncio
+async def test_prepare_data_notdata():
+    client = AsyncWhatsAppClient(
+        phone_number_id=WHATSAPP_PHONE_NUMBER_ID,
+        bearer_token=WHATSAPP_AUTH_TOKEN,
+        reuse_client=True
+    )
+    form_data = client._AsyncWhatsAppClient__prepare_data(None, None)
+
+    # Check that form_data is indeed aiohttp.FormData
+    assert isinstance(form_data, aiohttp.FormData)
+def test__get_headers__():
+    client = AsyncWhatsAppClient(
+    phone_number_id=WHATSAPP_PHONE_NUMBER_ID,
+    bearer_token=WHATSAPP_AUTH_TOKEN,
+    reuse_client=True
+    )
+
+    headers =client.__get_headers__("text")
+    headers =client.__get_headers__(None)
+@pytest.mark.asyncio
+async def test__get_session__():
+    client = AsyncWhatsAppClient(
+    phone_number_id=WHATSAPP_PHONE_NUMBER_ID,
+    bearer_token=WHATSAPP_AUTH_TOKEN,
+    reuse_client=True
+    )
+    client._session=None
+    await client._AsyncWhatsAppClient__get_session()
+@pytest.mark.asyncio
+async def test__get_session___reuseclientfalse():
+    client = AsyncWhatsAppClient(
+    phone_number_id=WHATSAPP_PHONE_NUMBER_ID,
+    bearer_token=WHATSAPP_AUTH_TOKEN,
+    reuse_client=False
+    )
+    client._session=None
+    await client._AsyncWhatsAppClient__get_session()
+@pytest.mark.asyncio
+async def test__upload__():
+    client = AsyncWhatsAppClient(
+        phone_number_id=WHATSAPP_PHONE_NUMBER_ID,
+        bearer_token=WHATSAPP_AUTH_TOKEN,
+        reuse_client=True
+    )
+    mock_session = AsyncMock()
+    client._session = mock_session
+    data = {"key1": "value1", "key2": "value2"}
+    file_content = b"file bytes"
+    files = {
+        "file1": ["test.txt", file_content, "text/plain"]
+    }
+    
+
+    form_data = client._AsyncWhatsAppClient__prepare_data(data, files)
+    await client.__upload__("xyz.com",form_data)
+@pytest.mark.asyncio
+async def test__delete__():
+    client = AsyncWhatsAppClient(
+        phone_number_id=WHATSAPP_PHONE_NUMBER_ID,
+        bearer_token=WHATSAPP_AUTH_TOKEN,
+        reuse_client=True
+    )
+    mock_session = AsyncMock()
+    client._session = mock_session
+    await client.__delete__("xyz.com")
+@pytest.mark.asyncio
+async def test__get__():
+    client = AsyncWhatsAppClient(
+        phone_number_id=WHATSAPP_PHONE_NUMBER_ID,
+        bearer_token=WHATSAPP_AUTH_TOKEN,
+        reuse_client=True
+    )
+    mock_session = AsyncMock()
+    client._session = mock_session
+    await client.__get__("xyz.com")
+
+@pytest.mark.asyncio
+async def test__post__():
+    client = AsyncWhatsAppClient(
+        phone_number_id=WHATSAPP_PHONE_NUMBER_ID,
+        bearer_token=WHATSAPP_AUTH_TOKEN,
+        reuse_client=True
+    )
+    mock_session = AsyncMock()
+    client._session = mock_session
+    await client.__post__("xyz.com", payload=None, data=None,content_type = "application/json")   
+@pytest.mark.asyncio
+async def test__post__valueerror():
+    client = AsyncWhatsAppClient(
+        phone_number_id=WHATSAPP_PHONE_NUMBER_ID,
+        bearer_token=WHATSAPP_AUTH_TOKEN,
+        reuse_client=True
+    )
+    data = {"key1": "value1", "key2": "value2"}
+    file_content = b"file bytes"
+    files = {
+        "file1": ["test.txt", file_content, "text/plain"]
+    }
+    
+
+    form_data = client._AsyncWhatsAppClient__prepare_data(data, files)
+    mock_session = AsyncMock()
+    client._session = mock_session
+    with pytest.raises(ValueError, match="Only one of payload or data should be provided."):
+       await client.__post__("xyz.com", payload="XYZ", data=form_data,content_type = "application/json") 
+
+@pytest.mark.parametrize("msg_type, expected_func", [
+    (WhatsAppMessageTypes.TEXT.value, "asend_text_message"),
+    (WhatsAppMessageTypes.REACTION.value, "asend_reaction"),
+    (WhatsAppMessageTypes.INTERACTIVE.value, "asend_interactive_message"),
+    (WhatsAppMessageTypes.TEMPLATE.value, "asend_template_message"),
+    (WhatsAppMessageTypes.AUDIO.value, "asend_audio_message"),
+    (WhatsAppMessageTypes.VIDEO.value, "asend_video_message"),
+    (WhatsAppMessageTypes.READ.value, "amark_as_read"),
+])
+def test_get_send_function(msg_type, expected_func):
+    whatsapp_client = AsyncWhatsAppClient(
+        phone_number_id=WHATSAPP_PHONE_NUMBER_ID,
+        bearer_token=WHATSAPP_AUTH_TOKEN,
+        reuse_client=True
+    )
+
+    func = whatsapp_client.get_send_function(msg_type)
+    assert func == getattr(whatsapp_client, expected_func)
+
+@pytest.mark.asyncio
+async def test_get_send_function_invalid_type():
+    whatsapp_client = AsyncWhatsAppClient(
+        phone_number_id=WHATSAPP_PHONE_NUMBER_ID,
+        bearer_token=WHATSAPP_AUTH_TOKEN,
+        reuse_client=True,
+    )
+
+    func = whatsapp_client.get_send_function("INVALID_TYPE")
+
+    # should return None
+    assert func is None
+
+
+import asyncio
+from unittest.mock import AsyncMock, patch
+
+
+@pytest.mark.asyncio
+async def test_asend_text_message_success():
+    dummy_payload = {
+        "messaging_product": "whatsapp",
+        "to": "1234567890",
+        "type": "text",
+        "text": {"body": "Hello world"}
+    }
+
+    # Dummy response matching WhatsAppResponse fields
+    dummy_response = {
+        "messaging_product": "whatsapp",
+        "contacts": [{"input": "1234567890", "wa_id": "9876543210"}],
+        "messages": [{"id": "message_1"}]
+    }
+
+    class DummyAsyncWhatsAppClient(AsyncWhatsAppClient):
+        async def __post__(self, url, payload=None, data=None, content_type="application/json"):
+            # Always return success with dummy_response
+            return 200, dummy_response, None
+
+    client = DummyAsyncWhatsAppClient("dummy_phone", "dummy_token")
+
+    response: WhatsAppResponse = await client.asend_text_message(dummy_payload)
+
+    assert response.response_status.status == "200"
+    assert response.messaging_product == "whatsapp"
+    assert response.contacts[0].input == "1234567890"
+    assert response.messages[0].id == "message_1"
+
+@pytest.mark.asyncio
+async def test_close_with_session():
+    whatsapp_client = AsyncWhatsAppClient(
+        phone_number_id=WHATSAPP_PHONE_NUMBER_ID,
+        bearer_token=WHATSAPP_AUTH_TOKEN,
+        reuse_client=True
+    )
+
+
+    mock_session = AsyncMock()
+    whatsapp_client._session = mock_session
+
+    await whatsapp_client._close()
+
+
+    mock_session.close.assert_awaited_once()
+
+    assert whatsapp_client._session is None
+
+
+@pytest.mark.asyncio
+async def test_aexit_with_session():
+    whatsapp_client = AsyncWhatsAppClient(
+        phone_number_id=WHATSAPP_PHONE_NUMBER_ID,
+        bearer_token=WHATSAPP_AUTH_TOKEN,
+        reuse_client=True
+    )
+    mock_session = AsyncMock()
+    whatsapp_client._session = mock_session
+    await whatsapp_client.__aexit__("abs", "abc", "ab")
+    whatsapp_client._session=None
+    await whatsapp_client.__aexit__("abs", "abc", "ab")
+
+@pytest.mark.asyncio
+async def test_aenter_with_session():
+    whatsapp_client = AsyncWhatsAppClient(
+        phone_number_id=WHATSAPP_PHONE_NUMBER_ID,
+        bearer_token=WHATSAPP_AUTH_TOKEN,
+        reuse_client=True
+    )
+    mock_session = AsyncMock()
+    whatsapp_client._session = mock_session
+    x=await whatsapp_client.__aenter__()
+@pytest.mark.asyncio
+async def test_asend_template_message_success():
+    dummy_payload = {
+        "messaging_product": "whatsapp",
+        "to": "1234567890",
+        "type": "template",
+        "template": {
+            "name": "hello_world",
+            "language": {"code": "en_US"},
+            "components": []
+        }
+    }
+
+    dummy_response = {
+        "messaging_product": "whatsapp",
+        "contacts": [{"input": "1234567890", "wa_id": "9876543210"}],
+        "messages": [{"id": "message_1"}]
+    }
+
+    class DummyAsyncWhatsAppClient(AsyncWhatsAppClient):
+        async def __post__(self, url, payload=None, data=None, content_type="application/json"):
+            return 200, dummy_response, None
+
+    client = DummyAsyncWhatsAppClient("dummy_phone", "dummy_token")
+    response: WhatsAppResponse = await client.asend_template_message(dummy_payload)
+
+    assert isinstance(response, WhatsAppResponse)
+    assert response.messaging_product == "whatsapp"
+    assert response.contacts[0].wa_id == "9876543210"
+    assert response.messages[0].id == "message_1"
+    assert response.response_status.status == "200"
+@pytest.mark.asyncio
+async def test_asend_audio_message_upload_error(monkeypatch):
+    """Covers branch where _upload_media returns an error."""
+
+    # Dummy client
+    client = AsyncWhatsAppClient("dummy_phone", "dummy_token")
+
+    # Monkeypatch _upload_media to return an error
+    async def fake_upload(data, mime_type):
+        return 500, None, "upload failed"
+    monkeypatch.setattr(client, "_upload_media", fake_upload)
+
+    # Create a payload without "audio", forcing _upload_media to be called
+    payload = WhatsAppMediaMessage(
+        messaging_product=client.get_product_name(),
+        to="1234567890",
+        type=WhatsAppMessageTypes.AUDIO.value,
+        media=MediaData(
+            data=b"fakebytes",
+            mime_type="audio/ogg"
+        )
+    ).model_dump()
+
+    resp = await client.asend_audio_message(payload)
+
+    # Since upload failed, should return WhatsAppResponse with error
+    assert resp.response_status.status == "500"
+    assert resp.response_status.error == "upload failed"
+    assert resp.messages == []
+
+@pytest.mark.asyncio
+async def test_asend_reaction_failure(monkeypatch):
+    """Covers error path in asend_reaction when __post__ returns failure."""
+    client = AsyncWhatsAppClient("dummy_phone", "dummy_token")
+
+    # Monkeypatch __post__ to simulate a 500 error
+    async def fake_post(url, payload=None, data=None, content_type="application/json"):
+        return 500, None, "server error"
+    monkeypatch.setattr(client, "__post__", fake_post)
+
+    payload = WhatsAppMessage(
+        messaging_product=client.get_product_name(),
+        to="1234567890",
+        type="reaction",
+        reaction={"message_id": "fakeid", "emoji": "👍"}
+    ).model_dump()
+
+    response: WhatsAppResponse = await client.asend_reaction(payload)
+
+    assert isinstance(response, WhatsAppResponse)
+    assert response.response_status.status == "500"
+    assert response.response_status.error == "server error"
+    assert response.messages == []
+    assert response.contacts == []
+
+
+@pytest.mark.asyncio
+async def test_asend_video_message_upload_error(monkeypatch):
+    """Covers branch where _upload_media returns an error for video messages."""
+
+    client = AsyncWhatsAppClient("dummy_phone", "dummy_token")
+
+    # Patch _upload_media to simulate failure
+    async def fake_upload(data, mime_type):
+        return 400, None, "video upload failed"
+    monkeypatch.setattr(client, "_upload_media", fake_upload)
+
+    # Create payload without "video" so upload is triggered
+    payload = WhatsAppMediaMessage(
+        messaging_product=client.get_product_name(),
+        to="1234567890",
+        type=WhatsAppMessageTypes.VIDEO.value,
+        media=MediaData(
+            data=b"fakebytes",
+            mime_type="video/mp4"
+        )
+    ).model_dump()
+
+    resp = await client.asend_video_message(payload)
+
+    # Verify failure response
+    assert resp.response_status.status == "400"
+    assert resp.response_status.error == "video upload failed"
+    assert resp.messages == []
+
+
+@pytest.mark.asyncio
+async def test_asend_interactive_message_failure(monkeypatch):
+    """Covers asend_interactive_message branch when __post__ fails."""
+    client = AsyncWhatsAppClient("dummy_phone", "dummy_token")
+
+    # Monkeypatch __post__ to simulate failure
+    async def fake_post(url, payload=None, data=None, content_type="application/json"):
+        return 500, None, "server error"
+    monkeypatch.setattr(client, "__post__", fake_post)
+
+    # Minimal valid interactive message payload
+    payload = WhatsAppInteractiveMessage(
+        messaging_product=client.get_product_name(),
+        to="1234567890",
+        type=WhatsAppMessageTypes.INTERACTIVE.value,
+        interactive={"type": "button", "body": {"text": "Test"}}
+    ).model_dump()
+
+    response: WhatsAppResponse = await client.asend_interactive_message(payload)
+
+    assert isinstance(response, WhatsAppResponse)
+    assert response.response_status.status == "500"
+    assert response.response_status.error == "server error"
+    assert response.messages == []
+    assert response.contacts == []
+
+
+import pytest
+from byoeb_integrations.channel.whatsapp.meta.async_whatsapp_client import (
+    AsyncWhatsAppClient,
+    WhatsAppResponse,
+)
+
+@pytest.mark.asyncio
+async def test_asend_text_message_failure(monkeypatch):
+    client = AsyncWhatsAppClient("dummy_phone", "dummy_token")
+
+    # Fake __post__ returns failure
+    async def fake_post(url, payload=None, data=None, content_type="application/json"):
+        return 500, None, "server error"
+    monkeypatch.setattr(client, "__post__", fake_post)
+
+    # Minimal valid text payload
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": "1234567890",
+        "type": "text",
+        "text": {"body": "Hello!"}
+    }
+
+    response: WhatsAppResponse = await client.asend_text_message(payload)
+
+    # Should take the "if" branch
+    assert isinstance(response, WhatsAppResponse)
+    assert response.response_status.status == "500"
+    assert response.response_status.error == "server error"
+    assert response.contacts == []
+    assert response.messages == []
+
+
 
 if __name__ == "__main__":
     # event_loop = asyncio.get_event_loop()

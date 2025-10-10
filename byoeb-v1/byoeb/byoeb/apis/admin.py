@@ -55,14 +55,20 @@ async def form_post(request: Request, start_datetime: str = Form(...), end_datet
     # Save to excel for download
     ashas_df.to_excel(file_path, index=False)
     blob_file_name = f"logs/{os.path.basename(file_path)}"
-    await media_storage.adelete_file(
-        file_name=blob_file_name
-    )
+    # Check if file exists before deleting using aget_file_properties
+    status, _ = await media_storage.aget_file_properties(file_name=blob_file_name)
+
+    # Only delete if file exists (status 200 means file exists)
+    if status == 200:
+        await media_storage.adelete_file(file_name=blob_file_name)
+        print(f"Deleted existing file: {blob_file_name}")
+    else:
+        print(f"File {blob_file_name} does not exist (status: {status}), skipping delete")
     await media_storage.aupload_file(
         file_path=file_path,
         file_name=blob_file_name
     )
-    await media_storage._close()
+    # await media_storage._close()
     # Render HTML
     df_html = ashas_df.to_html(classes="table table-bordered", index=False)
     return templates.TemplateResponse("index.html", {
@@ -76,7 +82,7 @@ async def download_excel():
     _, asha_data = await media_storage.adownload_file(
         file_name=f"logs/{os.path.basename(file_path)}"
     )
-    await media_storage._close()
+    # await media_storage._close()
     stream = BytesIO(asha_data.data)  # or just use Filedata if already BytesIO
     return StreamingResponse(
         stream,

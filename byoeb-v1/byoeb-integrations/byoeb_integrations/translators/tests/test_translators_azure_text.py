@@ -80,7 +80,31 @@ def test_aazure_translate_text_en_hi(event_loop, mock_translate):
 
 def test_aazure_translate_text_en_en(event_loop, mock_translate):
     event_loop.run_until_complete(aazure_translate_text_en_en())
+def test_missing_region_raises_valueerror():
+    with pytest.raises(ValueError, match="region must be provided"):
+        AsyncAzureTextTranslator(
+            region=None
+        )
+def test_missing_credential_raises_valueerror():
+    with pytest.raises(ValueError, match="Either entra id credential or key must be provided"):
+        AsyncAzureTextTranslator(
+            credential=None,
+            key=None,
+            region="xyz"
+        )
+def test_missing_both_raises_valueerror():
+    with pytest.raises(ValueError, match="Either entra id credential or key must be provided not both"):
+        AsyncAzureTextTranslator(
+            credential="dummy",
+            key="dummy",
+            region="xyz"
+        )
 
+def test_translate_text_not_implemented():
+    obj =  AsyncAzureTextTranslator(region="eastus", key="dummy")
+    
+    with pytest.raises(NotImplementedError):
+        obj.translate_text("xyz", "abc","en")
 if __name__ == "__main__":
     event_loop = asyncio.get_event_loop()
     event_loop.run_until_complete(aazure_translate_text_en_hi())

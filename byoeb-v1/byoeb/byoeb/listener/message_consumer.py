@@ -138,6 +138,7 @@ class QueueConsumer:
             start_time = datetime.now()
             successfully_processed_messages = []
             try:
+                # print("messages", messages)
                 self._logger.info(f"Received {len(messages)} messages")
                 successfully_processed_messages =  await message_consumer_svc.consume(message_content) or []
                 self._logger.info(f"Successfully processed {len(successfully_processed_messages)} messages")

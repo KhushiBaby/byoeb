@@ -1,6 +1,6 @@
 {
     "regular": {
-        "user_type": "asha"
+        "user_type": ["asha", "others"]
     },
     "expert": {
         "asha_work_related": "anm",
