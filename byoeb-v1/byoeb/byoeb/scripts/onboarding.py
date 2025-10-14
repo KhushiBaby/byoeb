@@ -51,7 +51,7 @@ def main():
     	    print("Successfully extracted")
     	
     users = response.json()
-    
+    #print(users)
     if args.update:
     	update_url=url.replace("register_users","update_users")
     	
