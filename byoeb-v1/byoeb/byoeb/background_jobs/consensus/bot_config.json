@@ -10,11 +10,13 @@
             "consensus": {
                 "header": {
                     "en": "Please provide answer to below query",
-                    "hi": "कृपया नीचे पूछे गए प्रश्न का उत्तर दें"
+                    "hi": "कृपया नीचे पूछे गए प्रश्न का उत्तर दें",
+                    "mr": "कृपया खाली प्रश्न का उत्तर दें"
                 },
                 "footer": {
                     "en": "Reply by tagging the message",
-                    "hi": "संदेश को टैग करके जवाब दें"
+                    "hi": "संदेश को टैग करके जवाब दें",
+                    "mr": "संदेश को टैग करके उत्तर दें"
                 },
                 "template_name": "consensus"
             }   
@@ -23,12 +25,14 @@
             "consensus": {
                 "timeout": {
                     "en": "Please ask your question directly to ANM",
-                    "hi": "कृपया अपना प्रश्न सीधे ANM से पूछें"
+                    "hi": "कृपया अपना प्रश्न सीधे ANM से पूछें",
+                    "mr": "कृपया आपला प्रश्न थेट ANM ला विचारा"
                 }
             },
             "follow_up_questions_description": {
                 "en": "Related questions",
-                "hi": "संबंधित सवाल"
+                "hi": "संबंधित सवाल",
+                "mr": "संबंधित प्रश्न"
             }
         }
     }
