@@ -5,7 +5,6 @@ from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from byoeb_integrations.media_storage.azure.async_azure_blob_storage import AsyncAzureBlobStorage
 from byoeb_integrations.embeddings.llama_index.azure_openai import AzureOpenAIEmbed
 from byoeb_integrations.vector_stores.azure_vector_search.azure_vector_search import AzureVectorStore
-from byoeb_integrations.vector_stores.llama_index.llama_index_chroma_store import LlamaIndexChromaDBStore
 from byoeb_integrations.llms.llama_index.llama_index_openai import AsyncLLamaIndexOpenAILLM
 from byoeb_integrations.embeddings.chroma.llama_index_azure_openai import AzureOpenAIEmbeddingFunction
 from byoeb_core.media_storage.base import BaseMediaStorage
@@ -137,6 +136,7 @@ elif vector_store_type == "llama_index_chroma":
     # LlamaIndex ChromaDB Store uses LlamaIndex embed model
     embedding_function = azure_openai_embed.get_embedding_function()
     
+    from byoeb_integrations.vector_stores.llama_index.llama_index_chroma_store import LlamaIndexChromaDBStore
     vector_store = LlamaIndexChromaDBStore(
         persist_directory=persist_directory,
         collection_name=collection_name,
