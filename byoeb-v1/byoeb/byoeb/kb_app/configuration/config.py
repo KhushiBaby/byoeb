@@ -34,6 +34,10 @@ env_azure_search_api_key = os.getenv("AZURE_SEARCH_API_KEY")
 env_azure_search_service_name = os.getenv("AZURE_SEARCH_SERVICE_NAME")
 env_azure_search_index_name = os.getenv("AZURE_SEARCH_INDEX_NAME")
 
+env_azure_search_vectorizer_model_uri = os.getenv("AZURE_SEARCH_VECTORIZER_MODEL_URI")
+env_azure_search_vectorizer_model_name = os.getenv("AZURE_SEARCH_VECTORIZER_MODEL_NAME")
+env_azure_search_vectorizer_model_api_key = os.getenv("AZURE_SEARCH_VECTORIZER_MODEL_API_KEY")
+
 # Azure Cognitive Services (optional - for API key authentication)
 env_azure_cognitive_key = os.getenv("AZURE_COGNITIVE_KEY")
 

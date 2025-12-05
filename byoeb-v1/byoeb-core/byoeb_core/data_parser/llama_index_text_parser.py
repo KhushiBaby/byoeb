@@ -2,7 +2,7 @@ import logging
 from typing import List
 from byoeb_core.models.media_storage.file_data import FileData, FileMetadata
 from enum import Enum
-from llama_index.core.schema import TextNode, Document
+from llama_index.core.schema import BaseNode, TextNode, Document
 from llama_index.core.text_splitter import SentenceSplitter
 from llama_index.core.node_parser import TokenTextSplitter
 
@@ -52,13 +52,13 @@ class LLamaIndexTextParser:
             return self.get_token_text_splitter()
         else:
             raise ValueError("Invalid type")
-        
+    
     def get_chunks_from_collection(
         self,
         data: List[str] | List[FileData],
         encoding: str = "utf-8",
         splitter_type=LLamaIndexTextSplitterType.SENTENCE
-    ):
+    ) -> List[BaseNode]:
         logger.info(f"🔤 Parsing {len(data)} items into chunks (encoding: {encoding})")
         metadatas = []
         texts = data
@@ -66,7 +66,8 @@ class LLamaIndexTextParser:
             # Try to decode with multiple encodings if utf-8 fails
             texts = []
             for idx, d in enumerate(data):
-                file_name = d.metadata.file_name if hasattr(d, 'metadata') and d.metadata else f"file_{idx}"
+                assert isinstance(d, FileData)
+                file_name = d.metadata.file_name if d.metadata else f"file_{idx}"
                 logger.debug(f"  Decoding file {idx+1}/{len(data)}: {file_name}")
                 
                 try:
@@ -109,7 +110,7 @@ class LLamaIndexTextParser:
             from collections import defaultdict
             chunks_per_file = defaultdict(int)
             for node in nodes:
-                file_name = node.metadata.get("file_name", "unknown") if node.metadata else "unknown"
+                file_name = node.metadata.get("file_name", "unknown")
                 chunks_per_file[file_name] += 1
             
             logger.info(f"📊 Chunking summary by file:")

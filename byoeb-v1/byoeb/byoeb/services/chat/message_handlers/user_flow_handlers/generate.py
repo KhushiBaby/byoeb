@@ -1,8 +1,10 @@
 import asyncio
 import hashlib
+from byoeb.constants.feature_enums import FeatureFlag
 from byoeb.services.chat.utils import clean_message_for_console
 import byoeb.services.chat.constants as constants
 import re
+from byoeb.utils.embedding_cache import CacheResult, EmbeddingCache
 import byoeb.utils.utils as utils
 import random
 from rapidfuzz.fuzz import ratio
@@ -10,6 +12,7 @@ from datetime import datetime, timezone
 from tenacity import retry, stop_after_attempt, wait_exponential, RetryError
 from typing import List, Dict, Any
 from byoeb.chat_app.configuration.config import bot_config, app_config
+import byoeb.chat_app.configuration.config as env_config
 from byoeb.models.message_category import MessageCategory
 from byoeb_core.models.vector_stores.chunk import Chunk
 from byoeb_core.models.byoeb.message_context import (
@@ -18,11 +21,19 @@ from byoeb_core.models.byoeb.message_context import (
     ReplyContext,
     MessageTypes
 )
+from byoeb_integrations.embeddings.llama_index.openai import OpenAIEmbed
 from byoeb_integrations.vector_stores.azure_vector_search.azure_vector_search import AzureVectorSearchType
 from byoeb_core.models.byoeb.user import User
 from byoeb.services.chat.message_handlers.base import Handler
 from byoeb.chat_app.configuration.dependency_setup import llm_client
+from byoeb.chat_app.configuration.config import env_ashabot_message_cache_capacity, feature_flags
 from byoeb.application_logger.azure_app_insights import AppInsightsLogHandler
+
+embedding_cap = int(env_ashabot_message_cache_capacity or 64)
+embedding_fn = (
+    OpenAIEmbed(model="text-embedding-3-small", dimensions=768, api_key=env_config.env_openai_api_key).get_embedding_function()
+    if env_config.env_openai_api_key and embedding_cap > 0 else None
+)
 
 class ByoebUserGenerateResponse(Handler):
     AUDIO_MODALITY = "audio"
@@ -34,6 +45,7 @@ class ByoebUserGenerateResponse(Handler):
     _asha_work_related = "asha_work_related"
     _small_talk = "small_talk"
     _incomprehensible = "incomprehensible"
+    embedding_cache = EmbeddingCache("message-consumer", dim=768, capacity=embedding_cap)
 
     async def __aretrieve_chunks(
         self,
@@ -318,6 +330,8 @@ class ByoebUserGenerateResponse(Handler):
         related_questions: List[str] = None,
         emoji = None,
         status = None,
+        cache_details: CacheResult = (None, None, None),  # used for audio cache
+        cache_hit: bool = False,
     ) -> ByoebMessageContext:
         start_time = datetime.now(timezone.utc).timestamp()
         if response_source is None:
@@ -339,17 +353,37 @@ class ByoebUserGenerateResponse(Handler):
         print("Options: ", options)
         end_time = datetime.now(timezone.utc).timestamp()
         utils.log_to_text_file(f"Translated response message in {end_time - start_time} seconds")
-        start_time = datetime.now(timezone.utc).timestamp()
         user_language = message.user.user_language
-        media_info = await self.__create_source_audio(
-            message_source_text=message_source_text,
-            user_language=user_language
-        )
-        end_time = datetime.now(timezone.utc).timestamp()
-        AppInsightsLogHandler.getLogger("text_to_audio").info(f"Created audio response message in {end_time - start_time} seconds", extra={AppInsightsLogHandler.DETAILS: {
-            "message_id": message.message_context.message_id,
-            "time_taken": end_time - start_time
-        }})
+
+        cache_info = {"cache_score": cache_details[0]} if cache_details[0] is not None else {}
+        if cache_hit:
+            cache_info["cache_hit"] = cache_hit
+        if cache_details[1] is not None:
+            cache_id = cache_details[1]
+            cache = cache_details[2]
+        else:
+            cache_id, cache = None, None
+
+        media_info = cache.get("media_info", {}).get(user_language) if cache is not None else None
+        if media_info is None:
+            start_time = datetime.now(timezone.utc).timestamp()
+            media_info = await self.__create_source_audio(
+                message_source_text=message_source_text,
+                user_language=user_language
+            )
+            end_time = datetime.now(timezone.utc).timestamp()
+            AppInsightsLogHandler.getLogger("text_to_audio").info(f"Created audio response message in {end_time - start_time} seconds", extra={AppInsightsLogHandler.DETAILS: {
+                "message_id": message.message_context.message_id,
+                "time_taken": end_time - start_time
+            }})
+            if cache_id is not None:
+                assert cache is not None
+                if "media_info" not in cache:
+                    cache["media_info"] = {user_language: media_info}
+                else:
+                    cache[user_language] = media_info
+                self.embedding_cache.update(cache_id, cache)
+
         utils.log_to_text_file(f"Created audio response message in {end_time - start_time} seconds")
         description = bot_config["template_messages"]["user"]["follow_up_questions_description"][user_language]
         message_type = None
@@ -428,7 +462,8 @@ class ByoebUserGenerateResponse(Handler):
                     **button_reply_additional_info,
                     **interactive_list_additional_info,
                     **text_additional_info,
-                    **idk_status
+                    **idk_status,
+                    **cache_info
                 }
             ),
             reply_context=reply_context,
@@ -522,6 +557,7 @@ class ByoebUserGenerateResponse(Handler):
         
         user_prompt = template_user_prompt.replace("<QUERY_TYPE>", query_type).replace("<QUERY_EN_ADDCONTEXT>", query).replace("<RAW_KB>", raw_kb_list).replace("<NEW_KB>", update_kb_list)
         augmented_prompts = self.__augment(system_prompt, user_prompt)
+
         start_time = datetime.now(timezone.utc).timestamp()
         llm_response, response_text = await llm_client.agenerate_response(augmented_prompts)
         tokens = llm_client.get_response_tokens(llm_response)
@@ -582,7 +618,7 @@ class ByoebUserGenerateResponse(Handler):
     
     async def handle_message_generate_workflow(
         self,
-        messages: ByoebMessageContext
+        messages: List[ByoebMessageContext]
     ) -> List[ByoebMessageContext]:
         byoeb_messages = []
         message: ByoebMessageContext = messages[0].model_copy(deep=True)
@@ -615,51 +651,80 @@ class ByoebUserGenerateResponse(Handler):
             message_english = message.message_context.message_english_text
             user_language = message.user.user_language
             query_type = message.message_context.additional_info.get(constants.QUERY_TYPE)
+            cache_hit = False
+
+            if embedding_fn and (FeatureFlag.CACHE_MESSAGES in feature_flags or message.user.test_user):
+                start_time = datetime.now(timezone.utc).timestamp()
+                embedding = await embedding_fn.aget_text_embedding(message_english)
+                end_time = datetime.now(timezone.utc).timestamp()
+                print(f"Generated cache embeddings in {end_time - start_time}s")
+                cache_result = self.embedding_cache.query(embedding, 0.9)
+            else:
+                embedding = None
+                cache_result = None, None, None
+
             start_time = datetime.now(timezone.utc).timestamp()
-            retrieved_chunks_task = self.__aretrieve_chunks(message_english, k=3)
-            retrieved_chunks_backup_task = self.__aretrieve_chunks(
-                message_english,
-                k=5,
-                search_type=AzureVectorSearchType.DENSE.value
-            )
-            retrieved_chunks_related_questions_task = self._retrieve_top_k_chunks_for_related_questions(message_english, k=10)
-            retrieved_chunks, retrieved_chunks_backup, retrieved_chunks_related_questions = await asyncio.gather(
-                retrieved_chunks_task,
-                retrieved_chunks_backup_task,
-                retrieved_chunks_related_questions_task
-            )
-            end_time = datetime.now(timezone.utc).timestamp()
-            AppInsightsLogHandler.getLogger("retrieve_chunks").info(f"Retrieved chunks from KB for {message.message_context.message_id} in {end_time - start_time}s", extra={AppInsightsLogHandler.DETAILS: {
-                "message_id": message.message_context.message_id,
-                "time_taken": end_time - start_time
-            }})
-            start_time = datetime.now(timezone.utc).timestamp()
-            response_task = self.agenerate_answer(user_language,message_english,query_type,retrieved_chunks)
-            response_backup_task = self.agenerate_answer(user_language,message_english,query_type,retrieved_chunks_backup)
-            response_result, response_backup_result = await asyncio.gather(
-                response_task,
-                response_backup_task
-            )
-            response_en, response_source, tokens = response_result
-            response_en_backup, response_source_backup, tokens_backup = response_backup_result
-            
-            if utils.is_idk(response_en):
-                response_en = response_en_backup
-                response_source = response_source_backup
-            # response_en, response_source, tokens = await self.agenerate_answer(user_language, message_english, query_type, retrieved_chunks)
-            
-            if message.user.user_language == "en":
-                response_source = response_en
-            related_questions = self.get_related_questions(message.user.user_language, retrieved_chunks_related_questions, message.message_context.message_source_text)
-            end_time = datetime.now(timezone.utc).timestamp()
-            AppInsightsLogHandler.getLogger("generate_answer_and_related_questions").info(f"Generated related questions for {message.message_context.message_id} in {end_time - start_time}s", extra={AppInsightsLogHandler.DETAILS: {
-                "message_id": message.message_context.message_id,
-                "time_taken": end_time - start_time,
-                "completion_tokens": tokens.get("completion_tokens"),
-                "backup_completion_tokens": tokens_backup.get("completion_tokens"),
-                "prompt_tokens": tokens.get("prompt_tokens"),
-                "backup_prompt_tokens": tokens_backup.get("prompt_tokens")
-            }})
+            cache_val = cache_result[2]
+            if cache_val and "answer" in cache_val and user_language in cache_val["answer"]:
+                response_en, response_source, related_questions, tokens, tokens_backup = cache_val["answer"][user_language]
+                cache_hit = True
+            else:
+                retrieved_chunks_task = self.__aretrieve_chunks(message_english, k=3)
+                retrieved_chunks_backup_task = self.__aretrieve_chunks(
+                    message_english,
+                    k=5,
+                    search_type=AzureVectorSearchType.DENSE.value
+                )
+                retrieved_chunks_related_questions_task = self._retrieve_top_k_chunks_for_related_questions(message_english, k=10)
+                retrieved_chunks, retrieved_chunks_backup, retrieved_chunks_related_questions = await asyncio.gather(
+                    retrieved_chunks_task,
+                    retrieved_chunks_backup_task,
+                    retrieved_chunks_related_questions_task
+                )
+                end_time = datetime.now(timezone.utc).timestamp()
+                AppInsightsLogHandler.getLogger("retrieve_chunks").info(f"Retrieved chunks from KB for {message.message_context.message_id} in {end_time - start_time}s", extra={AppInsightsLogHandler.DETAILS: {
+                    "message_id": message.message_context.message_id,
+                    "time_taken": end_time - start_time
+                }})
+                start_time = datetime.now(timezone.utc).timestamp()
+                response_task = self.agenerate_answer(user_language,message_english,query_type,retrieved_chunks)
+                response_backup_task = self.agenerate_answer(user_language,message_english,query_type,retrieved_chunks_backup)
+                response_result, response_backup_result = await asyncio.gather(
+                    response_task,
+                    response_backup_task
+                )
+                response_en, response_source, tokens = response_result
+                response_en_backup, response_source_backup, tokens_backup = response_backup_result
+
+                is_idk = utils.is_idk(response_en)
+                if is_idk:
+                    response_en = response_en_backup
+                    response_source = response_source_backup
+                # response_en, response_source, tokens = await self.agenerate_answer(user_language, message_english, query_type, retrieved_chunks)
+
+                if message.user.user_language == "en":
+                    response_source = response_en
+                related_questions = self.get_related_questions(message.user.user_language, retrieved_chunks_related_questions, message.message_context.message_source_text)
+
+                if not is_idk and embedding:
+                    cache_val = cache_val or {}
+                    cache_val["answer"] = cache_val.get("answer", {})
+                    cache_val["answer"][user_language] = response_en, response_source, related_questions, tokens, tokens_backup
+                    miss_thresh = cache_result[0] if cache_result is not None else None
+                    cache_result = self.embedding_cache.store(embedding, cache_val)
+                    cache_result = miss_thresh, *cache_result[1:]
+                else:
+                    cache_result = None, None, None
+
+                end_time = datetime.now(timezone.utc).timestamp()
+                AppInsightsLogHandler.getLogger("generate_answer_and_related_questions").info(f"Generated related questions for {message.message_context.message_id} in {end_time - start_time}s", extra={AppInsightsLogHandler.DETAILS: {
+                    "message_id": message.message_context.message_id,
+                    "time_taken": end_time - start_time,
+                    "completion_tokens": tokens.get("completion_tokens"),
+                    "backup_completion_tokens": tokens_backup.get("completion_tokens"),
+                    "prompt_tokens": tokens.get("prompt_tokens"),
+                    "backup_prompt_tokens": tokens_backup.get("prompt_tokens")
+                }})
             byoeb_user_message = await self.__create_user_message(
                 message=message,
                 response_en=response_en,
@@ -667,7 +732,9 @@ class ByoebUserGenerateResponse(Handler):
                 query_type=query_type,
                 emoji=self.USER_PENDING_EMOJI,
                 status=constants.PENDING,
-                related_questions=related_questions
+                related_questions=related_questions,
+                cache_details=cache_result,
+                cache_hit=cache_hit
             )
         print("Created user message")
         byoeb_expert_message = None

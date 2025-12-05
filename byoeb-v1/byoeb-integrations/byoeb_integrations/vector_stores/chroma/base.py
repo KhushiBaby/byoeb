@@ -3,13 +3,9 @@ from typing import List
 import chromadb
 import hashlib
 from chromadb.config import Settings
-from byoeb_core.vector_stores.base import BaseVectorStore
+from byoeb_core.vector_stores.base import BaseVectorStore, VectorStoreMetadata
 from byoeb_core.models.vector_stores.chunk import Chunk
 from chromadb.utils import embedding_functions
-try:
-    from llama_index.core.schema import TextNode
-except ImportError:
-    TextNode = None
 
 logger = logging.getLogger(__name__)
 
@@ -43,57 +39,6 @@ class ChromaDBVectorStore(BaseVectorStore):
             embedding_function=embedding_function
         )
 
-    def add_nodes(
-        self,
-        nodes: List,
-        show_progress: bool = False,
-        batch_size: int = 100,
-        **kwargs
-    ):
-        """
-        Add TextNode objects to the collection.
-        
-        :param nodes: List of TextNode objects from LlamaIndex
-        :param show_progress: Whether to show progress
-        :param batch_size: Number of nodes to add per batch (default: 100)
-        """
-        if TextNode is None:
-            raise ImportError("llama_index is required for add_nodes method")
-        
-        logger.info(f"📥 Converting {len(nodes)} TextNodes to chunks format")
-        
-        # Log files being ingested
-        from collections import defaultdict
-        files_ingested = defaultdict(int)
-        for node in nodes:
-            file_name = node.metadata.get("file_name", "unknown") if node.metadata else "unknown"
-            files_ingested[file_name] += 1
-        
-        logger.info(f"📋 Files to be ingested ({len(files_ingested)} files):")
-        for file_name, chunk_count in sorted(files_ingested.items()):
-            logger.info(f"  📄 {file_name}: {chunk_count} chunks")
-        
-        # Convert TextNodes to chunks format
-        data_chunks = [node.text for node in nodes]
-        metadata = [
-            node.metadata if node.metadata else {}
-            for node in nodes
-        ]
-        ids = [
-            node.node_id if hasattr(node, 'node_id') and node.node_id 
-            else hashlib.md5(node.text.encode()).hexdigest()
-            for node in nodes
-        ]
-        
-        logger.info(f"✅ Converted {len(data_chunks)} nodes, starting batch insertion")
-        
-        self.add_chunks(
-            data_chunks=data_chunks,
-            metadata=metadata,
-            ids=ids,
-            batch_size=batch_size
-        )
-
     def add_chunks(
         self,
         data_chunks: list, 
@@ -111,7 +56,7 @@ class ChromaDBVectorStore(BaseVectorStore):
         :param batch_size: Number of chunks to add per batch (default: 100)
         """
         total_chunks = len(data_chunks)
-        logger.info(f"📤 Adding {total_chunks} chunks to ChromaDB in batches of {batch_size}")
+        logger.debug(f"📤 Adding {total_chunks} chunks to ChromaDB in batches of {batch_size}")
 
         # Process in batches to avoid memory issues and show progress
         for i in range(0, total_chunks, batch_size):
@@ -131,7 +76,7 @@ class ChromaDBVectorStore(BaseVectorStore):
                 files_in_batch[file_name] += 1
             
             files_summary = ", ".join([f"{name}({count})" for name, count in sorted(files_in_batch.items())])
-            logger.info(f"  Processing batch {batch_num}/{total_batches} ({len(batch_chunks)} chunks) - Files: {files_summary}")
+            logger.debug(f"  Processing batch {batch_num}/{total_batches} ({len(batch_chunks)} chunks) - Files: {files_summary}")
             
             try:
                 self.collection.add(
@@ -139,12 +84,13 @@ class ChromaDBVectorStore(BaseVectorStore):
                     metadatas=batch_metadata,
                     ids=batch_ids
                 )
-                logger.info(f"  ✅ Batch {batch_num}/{total_batches} added successfully")
+                logger.debug(f"  ✅ Batch {batch_num}/{total_batches} added successfully")
             except Exception as e:
                 logger.error(f"  ❌ Error adding batch {batch_num}/{total_batches}: {str(e)}")
                 raise
         
-        logger.info(f"✅ Successfully added all {total_chunks} chunks to ChromaDB")
+        logger.debug(f"✅ Successfully added all {total_chunks} chunks to ChromaDB")
+        return ids
 
     def prepare_data(self, nodes: List):
         """Prepare data_chunks, metadata and ids lists from TextNode list."""
@@ -170,9 +116,9 @@ class ChromaDBVectorStore(BaseVectorStore):
 
         if loop is None:
             # No running loop; safe to call synchronously
-            return self.add_chunks(data_chunks=data_chunks, metadata=metadata, ids=ids, batch_size=batch_size, **kwargs)
+            result = self.add_chunks(data_chunks=data_chunks, metadata=metadata, ids=ids, batch_size=batch_size, **kwargs)
         else:
-            return await loop.run_in_executor(
+            result = await loop.run_in_executor(
                 None,
                 self.add_chunks,
                 data_chunks,
@@ -180,6 +126,8 @@ class ChromaDBVectorStore(BaseVectorStore):
                 ids,
                 batch_size
             )
+        for id in result:
+            yield id
 
     def update_chunks(
         self,
@@ -209,12 +157,19 @@ class ChromaDBVectorStore(BaseVectorStore):
         """
         self.collection.delete(ids=ids)
 
+    async def adelete_chunks(
+        self,
+        ids: list,
+        **kwargs
+    ):
+        self.collection.delete(ids=ids)
+
     def retrieve_top_k_chunks(
         self,
         text: str,
         k: int,
         **kwargs
-    ):
+    ) -> List[Chunk]:
         """
         Retrieve the top k data chunks from the collection based on similarity to the query text.
         
@@ -222,27 +177,24 @@ class ChromaDBVectorStore(BaseVectorStore):
         :param k: Number of top results to retrieve
         :return: The top k data chunks and their corresponding metadata
         """
-        logger.info(f"Querying ChromaDB with text: '{text[:100]}...' (k={k})")
-        
         try:
             results = self.collection.query(query_texts=[text], n_results=k)
             chunk_list: List[Chunk] = []
             
             # Check if we have any results
             if not results or "documents" not in results or not results["documents"]:
-                logger.warning(f"No documents found in ChromaDB query results")
+                logger.debug(f"No documents found in ChromaDB query results")
                 return chunk_list
             
             # Check if the first query result has documents
             if not results["documents"][0]:
-                logger.warning(f"ChromaDB query returned empty documents list")
+                logger.debug(f"ChromaDB query returned empty documents list")
                 return chunk_list
             
             documents = results["documents"][0]
+            distances = (results["distances"] or [[]])[0]
             ids = results.get("ids", [[]])[0] if results.get("ids") else []
             metadatas = results.get("metadatas", [[]])[0] if results.get("metadatas") else []
-            
-            logger.info(f"ChromaDB returned {len(documents)} documents")
             
             # Ensure all lists have the same length
             min_length = min(len(documents), len(ids) if ids else len(documents), len(metadatas) if metadatas else len(documents))
@@ -250,6 +202,7 @@ class ChromaDBVectorStore(BaseVectorStore):
             for idx in range(min_length):
                 chunk_id = ids[idx] if idx < len(ids) else f"chunk_{idx}"
                 chunk_text = documents[idx]
+                chunk_similarity = 1 - distances[idx]
                 # Handle None metadata gracefully
                 metadata = metadatas[idx] if idx < len(metadatas) and metadatas[idx] is not None else {}
                 
@@ -266,17 +219,15 @@ class ChromaDBVectorStore(BaseVectorStore):
                     except Exception as e:
                         logger.warning(f"Error creating Chunk_metadata: {e}, using raw metadata")
                         chunk_metadata = metadata
-                
+
                 chunk = Chunk(
                     chunk_id=chunk_id,
                     text=chunk_text,
-                    metadata=chunk_metadata
+                    metadata=chunk_metadata,
+                    similarity=chunk_similarity
                 )
                 chunk_list.append(chunk)
-            
-            logger.info(f"Successfully created {len(chunk_list)} Chunk objects")
             return chunk_list
-            
         except Exception as e:
             logger.error(f"Error retrieving chunks from ChromaDB: {e}")
             import traceback
@@ -315,6 +266,9 @@ class ChromaDBVectorStore(BaseVectorStore):
             k
         )
 
+    async def aretrieve_similar_chunks(self, text: str) -> List[Chunk]:
+        return await self.aretrieve_top_k_chunks(text=text, k=1)
+
     def get_client(self):
         """
         Get the underlying ChromaDB client.
@@ -333,12 +287,30 @@ class ChromaDBVectorStore(BaseVectorStore):
             name=self.__collection_name,
             embedding_function=self.__embedding_function
         )
-    
-    def rebuild_store(self):
-        """
-        Delete the entire store and recreate the collection.
-        Similar to Azure Vector Store pattern - always use fresh collection reference.
-        """
+
+    async def get_count(self) -> int:
+        return self.collection.count()
+
+    async def get_metadata(self) -> VectorStoreMetadata:
+        return VectorStoreMetadata(
+            store_type="chroma",
+            collection=self.__collection_name,
+            count=await self.get_count(),
+            capabilities={
+                "vector_search": True,
+                "metadata_filters": True,
+            },
+        )
+
+    def create_store(self):
+        logger.info(f"🔄 Creating collection: {self.__collection_name}")
+        self.collection = self.client.get_or_create_collection(
+            name=self.__collection_name,
+            embedding_function=self.__embedding_function
+        )
+        logger.info(f"✅ Collection '{self.__collection_name}' created and ready for use")
+
+    def delete_store(self):
         try:
             collection_name = self.collection.name if hasattr(self, 'collection') and self.collection else self.__collection_name
             self.client.delete_collection(collection_name)
@@ -348,14 +320,3 @@ class ChromaDBVectorStore(BaseVectorStore):
             logger.info(f"ℹ️  Collection {self.__collection_name} doesn't exist, nothing to delete")
         except Exception as e:
             logger.warning(f"⚠️  Error deleting collection: {str(e)}")
-        
-        # Recreate the collection after deletion (like Azure Vector Store creates fresh clients)
-        # This ensures self.collection points to a valid collection object with a valid UUID
-        logger.info(f"🔄 Recreating collection: {self.__collection_name}")
-        self.collection = self.client.get_or_create_collection(
-            name=self.__collection_name,
-            embedding_function=self.__embedding_function
-        )
-        logger.info(f"✅ Collection '{self.__collection_name}' recreated and ready for use")
-
-    

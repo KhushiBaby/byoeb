@@ -1,18 +1,15 @@
 from byoeb.models.consensus import Consensus
 import byoeb.services.chat.constants as constants
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional, TYPE_CHECKING
 from byoeb.factory import MongoDBFactory
 from byoeb.services.databases.mongo_db.base import BaseMongoDBService
 from byoeb_core.models.byoeb.message_context import ByoebMessageContext
-from byoeb_integrations.databases.mongo_db.azure.async_azure_cosmos_mongo_db import AsyncAzureCosmosMongoDBCollection
-from byoeb.repositories.repository_factory import get_repository_factory
 from collections import Counter, defaultdict
 from zoneinfo import ZoneInfo
 import pandas as pd
 
 if TYPE_CHECKING:
-    from byoeb.services.databases.mongo_db.user_db import UserMongoDBService
     from byoeb.services.leaderboard.time_window_strategies import TimeWindowStrategy
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -604,14 +601,3 @@ class MessageMongoDBService(BaseMongoDBService):
             await message_repository.insert_many(queries["create"])
         if queries.get("update"):
             await message_repository.bulk_update(queries["update"])
-
-    async def delete_message_collection(self):
-        """Delete the message collection."""
-        try:
-            message_client = await self._get_collection_client(self.collection_name)
-            if isinstance(message_client, AsyncAzureCosmosMongoDBCollection):
-                await message_client.adelete_collection()
-                return True, None
-            return False, None
-        except Exception as e:
-            return False, e

@@ -7,7 +7,7 @@ readme = "README.md"
 exclude = ["**/tests/**", "**/tests"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 openai = "1.58.1"
 chromadb = "0.5.23"
 llama-index-embeddings-azure-openai = "0.2.5"

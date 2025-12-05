@@ -14,7 +14,7 @@ from byoeb.chat_app.configuration.dependency_setup import media_storage
 
 REGISTER_API_NAME = 'admin_apis'
 
-admin_apis_router = APIRouter()
+admin_apis_router = APIRouter(tags=["Administrative"])
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 jobs_path = os.path.join(current_dir, '..', 'background_jobs')
@@ -22,19 +22,17 @@ jobs_path = os.path.normpath(jobs_path)
 template_dir = os.path.join(current_dir, 'ui_templates')
 templates = Jinja2Templates(directory=template_dir)
 file_path = "asha_data.xlsx"
-account_url = "https://khushibabyashastorage.blob.core.windows.net"
-container_name = "ashacontainer"
 
-@admin_apis_router.get("/asha_logs", response_class=HTMLResponse)
-async def form_get(request: Request):
+@admin_apis_router.get("/asha_logs")
+async def form_get(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("index.html", {"request": request})
 
-@admin_apis_router.get("/experiment", response_class=HTMLResponse)
-async def experiment_form_get(request: Request):
+@admin_apis_router.get("/experiment")
+async def experiment_form_get(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("admin.html", {"request": request})
 
-@admin_apis_router.post("/asha_logs", response_class=HTMLResponse)
-async def form_post(request: Request, start_datetime: str = Form(...), end_datetime: str = Form(...)):
+@admin_apis_router.post("/asha_logs")
+async def form_post(request: Request, start_datetime: str = Form(...), end_datetime: str = Form(...)) -> HTMLResponse:
     start = datetime.strptime(start_datetime, "%Y-%m-%dT%H:%M")
     end = datetime.strptime(end_datetime, "%Y-%m-%dT%H:%M")
     
@@ -90,16 +88,21 @@ async def download_excel():
     #     filename="data.xlsx",
     # )
 
-@admin_apis_router.post("/experiment", response_class=JSONResponse)
-async def query_handler(input: QueryInput):
+@admin_apis_router.post("/experiment")
+async def query_handler(input: QueryInput) -> JSONResponse:
     output = await process_message(input)
     output_json = output.model_dump(mode="json")
     print("Output JSON:", output_json)
     return JSONResponse(content=output_json, status_code=200)
 
-@admin_apis_router.post("/clear_history", response_class=JSONResponse)
-async def clear(request: Request):
+@admin_apis_router.post("/clear_history")
+async def clear(request: Request) -> JSONResponse:
     data = await request.json()
     phone_number_id = data.get("phone_number_id")
     clear_history(phone_number_id)
     return JSONResponse(content={"status": "cleared"}, status_code=200)
+
+@admin_apis_router.post("/purge_request_cache")
+async def query_handler() -> int:
+    from byoeb.chat_app.configuration.dependency_setup import byoeb_user_generate_response
+    return byoeb_user_generate_response.embedding_cache.purge()

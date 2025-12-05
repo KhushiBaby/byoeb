@@ -78,6 +78,8 @@ vector_store_type = env_config.env_vector_store_type or "azure_vector_search"
 vector_store: BaseVectorStore = None
 
 if vector_store_type == "azure_vector_search":
+    from azure.search.documents.indexes.models import AzureOpenAIVectorizerParameters
+
     # Azure Search Service Configuration - use environment variables if set, otherwise fallback to app_config.json
     azure_search_service_name = env_config.env_azure_search_service_name or app_config["vector_store"]["azure_vector_search"]["service_name"]
     azure_search_doc_index_name = env_config.env_azure_search_index_name or app_config["vector_store"]["azure_vector_search"]["doc_index_name"]
@@ -96,7 +98,14 @@ if vector_store_type == "azure_vector_search":
         service_name=azure_search_service_name,
         index_name=azure_search_doc_index_name,
         embedding_function=embedding_function,
-        credential=credential
+        credential=credential,
+        vectorizer_params=AzureOpenAIVectorizerParameters(
+            resource_url=env_config.env_azure_search_vectorizer_model_uri,
+            deployment_id=env_config.env_azure_search_vectorizer_model_name,
+            deployment_name=env_config.env_azure_search_vectorizer_model_name,
+            model_name=env_config.env_azure_search_vectorizer_model_name,
+            api_key=env_config.env_azure_search_vectorizer_model_api_key
+        )
     )
     print(f"✅ Initialized Azure Vector Store: {azure_search_service_name}/{azure_search_doc_index_name}")
 

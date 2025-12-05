@@ -54,7 +54,7 @@ byoeb/
 ## Installation & Setup
 
 ### Prerequisites
-- Python 3.10+
+- Python 3.11+
 - Poetry (dependency management)
 - Azure account with required services
 - WhatsApp Business API access

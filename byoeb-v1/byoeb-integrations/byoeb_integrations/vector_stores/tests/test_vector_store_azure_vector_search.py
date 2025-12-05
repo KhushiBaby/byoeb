@@ -111,8 +111,19 @@ def mock_search_clients(mocker):
     mock_search_client.upload_documents.return_value = [{"key": "doc-1", "status": True}]
 
     # Search returns hits; ensure related_questions is a dict (model expects dict)
+
+    class FakeAsyncPaged:
+        def __init__(self, items: list[dict]): self._items = items
+
+        def __aiter__(self): return self._async_generator()
+
+        async def _async_generator(self):
+            for item in self._items:
+                yield item
+
+
     def _fake_search(*args, **kwargs):
-        return [
+        async def wrapper(): return FakeAsyncPaged([
             {
                 "id": "1",
                 "text": "Photosynthesis basics",
@@ -125,7 +136,8 @@ def mock_search_clients(mocker):
                 "metadata": {"source": "1"},
                 "related_questions": {},
             },
-        ]
+        ])
+        return wrapper()
 
     mock_search_client.search.side_effect = _fake_search
     return mock_index_client, mock_search_client
@@ -148,14 +160,14 @@ async def test_azure_vector_search_upload_documents(embedding_fn_stub, llm_clien
         embedding_fn_stub,
         credential=DefaultAzureCredential()
     )
-    await azure_vector_search.aadd_chunks(
+    async for _ in azure_vector_search.aadd_chunks(
         ids=ids,
         data_chunks=texts,
         metadata=metadatas,
         llm_client=llm_client_stub,
         languages_translation_prompts=languages_translation_prompts,
         show_progress=True
-    )
+    ): ...
 
 @pytest.mark.asyncio
 async def test_azure_vector_search_query(embedding_fn_stub):
@@ -174,7 +186,7 @@ async def test_azure_vector_search_query(embedding_fn_stub):
     for query_text in query_texts:
         start_time = datetime.now().timestamp()
         results = await azure_vector_search.aretrieve_top_k_chunks(
-            query_text=query_text,
+            text=query_text,
             k=3,
             search_type=AzureVectorSearchType.DENSE.value,
             select=["id", "text", "metadata", "related_questions"],
@@ -191,4 +203,5 @@ def test_azure_vector_search_rebuild(embedding_fn_stub):
         embedding_fn_stub,
         credential=DefaultAzureCredential()
     )
-    azure_vector_search.rebuild_store()
+    azure_vector_search.delete_store()
+    azure_vector_search.create_store()

@@ -800,7 +800,8 @@ async def main():
     # Use KBService for ingestion (delegates to configured vector_store)
     svc = KBService(vector_store=vector_store, media_storage=amedia_storage, llm_client=llm_client)
     try:
-        count = await svc.create_kb_from_blob_store()
+        files = await amedia_storage.aget_all_files_properties()
+        count = await svc.upload(files)
         logger.info(f"✅ KB ingestion complete - {count} chunks ingested")
     finally:
         # Close media storage if it exposes a close method

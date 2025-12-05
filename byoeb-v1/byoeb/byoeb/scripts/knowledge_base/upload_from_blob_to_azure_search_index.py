@@ -90,7 +90,7 @@ async def create_kb_from_blob_store():
     chunk_metadatas = raw_chunks_metadata + update_chunks_metadata
     
     logger.info(f"💾 Starting ingestion of {len(chunk_ids)} total chunks to vector store")
-    await vector_store.aadd_chunks(
+    async for _ in vector_store.aadd_chunks(
         ids=chunk_ids,
         data_chunks=chunk_texts,
         metadata=chunk_metadatas,
@@ -98,7 +98,7 @@ async def create_kb_from_blob_store():
         languages_translation_prompts=prompt_config["languages_translation_prompts"],
         batch_size=10,
         show_progress=True
-    )
+    ): ...
     logger.info(f"✅ KB ingestion complete - {len(chunk_ids)} chunks ingested")
 
 async def abulk_download_files(

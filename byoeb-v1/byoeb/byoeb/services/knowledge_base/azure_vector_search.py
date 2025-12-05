@@ -36,7 +36,7 @@ async def create_kb_from_blob_store():
     ]
     chunk_ids = [hashlib.md5(chunk.text.encode()).hexdigest() for chunk in chunks]
     print(f"Number of chunks: {len(chunks)}")
-    await vector_store.aadd_chunks(
+    async for _ in vector_store.aadd_chunks(
         ids=chunk_ids,
         data_chunks=chunk_texts,
         metadata=chunk_metadatas,
@@ -44,7 +44,7 @@ async def create_kb_from_blob_store():
         languages_translation_prompts=prompt_config["languages_translation_prompts"],
         batch_size=5,
         show_progress=True
-    )
+    ): ...
 
 async def abulk_download_files(
     all_files: List[FileMetadata]

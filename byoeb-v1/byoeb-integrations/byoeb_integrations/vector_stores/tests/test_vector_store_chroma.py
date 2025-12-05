@@ -5,6 +5,7 @@ from chromadb import Documents, EmbeddingFunction, Embeddings
 from byoeb_integrations.vector_stores.chroma.base import ChromaDBVectorStore
 from byoeb_integrations.vector_stores.llama_index.llama_index_chroma_store import LlamaIndexChromaDBStore
 from llama_index.core.embeddings.mock_embed_model import MockEmbedding
+from llama_index.core.schema import TextNode
 
 os.environ["AZURE_OPENAI_API_KEY"] = "sk-xxxx"
 os.environ["CHROMA_TELEMETRY_DISABLED"] = "true"
@@ -26,7 +27,7 @@ def test_chroma_vector_store_ops(tmp_path):
 
     responses: List[Chunk] = chromavs.retrieve_top_k_chunks("hello", 1)
     assert responses and responses[0].text == "hello"
-    chromavs.rebuild_store()
+    chromavs.delete_store()
 
 def test_llama_index_chroma_vector_store_ops(tmp_path):
     embed_model = MockEmbedding(embed_dim=4)
@@ -38,10 +39,8 @@ def test_llama_index_chroma_vector_store_ops(tmp_path):
     assert responses and responses[0].text == "hello"
 
     count_before = chromavs.collection.count()
-    chromavs.rebuild_store()
+    chromavs.delete_store()
+    chromavs.create_store()
     chromavs.add_chunks(["hello", "world"], [{"a": 1}, {"b": 2}], ["1", "2"])
     count_after = chromavs.collection.count()
     assert count_after == count_before
-
-if __name__ == "__main__":
-    test_llama_index_chroma_vector_store_ops()

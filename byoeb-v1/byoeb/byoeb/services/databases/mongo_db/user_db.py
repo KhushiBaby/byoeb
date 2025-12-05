@@ -3,7 +3,7 @@ from aiocache import Cache
 from datetime import datetime, timezone
 from byoeb_core.models.byoeb.user import User
 from byoeb.factory import MongoDBFactory
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from byoeb.services.databases.mongo_db.base import BaseMongoDBService
 import os
 
@@ -125,7 +125,7 @@ class UserMongoDBService(BaseMongoDBService):
         users_obj = await user_repository.find_users_by_type(user_type)
         return [User(**user_obj["User"]) for user_obj in users_obj]
     
-    def user_activity_update_query(self, user: User, qa: Dict[str, Any] = None, skip_timestamp: bool = False):
+    def user_activity_update_query(self, user: User, qa: Optional[Dict[str, Any]] = None, skip_timestamp: bool = False):
         """Generate update query for user activity."""
         update_data = {"$set": {}}
         if not skip_timestamp:

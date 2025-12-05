@@ -1,15 +1,12 @@
-import asyncio
 import os
 import logging
-from typing import Any, List
+from typing import Any, List, Optional
 from byoeb_core.media_storage.base import BaseMediaStorage
 from byoeb_core.models.media_storage.file_data import FileMetadata, FileData
 from azure.storage.blob.aio import BlobServiceClient
 from azure.core.exceptions import (
     ResourceNotFoundError,
-    ResourceExistsError,
-    ClientAuthenticationError,
-    HttpResponseError
+    ResourceExistsError
 )
 
 class StatusCodes:
@@ -51,24 +48,21 @@ class AsyncAzureBlobStorage(BaseMediaStorage):
     async def aget_file_properties(
         self,
         file_name,
-    ) -> (str, FileMetadata | str):
+    ) -> Optional[FileMetadata]:
         blob_client = self.__blob_service_client.get_blob_client(
             container=self.__container_name,
             blob=file_name
         )
         try:
             properties = await blob_client.get_blob_properties()
-            return StatusCodes.OK, FileMetadata(
+            return FileMetadata(
                 file_name=file_name,
                 file_type=properties.metadata.get("file_type"),
                 creation_time=properties.creation_time.strftime("%Y-%m-%d %H:%M:%S"),
             )
         except ResourceNotFoundError as e:
             self.__logger.error("Blob not found: %s", e)
-            return StatusCodes.NOT_FOUND, e.message 
-        except Exception as e:
-            self.__logger.error("Error getting blob properties: %s", e)
-            raise e
+            return None
         
     async def aget_all_files_properties(
         self,
@@ -77,8 +71,8 @@ class AsyncAzureBlobStorage(BaseMediaStorage):
         container_client = self.__blob_service_client.get_container_client(container_name)
         files = []
         async for blob in container_client.list_blobs():
-            status, properties = await self.aget_file_properties(blob.name)
-            if isinstance(properties, FileMetadata):
+            properties = await self.aget_file_properties(blob.name)
+            if properties is not None:
                 files.append(properties)
         return files
     
@@ -112,29 +106,19 @@ class AsyncAzureBlobStorage(BaseMediaStorage):
     async def adownload_file(
         self,
         file_name,
-    ) -> (str, FileData | str):
-        blob_client = self.__blob_service_client.get_blob_client(
-            container=self.__container_name,
-            blob=file_name
-        )
-        blob_download_reponse = None
+    ) -> Optional[FileData]:
+        blob_client = self.__blob_service_client.get_blob_client(container=self.__container_name, blob=file_name)
         try:
             blob_download_reponse = await blob_client.download_blob()
             properties = await blob_client.get_blob_properties()
-            return StatusCodes.OK, FileData(
-                data=await blob_download_reponse.readall(),
-                metadata=FileMetadata(
-                    file_name=file_name,
-                    file_type=properties.metadata.get("file_type"),
-                    creation_time=properties.creation_time.strftime("%Y-%m-%d %H:%M:%S"),
-                )
-            )
-        except ResourceNotFoundError as e:
-            self.__logger.error("Blob not found: %s", e)
-            return StatusCodes.NOT_FOUND, e.message
-        except Exception as e:
-            self.__logger.error("Error downloading audio file from blob storage: %s", e)
-            raise e
+            data = await blob_download_reponse.readall()
+        except ResourceNotFoundError:
+            return None
+        return FileData(data=data, metadata=FileMetadata(
+            file_name=file_name,
+            file_type=properties.metadata.get("file_type"),
+            creation_time=properties.creation_time.strftime("%Y-%m-%d %H:%M:%S"),
+        ))
     
     async def adelete_file(
         self,

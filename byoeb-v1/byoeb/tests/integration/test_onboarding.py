@@ -311,12 +311,7 @@ def test_whatsapp_onboarding_flow():
               assert response.status_code == 200, f"Step {step+1} failed"
 
     get_url = BASE_URL.replace("receive","get_users")
-    headers = {
-    "accept": "application/json",
-    "Content-Type": "application/json"
-    }
-    data = [PHONE_NUMBER_ID] 
-    response = requests.get(get_url, headers=headers, data=json.dumps(data))
+    response = requests.post(get_url, headers={"Accept": "application/json"}, json=[PHONE_NUMBER_ID])
     response.raise_for_status()
     message = response.json()
     assert len(message) == 1

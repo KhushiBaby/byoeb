@@ -6,12 +6,30 @@ authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 llama-index = "0.11.23"
 gtts = "2.5.4"
 pydub = "0.25.1"
 ffmpeg-python = "0.2.0"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.1"
+pytest-asyncio = "^1.1.0"
+pytest-cov = "^7.0.0"
+pytest-mock = "^3.15.0"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = [
+  "--cov=byoeb_core",
+  "--cov-branch",
+  "--cov-report=term-missing:skip-covered",
+  "--cov-report=html:htmlcov",
+  "--cov-report=json:coverage.json",
+  "--cov-report=xml:coverage.xml"
+]
+asyncio_mode = "auto"
 
 [build-system]
 requires = ["poetry-core"]

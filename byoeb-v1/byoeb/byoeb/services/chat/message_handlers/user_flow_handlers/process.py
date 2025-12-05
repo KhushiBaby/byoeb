@@ -93,7 +93,7 @@ class ByoebUserProcess(Handler):
         utils.log_to_text_file(f"Query rewritting and transcribe in {end_time - start_time} seconds: {str(tokens)} {response_text}")
         return query_en, query_en_addcontext, query_type, tokens
 
-    async def __handle_process_message_workflow(
+    async def handle_process_message_workflow(
         self,
         messages: List[ByoebMessageContext]
     ) -> ByoebMessageContext:
@@ -162,7 +162,7 @@ class ByoebUserProcess(Handler):
     ) -> Dict[str, Any]:
         message = None
         try:
-            message = await self.__handle_process_message_workflow(messages)
+            message = await self.handle_process_message_workflow(messages)
         except Exception as e:
             raise e
         

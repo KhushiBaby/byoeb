@@ -1,6 +1,13 @@
+# fixes crash during 'import chromadb' - see: https://docs.trychroma.com/docs/overview/troubleshooting#sqlite
+import sys
+__import__("pysqlite3")
+sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
+
+
 import logging
 import logging.config
 import os
+import tempfile
 import asyncio
 import uvicorn
 import yaml
@@ -67,12 +74,12 @@ def create_apps():
     """
 
     app = FastAPI(lifespan=lifespan)
+    app.include_router(admin_apis_router)
     app.include_router(background_apis_router)
-    app.include_router(health_apis_router)
-    app.include_router(register_apis_router)
     app.include_router(chat_apis_router)
     app.include_router(user_apis_router)
-    app.include_router(admin_apis_router)
+    app.include_router(register_apis_router)
+    app.include_router(health_apis_router)
 
     mcp = FastMCP()
     health_mcps_router(mcp)
@@ -84,41 +91,46 @@ def create_apps():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    pid = os.getpid()
-    print(f"FastAPI app is running with PID: {pid}")
-    from byoeb.chat_app.configuration.dependency_setup import (
-        channel_client_factory, 
-        message_consumer,
-        queue_producer_factory,
-        text_translator
-    )
-    from byoeb.apis.background_jobs import setup_scheduled_jobs
-    from byoeb.chat_app.configuration.dependency_setup import start_scheduler, stop_scheduler
+    with tempfile.TemporaryDirectory(prefix="ashabot-") as tempdir:
+        pid = os.getpid()
+        print(f"FastAPI app is running with PID: {pid}")
 
-    try:
-        await message_consumer.initialize()
-        asyncio.create_task(message_consumer.listen())
-    except Exception as e:
-        logger.error(f"Failed to initialize message consumer: {e}")
-        logger.warning("Application will continue without message queue consumer")
-        import traceback
-        logger.error(traceback.format_exc())
+        from byoeb.chat_app.configuration import config
+        config.app_tempdir.set_result(tempdir)
 
-    setup_scheduled_jobs()
-    start_scheduler()
-    logger.info("Background job scheduler started during application startup")
+        from byoeb.chat_app.configuration.dependency_setup import (
+            channel_client_factory,
+            message_consumer,
+            queue_producer_factory,
+            text_translator
+        )
+        from byoeb.apis.background_jobs import setup_scheduled_jobs
+        from byoeb.chat_app.configuration.dependency_setup import start_scheduler, stop_scheduler
 
-    async with mcp_app.lifespan(app):
-        yield
+        try:
+            await message_consumer.initialize()
+            asyncio.create_task(message_consumer.listen())
+        except Exception as e:
+            logger.error(f"Failed to initialize message consumer: {e}")
+            logger.warning("Application will continue without message queue consumer")
+            import traceback
+            logger.error(traceback.format_exc())
 
-    stop_scheduler()
-    logger.info("Background job scheduler stopped during application shutdown")
+        setup_scheduled_jobs()
+        start_scheduler()
+        logger.info("Background job scheduler started during application startup")
 
-    await channel_client_factory.close()
-    await message_consumer.close()
-    await queue_producer_factory.close()
-    await text_translator._close()
-    logger.info("FastAPI app is shutting down. Closing all clients")
+        async with mcp_app.lifespan(app):
+            yield
+
+        stop_scheduler()
+        logger.info("Background job scheduler stopped during application shutdown")
+
+        await channel_client_factory.close()
+        await message_consumer.close()
+        await queue_producer_factory.close()
+        await text_translator._close()
+        logger.info("FastAPI app is shutting down. Closing all clients")
 
 app, mcp_app = create_apps()
 

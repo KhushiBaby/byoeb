@@ -1,5 +1,5 @@
 # Use an official Python runtime
-FROM python:3.11-slim
+FROM python:3.11-slim-bullseye
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -18,14 +18,21 @@ RUN pip install "poetry==$POETRY_VERSION"
 WORKDIR /app
 
 # Copy dependency manifests and local path packages first for better caching
+COPY byoeb ./byoeb
 COPY byoeb/pyproject.toml ./byoeb/
 COPY byoeb/poetry.lock* ./byoeb/
+
 COPY byoeb-integrations ./byoeb-integrations
+COPY byoeb-integrations/pyproject.toml ./byoeb-integrations/
+COPY byoeb-integrations/poetry.lock* ./byoeb-integrations/
+
 COPY byoeb-core ./byoeb-core
+COPY byoeb-core/pyproject.toml ./byoeb-core/
+COPY byoeb-core/poetry.lock* ./byoeb-core/
 
 # Change directory to service's root and install dependencies via Poetry
 WORKDIR /app/byoeb
-RUN poetry install --no-root --no-interaction --no-ansi
+RUN poetry lock --no-interaction --no-ansi && poetry install --no-root --no-interaction --no-ansi
 
 # Copy the full project after dependencies are cached
 WORKDIR /app

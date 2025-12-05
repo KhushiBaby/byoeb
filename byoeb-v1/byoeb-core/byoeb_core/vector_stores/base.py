@@ -1,8 +1,21 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, AsyncIterator, Dict, List, Optional
 
+from pydantic import BaseModel, Field
+
+from byoeb_core.models.vector_stores.chunk import Chunk
+
+class VectorStoreMetadata(BaseModel):
+    store_type: str
+    collection: str
+    count: Optional[int] = None
+    capabilities: Dict[str, bool] = Field(default_factory=dict)
 
 class BaseVectorStore(ABC):
+
+    @abstractmethod
+    async def get_metadata(self) -> VectorStoreMetadata:
+        pass
 
     @abstractmethod
     def add_chunks(
@@ -11,17 +24,17 @@ class BaseVectorStore(ABC):
         metadata: list,
         ids: list,
         **kwargs
-    ) -> Any:
+    ) -> List[str]:
         pass
 
-    async def aadd_chunks(
+    def aadd_chunks(
         self,
         data_chunks: list, 
         metadata: list,
         ids: list,
         **kwargs
-    ) -> Any:
-        return NotImplementedError
+    ) -> AsyncIterator[str]:
+        raise NotImplementedError
 
     @abstractmethod
     def update_chunks(
@@ -40,7 +53,7 @@ class BaseVectorStore(ABC):
         ids: list,
         **kwargs
     ) -> Any:
-        return NotImplementedError
+        raise NotImplementedError
     
     @abstractmethod
     def delete_chunks(
@@ -54,8 +67,8 @@ class BaseVectorStore(ABC):
         self,
         ids: list,
         **kwargs
-    ) -> Any:
-        return NotImplementedError
+    ) -> int:
+        raise NotImplementedError
 
     @abstractmethod
     def retrieve_top_k_chunks(
@@ -63,7 +76,7 @@ class BaseVectorStore(ABC):
         text: str,
         k: int,
         **kwargs
-    ) -> Any:
+    ) -> List[Chunk]:
         pass
     
     async def aretrieve_top_k_chunks(
@@ -71,11 +84,24 @@ class BaseVectorStore(ABC):
         text: str,
         k: int,
         **kwargs
-    ) -> Any:
-        return NotImplementedError
-    
+    ) -> List[Chunk]:
+        raise NotImplementedError
+
     @abstractmethod
-    def rebuild_store(self):
+    async def aretrieve_similar_chunks(self, text: str) -> List[Chunk]:
         pass
 
+    @abstractmethod
+    async def get_count(self) -> int:
+        pass
 
+    @abstractmethod
+    def create_store(self):
+        """
+        Create vector store if it does not exist.
+        """
+        pass
+
+    @abstractmethod
+    def delete_store(self):
+        pass

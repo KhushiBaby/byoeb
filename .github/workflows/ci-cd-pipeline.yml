@@ -18,6 +18,7 @@ jobs:
     uses: ./.github/workflows/unit-tests.yml
     with:
       directory: ./byoeb-v1/byoeb-core
+      tests-path: .
     secrets: inherit
 
   # Step 1b: Run byoeb unit tests

@@ -1,13 +1,20 @@
+import logging
 import os
 from typing import List
+
+from chromadb import Collection
 from byoeb_core.models.vector_stores.chunk import Chunk
-from byoeb_core.vector_stores.base import BaseVectorStore
+from byoeb_core.vector_stores.base import BaseVectorStore, VectorStoreMetadata
 from byoeb_integrations.vector_stores.chroma.base import ChromaDBVectorStore
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core import VectorStoreIndex
 from llama_index.core.schema import TextNode
 
+logger = logging.getLogger(__name__)
+
 class LlamaIndexChromaDBStore(BaseVectorStore):
+    collection: Collection
+
     def __init__(
         self,
         persist_directory: str,
@@ -40,45 +47,26 @@ class LlamaIndexChromaDBStore(BaseVectorStore):
         )
         return self.vector_store_index
     
-    def add_nodes(
-        self,
-        nodes: List[TextNode],
-        show_progress: bool = False
-    ):
+    def delete_nodes(self, ids: List[str]):
         vector_store_index = self.__get_or_create_store()
-        vector_store_index.insert_nodes(
-            nodes,
-            show_progress=show_progress
-        )
-
-    def delete_nodes(
-        self,
-        ids: List[str],
-        show_progress: bool = False
-    ):
-        vector_store_index = self.__get_or_create_store()
-        vector_store_index.delete_nodes(
-            ids,
-            show_progress=show_progress
-        )
+        vector_store_index.delete_nodes(ids)
 
     def add_chunks(
         self,
         data_chunks: list, 
         metadata: list,
-        ids: list = None,
+        ids: list,
         **kwargs
     ):
         if len(data_chunks) != len(metadata):
             raise ValueError("Data chunks and metadata should be of the same length")
         nodes = []
-        for i, _ in enumerate(data_chunks):
-            text_node = TextNode(
-                text=data_chunks[i],
-                metadata=metadata[i],
-            )
+        for id, text, metadata in zip(ids, data_chunks, metadata):
+            text_node = TextNode(id_=id, text=text, metadata=metadata)
             nodes.append(text_node)
-        self.add_nodes(nodes)
+        vector_store_index = self.__get_or_create_store()
+        vector_store_index.insert_nodes(nodes)
+        return [c.node_id for c in nodes]
 
     async def aadd_chunks(
         self,
@@ -103,9 +91,11 @@ class LlamaIndexChromaDBStore(BaseVectorStore):
         func = partial(self.add_chunks, data_chunks=data_chunks, metadata=metadata, ids=ids, batch_size=batch_size, **kwargs)
 
         if loop is None:
-            return func()
+            result = func()
         else:
-            return await loop.run_in_executor(None, func)
+            result = await loop.run_in_executor(None, func)
+        for id in result:
+            yield id
 
     def update_chunks(
         self,
@@ -114,9 +104,16 @@ class LlamaIndexChromaDBStore(BaseVectorStore):
         ids: list,
         **kwargs
     ):
-        raise NotImplementedError
+        self.collection.update(documents=data_chunks, metadatas=metadata, ids=ids)
     
     def delete_chunks(
+        self,
+        ids: list,
+        **kwargs
+    ):
+        self.delete_nodes(ids)
+    
+    async def adelete_chunks(
         self,
         ids: list,
         **kwargs
@@ -128,7 +125,7 @@ class LlamaIndexChromaDBStore(BaseVectorStore):
         text: str,
         k: int,
         **kwargs
-    ):
+    ) -> List[Chunk]:
         vector_store_index = self.__get_or_create_store()
         retriever = vector_store_index.as_retriever(similarity_top_k=k)
         nodes = retriever.retrieve(text)
@@ -137,7 +134,8 @@ class LlamaIndexChromaDBStore(BaseVectorStore):
             chunk = Chunk(
                 chunk_id=node.node.node_id,
                 text=node.node.text,
-                metadata=node.node.metadata
+                metadata=node.node.metadata,
+                similarity=node.score
             )
             chunk_list.append(chunk)
         return chunk_list
@@ -147,7 +145,7 @@ class LlamaIndexChromaDBStore(BaseVectorStore):
         text: str,
         k: int,
         **kwargs
-    ):
+    ) -> List[Chunk]:
         vector_store_index = self.__get_or_create_store()
         retriever = vector_store_index.as_retriever(similarity_top_k=k)
         nodes = await retriever.aretrieve(text)
@@ -156,14 +154,32 @@ class LlamaIndexChromaDBStore(BaseVectorStore):
             chunk = Chunk(
                 chunk_id=node.node.node_id,
                 text=node.node.text,
-                metadata=node.node.metadata
+                metadata=node.node.metadata,
+                similarity=node.score
             )
             chunk_list.append(chunk)
         return chunk_list
-    
-    def rebuild_store(self):
-        if self.vector_store_index is not None:
-            self.chromadb.rebuild_store()
-        self.vector_store_index = None
+
+    async def aretrieve_similar_chunks(self, text: str) -> List[Chunk]:
+        return await self.aretrieve_top_k_chunks(text=text, k=1)
+
+    async def get_count(self) -> int:
+        return self.collection.count()
+
+    async def get_metadata(self) -> VectorStoreMetadata:
+        return VectorStoreMetadata(
+            store_type="llama_index_chroma",
+            collection=self.__collection_name,
+            count=await self.get_count(),
+            capabilities={
+                "vector_search": True,
+                "metadata_filters": True,
+            },
+        )
+
+    def create_store(self):
         self.__get_or_create_store()
-    
+
+    def delete_store(self):
+        self.chromadb.delete_store()
+        self.vector_store_index = None

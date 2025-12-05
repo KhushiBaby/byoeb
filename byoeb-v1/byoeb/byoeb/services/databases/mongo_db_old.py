@@ -1,9 +1,6 @@
-import asyncio
-import hashlib
-import json
 import byoeb.services.chat.constants as constants
 from datetime import datetime, timedelta
-from aiocache import cached, Cache
+from aiocache import Cache
 from byoeb_core.models.byoeb.message_context import ByoebMessageContext
 from typing import List, Dict, Any
 from datetime import datetime
@@ -269,15 +266,3 @@ class MongoDBService:
             await user_client.ainsert(queries["create"])
         if "update" in queries and len(queries["update"]) > 0:
             await user_client.aupdate(bulk_queries=queries["update"])
-        
-    async def delete_message_collection(
-        self
-    ):
-        try:
-            message_client = await self.__get_message_collection_client()
-            if isinstance(message_client, AsyncAzureCosmosMongoDBCollection):
-                await message_client.adelete_collection()
-                return True, None
-            return False, None
-        except Exception as e:
-            return False, e
