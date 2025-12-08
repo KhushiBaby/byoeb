@@ -136,6 +136,10 @@ def setup_scheduled_jobs():
 # ---------------------------------------------------------
 # API Endpoints
 # ---------------------------------------------------------
+@background_apis_router.post("/schedule", deprecated=True)
+async def __schedule() -> JSONResponse:
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "This endpoint has been deprecated, use POST /jobs/{job_id} instead."})
+
 @background_apis_router.post("/jobs/{job_id}", summary="Run a background job manually")
 async def run_job_manually(job_id: str = Path(..., description="Job ID to trigger")) -> JSONResponse:
     """

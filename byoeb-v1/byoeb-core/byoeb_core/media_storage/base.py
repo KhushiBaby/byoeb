@@ -36,6 +36,6 @@ class BaseMediaStorage(ABC):
     @abstractmethod
     async def adelete_file(
         self,
-        blob_name: str,
+        file_name: str,
     ) -> Any:
         pass

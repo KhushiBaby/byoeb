@@ -1,16 +1,14 @@
+import csv
+import io
 import os
+from typing import AsyncIterator
 from byoeb.models.experiment import QueryInput
-from io import BytesIO
 from datetime import datetime
-from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse
-from fastapi import Form, Request
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi import APIRouter, Form, Request
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import StreamingResponse
 from byoeb.background_jobs.daily_logs.asha_logs import fetch_daily_logs
 from byoeb.services.admin.message_process import process_message, clear_history
-from byoeb.chat_app.configuration.dependency_setup import media_storage
 
 REGISTER_API_NAME = 'admin_apis'
 
@@ -32,61 +30,30 @@ async def experiment_form_get(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("admin.html", {"request": request})
 
 @admin_apis_router.post("/asha_logs")
-async def form_post(request: Request, start_datetime: str = Form(...), end_datetime: str = Form(...)) -> HTMLResponse:
-    start = datetime.strptime(start_datetime, "%Y-%m-%dT%H:%M")
-    end = datetime.strptime(end_datetime, "%Y-%m-%dT%H:%M")
-    
+async def asha_logs(start: datetime = Form(...), end: datetime = Form(...)) -> StreamingResponse:
     start_unix = str(start.timestamp())
     end_unix = str(end.timestamp())
-    ashas_df = await fetch_daily_logs(
-        start_timestamp=start_unix,
-        end_timestamp=end_unix
-    )
-    
-    # Save to excel for download
-    ashas_df.to_excel(file_path, index=False)
-    blob_file_name = f"logs/{os.path.basename(file_path)}"
-    # Check if file exists before deleting using aget_file_properties
-    status, _ = await media_storage.aget_file_properties(file_name=blob_file_name)
 
-    # Only delete if file exists (status 200 means file exists)
-    if status == 200:
-        await media_storage.adelete_file(file_name=blob_file_name)
-        print(f"Deleted existing file: {blob_file_name}")
-    else:
-        print(f"File {blob_file_name} does not exist (status: {status}), skipping delete")
-    await media_storage.aupload_file(
-        file_path=file_path,
-        file_name=blob_file_name
-    )
-    # await media_storage._close()
-    # Render HTML
-    df_html = ashas_df.to_html(classes="table table-bordered", index=False)
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "table": df_html,
-        "show_download": True
+    async def stream_csv() -> AsyncIterator[bytes]:
+        buffer = io.StringIO()
+        writer = None
+
+        async for row in fetch_daily_logs(start_unix, end_unix):
+            if writer is None:
+                writer = csv.DictWriter(buffer, fieldnames=row.keys())
+                writer.writeheader()
+
+            writer.writerow(row)
+
+            chunk = buffer.getvalue()
+            buffer.seek(0)
+            buffer.truncate(0)
+
+            yield chunk.encode("utf-8")
+
+    return StreamingResponse(stream_csv(), media_type="text/csv", headers={
+        "Content-Disposition": f"attachment; filename=asha-logs-{start.isoformat()}-{end.isoformat()}.csv"
     })
-
-@admin_apis_router.get("/download")
-async def download_excel():
-    _, asha_data = await media_storage.adownload_file(
-        file_name=f"logs/{os.path.basename(file_path)}"
-    )
-    # await media_storage._close()
-    stream = BytesIO(asha_data.data)  # or just use Filedata if already BytesIO
-    return StreamingResponse(
-        stream,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={
-            "Content-Disposition": "attachment; filename=downloaded.xlsx"
-        }
-    )
-    # return FileResponse(
-    #     path=file_path,
-    #     media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    #     filename="data.xlsx",
-    # )
 
 @admin_apis_router.post("/experiment")
 async def query_handler(input: QueryInput) -> JSONResponse:

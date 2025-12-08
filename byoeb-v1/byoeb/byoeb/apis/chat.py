@@ -5,7 +5,7 @@ import time
 import uuid
 from typing import Any, List, Dict, Literal, Set
 import byoeb.chat_app.configuration.dependency_setup as dependency_setup
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PositiveInt
 from byoeb_core.models.byoeb.message_context import (
     ByoebMessageContext,
     MessageContext,
@@ -48,13 +48,14 @@ async def receive(body: Dict[str, Any] = Body(..., description="Raw WhatsApp web
 
 @chat_apis_router.get("/get_bot_messages", summary="Fetch bot messages after a given timestamp")
 async def get_bot_messages(
-    timestamp: int = Query(..., description="Unix timestamp to fetch messages since")
+    timestamp: int = Query(..., description="Unix timestamp to fetch messages since"),
+    length: PositiveInt = 1000
 ) -> List[ByoebMessageContext]:
     """
     Retrieves all bot messages stored in the database
     after the specified timestamp.
     """
-    responses = await dependency_setup.message_db_service.get_latest_bot_messages_by_timestamp(str(timestamp))
+    responses = await dependency_setup.message_db_service.get_latest_bot_messages_by_timestamp(str(timestamp), length)
     return responses
 
 
