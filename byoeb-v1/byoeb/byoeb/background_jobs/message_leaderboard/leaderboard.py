@@ -502,45 +502,17 @@ async def main():
     else:
         print(f"📊 PRODUCTION MODE: Using 9 parameters (3 districts)")
     
-    # TEST MODE: Send only to your test phone number
-    # Replace with your WhatsApp number (with country code, no +)
-    test_phone_number = "917567071072"  # TODO: Replace with your phone number
-    
-    # Validate phone number before sending
-    validated_phone = validate_and_format_phone_number(test_phone_number)
-    if not validated_phone:
-        print(f"\n❌ ERROR: Invalid phone number format: {test_phone_number}")
-        print(f"   Please update the phone number in the code (line 234)")
-        print(f"   Format: Country code + number (11-13 digits, no + or spaces)")
-        print(f"   Example for India: 919876543210")
-        return
-    
-    if validated_phone != test_phone_number:
-        print(f"\n📞 Phone number auto-formatted: {test_phone_number} → {validated_phone}")
-        test_phone_number = validated_phone
-    
-    print(f"\n🧪 TEST MODE: Sending template message only to {test_phone_number}")
+    # PRODUCTION MODE: Send to all users (actual sending)
+    print(f"\n🚀 PRODUCTION MODE: Sending template messages to {len(phone_numbers)} users")
     results = await send_leaderboard_template_messages(
-        [test_phone_number], 
+        phone_numbers, 
         top3_df, 
         user_db_service, 
         message_db_service,
         test_mode_3_params=TEST_MODE_3_PARAMS
     )
     success_count = sum(1 for r in results if r.get("status") == "success")
-    print(f"\n✅ Test: Successfully sent {success_count} out of {len(results)} messages")
-    return  # Exit early in test mode
-
-    # PRODUCTION MODE: Send to all users (actual sending) - COMMENTED OUT FOR TESTING
-    # print(f"\n🚀 PRODUCTION MODE: Sending template messages to {len(phone_numbers)} users")
-    # results = await send_leaderboard_template_messages(
-    #     phone_numbers, 
-    #     top3_df, 
-    #     user_db_service, 
-    #     message_db_service
-    # )
-    # success_count = sum(1 for r in results if r.get("status") == "success")
-    # print(f"\n✅ Successfully sent {success_count} out of {len(results)} messages")
+    print(f"\n✅ Successfully sent {success_count} out of {len(results)} messages")
 
 if __name__ == "__main__":
     asyncio.run(main())
