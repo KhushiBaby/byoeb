@@ -446,66 +446,68 @@ async def build_block_leaderboard_for_district(
     return df.head(3)
 
 async def format_leaderboard_as_template_parameters(
-    top3_df: pd.DataFrame, 
+    top3_df: pd.DataFrame,
     is_block_leaderboard: bool = False,
     user_language: str = "en"
 ) -> List[str]:
     """
     Format leaderboard data as template parameters for WhatsApp template message.
-    
+
+    Template format:
+    📊 Top 3 {{4}} with Highest Interactions:
+    {{1}}
+    {{2}}
+    {{3}}
+    Ask me any questions...
+
+    - {{1}}, {{2}}, {{3}}: Up to 3 lines (only real data; single space for missing slots).
+    - {{4}}: Type indicator (e.g. "Block" or "District" - translated).
+
+    Each line format: "1) Block Nayagaon had 71 messages from 25 users."
+
     Args:
         top3_df: DataFrame with leaderboard data (either districts or blocks)
-        is_block_leaderboard: If True, expects 'block' column, otherwise expects 'district' column
+        is_block_leaderboard: If True, expects 'block' column, otherwise 'district'
         user_language: User's language code (en, hi, mr, te) for translating type indicator
-    
+
     Returns:
-        List of parameters for the template (includes translated type as last parameter: "Blocks" or "Districts")
+        List of 4 parameters: [line1, line2, line3, type_indicator]
     """
-    # Get translated type indicator (plural) and prefix (singular with space)
-    type_indicator = get_leaderboard_translation(is_block_leaderboard, user_language, plural=True)
+    type_indicator = get_leaderboard_translation(is_block_leaderboard, user_language, plural=False).strip()
     prefix = get_leaderboard_translation(is_block_leaderboard, user_language, plural=False)
-    
-    # Always return 10 parameters (3 items * 3 fields + 1 type indicator)
-    parameters = []
-    name_col = 'block' if is_block_leaderboard else 'district'
-    # prefix is already set above with translation
-    
-    # Add parameters for existing items
-    for idx, row in top3_df.iterrows():
-        raw_name = str(row[name_col]).strip() if pd.notna(row[name_col]) else "N/A"
-        
-        # Add translated prefix: "Block " for blocks, "District " for districts
-        if raw_name and raw_name != "N/A":
-            name = prefix + raw_name
-        else:
-            name = "N/A"
-        
-        message_count = str(int(row['message_count'])) if pd.notna(row['message_count']) else "0"
-        unique_users = str(int(row['unique_users'])) if pd.notna(row['unique_users']) else "0"
-        
-        # Ensure no empty strings or None values
-        parameters.append(name if name else "N/A")
-        parameters.append(message_count if message_count else "0")
-        parameters.append(unique_users if unique_users else "0")
-    
-    # If less than 3 items, pad with placeholder values
-    # WhatsApp requires all parameters to be non-empty strings
-    # Use "N/A" for missing names and "0" for missing counts
-    while len(parameters) < 9:
-        if len(parameters) % 3 == 0:  # Name position (0, 3, 6)
-            parameters.append("N/A")
-        else:  # Count or users position (1, 2, 4, 5, 7, 8)
-            parameters.append("0")
-    
-    # Add 10th parameter: type indicator ("Blocks" or "Districts" - translated based on user language)
-    parameters.append(type_indicator)
-    
-    # Validate: ensure exactly 10 parameters, all non-empty strings
-    assert len(parameters) == 10, f"Expected 10 parameters, got {len(parameters)}"
-    assert all(isinstance(p, str) and len(p) > 0 for p in parameters), \
-        f"All parameters must be non-empty strings. Got: {parameters}"
-    
-    return parameters[:10]  # Ensure exactly 10 parameters (3 items * 3 fields + 1 type)
+
+    name_col = "block" if is_block_leaderboard else "district"
+    lines = []
+
+    for _, row in top3_df.iterrows():
+        raw_name = str(row[name_col]).strip() if pd.notna(row[name_col]) else ""
+        message_count = int(row["message_count"]) if pd.notna(row["message_count"]) else 0
+        unique_users = int(row["unique_users"]) if pd.notna(row["unique_users"]) else 0
+
+        if not raw_name or raw_name == "N/A":
+            continue
+        if message_count == 0 and unique_users == 0:
+            continue
+
+        name = prefix + raw_name
+        lines.append((name, message_count, unique_users))
+
+    # Build exactly 3 line strings (only real entries; single space for missing slots)
+    formatted_lines = [
+        f"{rank}) {name} had {message_count} messages from {unique_users} users."
+        for rank, (name, message_count, unique_users) in enumerate(lines, start=1)
+    ]
+    # Pad to 3 slots; use single space for missing (WhatsApp may reject empty params)
+    while len(formatted_lines) < 3:
+        formatted_lines.append(" ")
+
+    parameters = [formatted_lines[0], formatted_lines[1], formatted_lines[2], type_indicator]
+
+    assert len(parameters) == 4, f"Expected 4 parameters, got {len(parameters)}"
+    assert all(isinstance(p, str) for p in parameters), f"All parameters must be strings. Got: {parameters}"
+    assert len(parameters[3]) > 0, f"Type indicator (4th parameter) must be non-empty. Got: {parameters}"
+
+    return parameters
 
 async def send_leaderboard_template_messages(
     phone_numbers: List[str],
@@ -515,11 +517,11 @@ async def send_leaderboard_template_messages(
 ):
     """
     Send leaderboard messages as WhatsApp template messages to all users.
-    
+
     NOTE: This function ONLY READS from the database (no modifications).
     It uses: find_messages_by_time_range, get_users, hydrate_users - all read-only operations.
-    
-    Sends 10 parameters: 3 items × (name, message_count, unique_users) + type indicator
+
+    Template uses 4 parameters: {{1}}, {{2}}, {{3}} = up to 3 lines; {{4}} = type (Block/Districts).
     """
     from byoeb.chat_app.configuration.dependency_setup import channel_client_factory
     from byoeb.services.channel.whatsapp import WhatsAppService
@@ -679,48 +681,38 @@ async def send_leaderboard_template_messages(
                 user_language=user_language
             )
             
-            # Validate template parameters before sending (always expect 10 parameters)
-            if not template_parameters or len(template_parameters) != 10:
+            # Validate template parameters before sending (expect 4: line1, line2, line3, type)
+            if not template_parameters or len(template_parameters) != 4:
                 error_count += 1
                 send_logger.error("Invalid template parameters", extra={AppInsightsLogHandler.DETAILS: {
                     "context": "invalid_template_params",
                     "phone": phone,
                     "user_id": user.user_id if user else None,
-                    "expected": 10,
+                    "expected": 4,
                     "got": len(template_parameters) if template_parameters else 0
                 }})
                 continue
-            
-            # Ensure all parameters are non-empty strings (no None or empty values)
+
+            # Ensure all parameters are non-empty strings (WhatsApp may reject empty)
             validated_parameters = []
             for i, param in enumerate(template_parameters):
                 if param is None:
-                    validated_parameters.append("N/A")
+                    validated_parameters.append(" " if i < 3 else "Block")
                 elif not isinstance(param, str):
-                    validated_parameters.append(str(param) if param else "N/A")
+                    validated_parameters.append(str(param).strip() or (" " if i < 3 else "Block"))
                 elif len(param.strip()) == 0:
-                    validated_parameters.append("N/A")
+                    validated_parameters.append(" " if i < 3 else "Block")
                 else:
                     validated_parameters.append(param.strip())
-            
+
             template_parameters = validated_parameters
-            
+
             # Build a text representation of the leaderboard (for logging/fallback)
-            # Last parameter is the translated type indicator ("Blocks" or "Districts")
-            type_indicator = template_parameters[-1] if len(template_parameters) > 0 else get_leaderboard_translation(is_block_leaderboard, user_language, plural=True)
-            
-            # Build leaderboard text: 10 parameters (9 data + 1 type)
-            if type_indicator in ["Block", "ब्लॉक", "బ్లాక్"]:  # Block indicators
-                leaderboard_text = "📊 Top 3 Blocks in Your District with Highest Interactions:\n\n"
-            else:
-                leaderboard_text = "📊 Top 3 Districts with Highest Interactions:\n\n"
-            
-            for i in range(0, 9, 3):
-                item = template_parameters[i]
-                count = template_parameters[i+1]
-                users = template_parameters[i+2]
-                if item != "N/A":
-                    leaderboard_text += f"{i//3 + 1}) {item}: {count} messages from {users} users\n"
+            # Template: {{1}}, {{2}}, {{3}} = lines; {{4}} = type
+            line1, line2, line3 = template_parameters[0], template_parameters[1], template_parameters[2]
+            type_indicator = template_parameters[3]
+            lines_block = "\n".join(s for s in [line1, line2, line3] if s.strip()) or "No data available for this period."
+            leaderboard_text = f"📊 Top 3 {type_indicator} with Highest Interactions:\n\n{lines_block}\n\nAsk me any questions about childbirth, maternal health, childcare, or health in general."
             
             # Create ByoebMessageContext with template information
             # Following the consensus pattern: create with REGULAR_TEXT and text fields,
@@ -907,7 +899,7 @@ async def main():
 
     console_logger.info("📝 Message Configuration:")
     console_logger.info("   Template: leaderboardv2")
-    console_logger.info("   Parameters: 10 (3 items × 3 fields + type indicator)")
+    console_logger.info("   Parameters: 4 (3 lines + type indicator)")
     console_logger.info("   Languages: Translated per user (en, hi, mr, te)")
     console_logger.info("📍 Personalization:")
     console_logger.info("   • Users WITH district & block → Top 3 blocks in their district")

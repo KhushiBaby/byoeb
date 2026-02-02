@@ -3,6 +3,7 @@ from datetime import datetime
 from byoeb.chat_app.configuration.config import app_config
 from byoeb.chat_app.configuration.dependency_setup import user_db_service
 from byoeb.factory import MongoDBFactory
+from byoeb.models.message_category import MessageCategory
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 SINGLETON = "singleton"
@@ -102,7 +103,13 @@ async def fetch_daily_logs(start_timestamp: str, end_timestamp: str) -> AsyncIte
     async for row in fetch_and_process_user_messages(
         start_timestamp=start_timestamp,
         end_timestamp=end_timestamp,
-        message_category=["bot_to_asha_response", "audio_idk", "text_idk"],
+        message_category=[
+            MessageCategory.AUDIO_IDK.value,
+            MessageCategory.TEXT_IDK.value,
+            MessageCategory.AUDIO_DISAMBIGUATION.value,
+            MessageCategory.TEXT_DISAMBIGUATION.value,
+            MessageCategory.BOT_TO_USER_RESPONSE.value
+        ],
         message_collection=message_collection
     ):
         yield row

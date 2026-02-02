@@ -1,10 +1,12 @@
 from enum import Enum
-from byoeb.chat_app.configuration.config import bot_config, app_config
 
 class MessageCategory(Enum):
     AUDIO_IDK = "audio_idk"
     TEXT_IDK = "text_idk"
     AUDIO_IDK_RECONFIRMATION = "audio_idk_reconfirmation"
+
+    AUDIO_DISAMBIGUATION = "audio_disambiguation"
+    TEXT_DISAMBIGUATION = "text_disambiguation"
 
     BOT_TO_USER = "bot_to_asha"
     BOT_TO_USER_RESPONSE = "bot_to_asha_response"

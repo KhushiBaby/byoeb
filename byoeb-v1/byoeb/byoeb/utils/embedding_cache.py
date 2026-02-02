@@ -3,16 +3,15 @@ import hashlib
 import os
 import pickle
 from typing import Any, Optional, TypeAlias, Union
-from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection
-from pymilvus.orm.future import SearchResult
+import lancedb
+import pyarrow as pa
 from byoeb.chat_app.configuration.config import app_tempdir
 
 CacheResult: TypeAlias = Union[tuple[float, bytes, Any], tuple[float, None, None], tuple[None, bytes, Any], tuple[None, None, None]]
 Embedding: TypeAlias = list[float] | bytes
 
 class EmbeddingCache:
-    FIELD_ID = "id"
-    FIELD_INDEX = "vec"
+    TABLE_NAME = "embeddings"
 
     def __init__(self, name: str, dim: int, capacity: int):
         self.name = name
@@ -20,7 +19,8 @@ class EmbeddingCache:
         self.capacity = capacity
         self.lru = {}
         self.next_id = 0
-        self.col = None
+        self.db = None
+        self.table = None
 
     def _preprocess_id(self, id: int | str) -> bytes:
         if isinstance(id, int):
@@ -43,48 +43,59 @@ class EmbeddingCache:
 
         if len(old) == 4:
             id = int.from_bytes(old, byteorder="big", signed=False)
-            assert self.col is not None
-            self.col.delete(f"{self.FIELD_ID}=={id}")
-            self.col.flush()
+            assert self.table is not None
+            self.table.delete(f"id = {id}")
+
+    def _init_db(self):
+        if self.db is not None:
+            return
+
+        self.kv = dbm.open(os.path.join(app_tempdir.result(), f"{self.name}-kv.db"), "c")
+        db_path = os.path.join(app_tempdir.result(), f"{self.name}-lance.db")
+        self.db = lancedb.connect(db_path)
+        if self.TABLE_NAME in self.db.table_names():
+            self.table = self.db.open_table(self.TABLE_NAME)
+            return
+        schema = pa.schema([pa.field("id", pa.int64()), pa.field("vector", pa.list_(pa.float32(), self.dim))])
+        self.table = self.db.create_table(self.TABLE_NAME, schema=schema)
 
     def _search(self, emb: Embedding) -> Optional[tuple[bytes, float]]:
-        if self.col is None:
-            self.kv = dbm.open(os.path.join(app_tempdir.result(), f"{self.name}-kv.db"), "c")
-            path_emb = os.path.join(app_tempdir.result(), f"{self.name}-emb.db")
-            connections.connect(uri=path_emb, alias=path_emb)
-            self.col = Collection("c", CollectionSchema([
-                FieldSchema(self.FIELD_ID, DataType.INT64, is_primary=True),
-                FieldSchema(self.FIELD_INDEX, DataType.FLOAT_VECTOR, dim=self.dim)
-            ]), using=path_emb)
-            _ = self.col.create_index(self.FIELD_INDEX, {"index_type": "AUTOINDEX", "metric_type": "COSINE"})
-
+        self._init_db()
         if isinstance(emb, str):
             id = self._preprocess_id(emb)
             return (id, 1.0) if id in self.kv else None
 
-        res = self.col.search([emb], self.FIELD_INDEX, {}, limit=1, output_fields=[self.FIELD_ID])
-        assert isinstance(res, SearchResult)
-        if not res or not res[0]:
+        results = self.table.search(emb).metric("cosine").limit(1).to_list()
+        if not results:
             return None
 
-        record = res[0][0]
-        return self._preprocess_id(record["entity"][self.FIELD_ID]), record["distance"]
+        record = results[0]
+        id = self._preprocess_id(record["id"])
+        score = float(record["_distance"])
+        similarity = 1.0 - score
+        return id, similarity
 
     def store(self, emb: Embedding, val: Any) -> CacheResult:
         res = self._search(emb)
-        assert self.col is not None
+        assert self.table is not None
 
-        if res and 1 - res[1] >= 0.999:  # hit
+        # For string embeddings, exact match means we can reuse the ID
+        # For vector embeddings, we should NOT reuse IDs even with high similarity
+        # because different embeddings need different IDs
+        if isinstance(emb, str) and res and res[1] >= 0.999:
+            # String key hit - reuse existing ID
             id = res[0]
-        elif isinstance(emb, str):  # miss, emb is str
+        elif isinstance(emb, str):
+            # String key miss - create deterministic ID from hash
             id = self._preprocess_id(emb)
-        else:  # miss, emb is vector
+        else:
+            # Vector embedding - always create new entry with new ID
             id_ = self.next_id
             id = self._preprocess_id(id_)
             self.next_id += 1
-            self.col.insert([[id_], [emb]])
-            self.col.flush()
+            self.table.add([{"id": id_, "vector": emb}])
 
+        # Store value and update LRU
         self.kv[id] = pickle.dumps(val)
         self._touch(id)
         self._evict()
@@ -94,18 +105,18 @@ class EmbeddingCache:
         res = self._search(emb)
         if res is None:
             return None, None, None
-        id, dist = res
-        if dist < thresh:
-            return dist, None, None
+        id, similarity = res
+        if similarity < thresh:
+            return similarity, None, None
         self._touch(id)
-        return dist, id, pickle.loads(self.kv[id])
+        return similarity, id, pickle.loads(self.kv[id])
 
     def update(self, id: bytes, val: Any):
         self.kv[id] = pickle.dumps(val)
         self._touch(id)
 
     def get(self, id: bytes) -> Optional[Any]:
-        assert self.col is not None
+        assert self.table is not None
         self._touch(id)
         return pickle.loads(self.kv[id]) if id in self.kv else None
 
@@ -116,9 +127,10 @@ class EmbeddingCache:
     def purge(self) -> int:
         n = len(self.lru)
         self.lru = {}
-        if self.col is not None:
-            self.col.drop()
-            self.col = None
+        if self.db is not None:
+            self.db.drop_table(self.TABLE_NAME)
+            self.table = None
+            self.db = None
         if hasattr(self, "kv"):
             for key in self.kv.keys():
                 del self.kv[key]

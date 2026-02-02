@@ -20,8 +20,6 @@ def new_cache(monkeypatch):
 
         monkeypatch.setattr(config_module, "app_tempdir", future, raising=False)
         monkeypatch.setattr(embedding_cache_module, "app_tempdir", future, raising=False)
-        monkeypatch.setenv("MILVUS_LOGS_DIR", tmpdir)
-        monkeypatch.setenv("MILVUS_LITE_HOME", tmpdir)
 
         def factory(name: str, capacity: int = 3) -> EmbeddingCache:
             return EmbeddingCache(name, dim=4, capacity=capacity)

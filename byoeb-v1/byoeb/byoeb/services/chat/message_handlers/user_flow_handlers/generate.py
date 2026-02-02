@@ -10,7 +10,7 @@ import random
 from rapidfuzz.fuzz import ratio
 from datetime import datetime, timezone
 from tenacity import retry, stop_after_attempt, wait_exponential, RetryError
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from byoeb.chat_app.configuration.config import bot_config, app_config
 import byoeb.chat_app.configuration.config as env_config
 from byoeb.models.message_category import MessageCategory
@@ -51,7 +51,7 @@ class ByoebUserGenerateResponse(Handler):
         self,
         text,
         k,
-        search_type=AzureVectorSearchType.HYBRID.value
+        search_type
     ) -> List[Chunk]:
         """
         Retrieve top k chunks from the vector store based on the input text.
@@ -333,6 +333,7 @@ class ByoebUserGenerateResponse(Handler):
         status = None,
         cache_details: CacheResult = (None, None, None),  # used for audio cache
         cache_hit: bool = False,
+        default_message_category: Optional[MessageCategory] = None
     ) -> ByoebMessageContext:
         start_time = datetime.now(timezone.utc).timestamp()
         if response_source is None:
@@ -388,7 +389,7 @@ class ByoebUserGenerateResponse(Handler):
         utils.log_to_text_file(f"Created audio response message in {end_time - start_time} seconds")
         description = bot_config["template_messages"]["user"]["follow_up_questions_description"][user_language]
         message_type = None
-        message_category=MessageCategory.BOT_TO_USER_RESPONSE.value
+        message_category = (default_message_category or MessageCategory.BOT_TO_USER_RESPONSE).value
         if (message.message_context.message_type == MessageTypes.REGULAR_AUDIO.value):
             message_type = MessageTypes.REGULAR_AUDIO.value
         elif (message.message_context.message_type == MessageTypes.REGULAR_TEXT.value
@@ -522,17 +523,14 @@ class ByoebUserGenerateResponse(Handler):
         )
         return new_expert_verification_message
     
-    @retry(
-        stop=stop_after_attempt(3),  # Retry up to 3 times
-        wait=wait_exponential(multiplier=1, max=10),  # Exponential backoff with a max wait time of 10 seconds
-    )
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, max=10))
     async def agenerate_answer(
         self,
         user_language: str,
-        query,
-        query_type,
-        retrieved_chunks: List[Chunk],
-    ):
+        query: str,
+        query_type: str,
+        vector_search_queries: list[tuple[str | None, str, int]] | None = None
+    ) -> tuple[str, str, dict[str, int], list[Chunk]]:
         def parse_response_xml(xml_string: str):
             # Patterns for extracting response_en and response_hi
             patterns = {
@@ -546,11 +544,14 @@ class ByoebUserGenerateResponse(Handler):
                 extracted_data[key] = match.group(1).strip() if match else None  # Strip removes extra spaces and newlines
 
             return extracted_data["response_en"], extracted_data["response_src"]
-        
-        update_kb = [chunk.text for chunk in retrieved_chunks if "KB Updated" in chunk.metadata.source]
-        raw_kb = [chunk.text for chunk in retrieved_chunks if "KB Updated" not in chunk.metadata.source]
-        update_kb_list = ", ".join(update_kb)
-        raw_kb_list = ", ".join(raw_kb)
+
+        vector_search_queries = vector_search_queries or [(query, AzureVectorSearchType.HYBRID.value, 3)]
+        retrieved_chunks: dict[str, Chunk] = {}
+        for chunks in await asyncio.gather(*(self.__aretrieve_chunks(q or query, k=k, search_type=t) for q, t, k in vector_search_queries)):
+            for chunk in chunks:
+                retrieved_chunks[chunk.chunk_id] = chunk
+        update_kb_list = ", ".join(str(chunk.text) for chunk in retrieved_chunks.values() if "KB Updated" in chunk.metadata.source)
+        raw_kb_list = ", ".join(str(chunk.text) for chunk in retrieved_chunks.values() if "KB Updated" not in chunk.metadata.source)
 
         system_prompt = self._get_system_prompt(user_language)
         template_user_prompt = bot_config["llm_response"]["answer_prompts"]["user_prompt"]
@@ -569,8 +570,77 @@ class ByoebUserGenerateResponse(Handler):
         print("Query type: ", query_type)
         if response_en is None or query_type is None:
             raise ValueError("Parsing failed, response or query_type is None.")
-        return response_en, response_source, tokens
-    
+        return response_en, response_source, tokens, list(retrieved_chunks.values())
+
+    async def needs_clarification(self, query: str, query_type: str, user_language: str, retrieved_chunks: list[Chunk]) -> Optional[tuple[str, str, dict[str, int]]]:
+        kb_topics = ", ".join(str(c.text) for c in retrieved_chunks)
+        task_description = bot_config["llm_response"]["clarification_prompts"]["system_prompt"]
+        response_translate = bot_config["llm_response"]["clarification_prompts"]["response_translate"][user_language]
+        output_format = bot_config["llm_response"]["clarification_prompts"]["output"]
+
+        system_prompt = task_description + "\n\n" + response_translate + "\n\n" + output_format
+        user_prompt = bot_config["llm_response"]["clarification_prompts"]["user_prompt"] \
+            .replace("<QUERY>", query) \
+            .replace("<QUERY_TYPE>", query_type) \
+            .replace("<KB_TOPICS>", kb_topics)
+
+        llm_response, response = await llm_client.generate_response(self.__augment(system_prompt, user_prompt))
+        response = response.strip()
+        if not response:
+            return None
+
+        clarification_en_match = re.search(r"<clarification_en\s*>(.*?)</clarification_en\s*>", response, re.DOTALL | re.IGNORECASE)
+        clarification_src_match = re.search(r"<clarification_src\s*>(.*?)</clarification_src\s*>", response, re.DOTALL | re.IGNORECASE)
+
+        clarification_en = clarification_en_match.group(1).strip() if clarification_en_match else None
+        clarification_src = clarification_src_match.group(1).strip() if clarification_src_match else None
+        if not clarification_en or not clarification_src:
+            return None
+
+        tokens = llm_client.get_response_tokens(llm_response)
+        return clarification_en, clarification_src, tokens
+
+    async def agenerate_expansion_queries(self, original_query: str, retrieved_chunks: list[Chunk]) -> list[str]:
+        def parse_expansion_xml(xml_string: str) -> tuple[bool, List[str]]:
+            # Check if reformulation is not possible
+            cannot_reformulate = re.search(r"<cannot_reformulate\s*>(.*?)</cannot_reformulate\s*>", xml_string, re.DOTALL | re.IGNORECASE)
+            if cannot_reformulate:
+                reason = cannot_reformulate.group(1).strip()
+                return False, [reason]
+
+            # Extract reformulated queries
+            pattern = r"<reformulated_query\s*>(.*?)</reformulated_query\s*>"
+            matches = re.findall(pattern, xml_string, re.DOTALL | re.IGNORECASE)
+            queries = [match.strip() for match in matches if match.strip()]
+            return True, queries
+
+        # Prepare retrieved chunks context (limit to avoid token bloat)
+        chunks_text = "\n\n---\n\n".join(f"Chunk {i+1}: {chunk.text}" for i, chunk in enumerate(retrieved_chunks))
+
+        system_prompt = bot_config["llm_response"]["expansion_prompts"]["system_prompt"]
+        template_user_prompt = bot_config["llm_response"]["expansion_prompts"]["user_prompt"]
+
+        user_prompt = template_user_prompt.replace("<QUERY>", original_query).replace("<RETRIEVED_CHUNKS>", chunks_text)
+        augmented_prompts = self.__augment(system_prompt, user_prompt)
+
+        start_time = datetime.now(timezone.utc).timestamp()
+        llm_response, response_text = await llm_client.generate_response(augmented_prompts)
+        tokens = llm_client.get_response_tokens(llm_response)
+        end_time = datetime.now(timezone.utc).timestamp()
+
+        utils.log_to_text_file(f"Generated expansion queries in {end_time - start_time} seconds: {str(tokens)}")
+
+        can_reformulate, result = parse_expansion_xml(response_text)
+
+        print(f"Original query: {original_query}")
+        if not can_reformulate:
+            print(f"Query expansion skipped -", original_query)
+            for reason in result or ["Insufficient context in original query"]:
+                print("-", reason)
+            return []
+
+        return result
+
     @retry(
         stop=stop_after_attempt(3),  # Retry up to 3 times
         wait=wait_exponential(multiplier=1, max=10),  # Exponential backoff with a max wait time of 10 seconds
@@ -652,6 +722,7 @@ class ByoebUserGenerateResponse(Handler):
             message_english = message.message_context.message_english_text
             user_language = message.user.user_language
             query_type = message.message_context.additional_info.get(constants.QUERY_TYPE)
+            default_message_category = None
             cache_hit = False
 
             if embedding_fn and (FeatureFlag.CACHE_MESSAGES in feature_flags or message.user.test_user):
@@ -664,53 +735,46 @@ class ByoebUserGenerateResponse(Handler):
                 embedding = None
                 cache_result = None, None, None
 
-            start_time = datetime.now(timezone.utc).timestamp()
             cache_val = cache_result[2]
             if cache_val and "answer" in cache_val and user_language in cache_val["answer"]:
-                response_en, response_source, related_questions, tokens, tokens_backup = cache_val["answer"][user_language]
+                response_en, response_source, related_questions, tokens = cache_val["answer"][user_language]
                 cache_hit = True
             else:
-                retrieved_chunks_task = self.__aretrieve_chunks(message_english, k=3)
-                retrieved_chunks_backup_task = self.__aretrieve_chunks(
-                    message_english,
-                    k=5,
-                    search_type=AzureVectorSearchType.DENSE.value
-                )
-                retrieved_chunks_related_questions_task = self._retrieve_top_k_chunks_for_related_questions(message_english, k=10)
-                retrieved_chunks, retrieved_chunks_backup, retrieved_chunks_related_questions = await asyncio.gather(
-                    retrieved_chunks_task,
-                    retrieved_chunks_backup_task,
-                    retrieved_chunks_related_questions_task
-                )
-                end_time = datetime.now(timezone.utc).timestamp()
-                AppInsightsLogHandler.getLogger("retrieve_chunks").info(f"Retrieved chunks from KB for {message.message_context.message_id} in {end_time - start_time}s", extra={AppInsightsLogHandler.DETAILS: {
-                    "message_id": message.message_context.message_id,
-                    "time_taken": end_time - start_time
-                }})
                 start_time = datetime.now(timezone.utc).timestamp()
-                response_task = self.agenerate_answer(user_language,message_english,query_type,retrieved_chunks)
-                response_backup_task = self.agenerate_answer(user_language,message_english,query_type,retrieved_chunks_backup)
-                response_result, response_backup_result = await asyncio.gather(
-                    response_task,
-                    response_backup_task
-                )
-                response_en, response_source, tokens = response_result
-                response_en_backup, response_source_backup, tokens_backup = response_backup_result
+                skip_cache = True
+                retrieved_chunks_related_questions = asyncio.create_task(self._retrieve_top_k_chunks_for_related_questions(message_english, k=10))
+                response_en, response_source, tokens, retrieved_chunks = await self.agenerate_answer(user_language, message_english, query_type)
+                if not utils.is_idk(response_en):  # got answer on first try :)
+                    skip_cache = False
+                else:
+                    query_expansions_queries = await self.agenerate_expansion_queries(message_english, retrieved_chunks)
+                    query_expansion_search_ops = [(None, AzureVectorSearchType.HYBRID.value, 3), (None, AzureVectorSearchType.DENSE.value, 3)]
+                    print("Response is IDK, attempting query expansion:", query_expansions_queries)
+                    for q in query_expansions_queries:
+                        try:
+                            response_en2, response_source2, tokens2, retrieved_chunks2 = await self.agenerate_answer(user_language, q, self._asha_work_related, query_expansion_search_ops)
+                        except Exception as e:
+                            utils.log_to_text_file(f"Query expansion failed for query '{q}': {e}")
+                            continue
+                        retrieved_chunks = list({c.chunk_id: c for c in retrieved_chunks + retrieved_chunks2}.values())
+                        if not utils.is_idk(response_en2):
+                            skip_cache = False
+                            response_en, response_source, tokens = response_en2, response_source2, tokens2
+                            break
 
-                is_idk = utils.is_idk(response_en)
-                if is_idk:
-                    response_en = response_en_backup
-                    response_source = response_source_backup
-                # response_en, response_source, tokens = await self.agenerate_answer(user_language, message_english, query_type, retrieved_chunks)
+                if utils.is_idk(response_en):
+                    print("Query expansion was unsuccessful, assessing whether clarification is required...")
+                    clarification = await self.needs_clarification(message_english, query_type, user_language, retrieved_chunks)
+                    if clarification:
+                        default_message_category = MessageCategory.AUDIO_DISAMBIGUATION if message.message_context.message_type == MessageTypes.REGULAR_AUDIO else MessageCategory.TEXT_DISAMBIGUATION
+                        response_en, response_source, tokens = clarification
 
-                if message.user.user_language == "en":
-                    response_source = response_en
-                related_questions = self.get_related_questions(message.user.user_language, retrieved_chunks_related_questions, message.message_context.message_source_text)
+                related_questions = self.get_related_questions(message.user.user_language, await retrieved_chunks_related_questions, message.message_context.message_source_text)
 
-                if not is_idk and embedding:
+                if not skip_cache and embedding:
                     cache_val = cache_val or {}
                     cache_val["answer"] = cache_val.get("answer", {})
-                    cache_val["answer"][user_language] = response_en, response_source, related_questions, tokens, tokens_backup
+                    cache_val["answer"][user_language] = response_en, response_source, related_questions, tokens
                     miss_thresh = cache_result[0] if cache_result is not None else None
                     cache_result = self.embedding_cache.store(embedding, cache_val)
                     cache_result = miss_thresh, *cache_result[1:]
@@ -721,10 +785,7 @@ class ByoebUserGenerateResponse(Handler):
                 AppInsightsLogHandler.getLogger("generate_answer_and_related_questions").info(f"Generated related questions for {message.message_context.message_id} in {end_time - start_time}s", extra={AppInsightsLogHandler.DETAILS: {
                     "message_id": message.message_context.message_id,
                     "time_taken": end_time - start_time,
-                    "completion_tokens": tokens.get("completion_tokens"),
-                    "backup_completion_tokens": tokens_backup.get("completion_tokens"),
-                    "prompt_tokens": tokens.get("prompt_tokens"),
-                    "backup_prompt_tokens": tokens_backup.get("prompt_tokens")
+                    **tokens
                 }})
             byoeb_user_message = await self.__create_user_message(
                 message=message,
@@ -735,7 +796,8 @@ class ByoebUserGenerateResponse(Handler):
                 status=constants.PENDING,
                 related_questions=related_questions,
                 cache_details=cache_result,
-                cache_hit=cache_hit
+                cache_hit=cache_hit,
+                default_message_category=default_message_category
             )
         print("Created user message")
         byoeb_expert_message = None

@@ -29,13 +29,14 @@ class ByoebUserProcess(Handler):
         return augmented_prompts
     
     def _get_system_prompt(self, user_language: str) -> str:
-        task_description = bot_config["llm_response"]["translation_and_rewrite_prompts"]["system_prompt"]["task_description"]
-        query_translate = bot_config["llm_response"]["translation_and_rewrite_prompts"]["system_prompt"]["query_translate"][user_language]
-        query_rewrtie = bot_config["llm_response"]["translation_and_rewrite_prompts"]["system_prompt"]["query_rewrite"]
-        query_classify = bot_config["llm_response"]["translation_and_rewrite_prompts"]["system_prompt"]["query_classify"]
-        output = bot_config["llm_response"]["translation_and_rewrite_prompts"]["system_prompt"]["output"]
-        system_prompt = task_description + "\n" + query_translate + "\n" + query_rewrtie + "\n" + query_classify + "\n" + output
-        return system_prompt
+        cfg = bot_config["llm_response"]["translation_and_rewrite_prompts"]["system_prompt"]
+        return "\n".join((
+            cfg["task_description"],
+            cfg["query_translate"][user_language],
+            cfg["query_rewrite"],
+            cfg["query_classify"],
+            cfg["output"]
+        ))
     
     def _create_conversation_history(self, last_conversations: List[Dict[str, Any]]) -> str:
         conversation_history = []
@@ -43,7 +44,7 @@ class ByoebUserProcess(Handler):
         i = 1
         for conversation in last_conversations:
             timestamp = int(conversation.get(constants.TIMESTAMP, 0))
-            if curr_time - timestamp > 1000:
+            if curr_time - timestamp > 1800:
                 continue  # Skip conversations older than 30 min
             
             question = conversation.get(constants.QUESTION, None)
@@ -62,7 +63,7 @@ class ByoebUserProcess(Handler):
         self,
         messages: ByoebMessageContext
     ):
-        def parse_xml_with_regex(xml_string: str):
+        def parse_xml_with_regex(xml_string: str) -> tuple[str, str, str]:
             # Patterns for extracting the required tags, ignoring their position in XML
             patterns = {
                 self.QUERY_EN: r"<query_en\s*>(.*?)</query_en\s*>",
