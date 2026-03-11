@@ -142,7 +142,21 @@ class UserMongoDBService(BaseMongoDBService):
         repository_factory = await self._get_repository_factory()
         user_repository = await repository_factory.get_user_repository()
         users_obj = user_repository.find_users_by_type(user_type)
-        return [User(**user_obj["User"]) async for user_obj in users_obj]
+        # Same as get_users: MongoDB may return naive datetimes; User model requires TZ-aware.
+        result: List[User] = []
+        async for user_obj in users_obj:
+            try:
+                user_data = _ensure_utc_dates(user_obj["User"])
+                result.append(User(**user_data))
+            except Exception as e:
+                # Match get_users resilience; log for observability without flooding on bad docs
+                self._logger.warning(
+                    "get_users_by_type: skipping user document user_type=%s error=%s",
+                    user_type,
+                    e,
+                )
+                continue
+        return result
     
     def user_activity_update_query(self, user: User, qa: Optional[Dict[str, Any]] = None, skip_timestamp: bool = False):
         """Generate update query for user activity."""
