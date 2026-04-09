@@ -32,15 +32,6 @@ byoeb_package_dir = script_dir.parent
 byoeb_parent_dir = byoeb_package_dir.parent
 sys.path.insert(0, str(byoeb_parent_dir))
 
-repo_root = Path(__file__).resolve().parents[3] if len(Path(__file__).resolve().parents) >= 4 else byoeb_parent_dir
-if str(repo_root) not in sys.path:
-    sys.path.insert(0, str(repo_root))
-
-try:
-    from src.utils import get_llm_response  # type: ignore
-except Exception:
-    get_llm_response = None
-
 from byoeb.background_jobs.daily_logs.asha_logs import fetch_daily_logs
 # Reuse existing Azure Blob client configuration
 from byoeb.kb_app.configuration.dependency_setup import amedia_storage, amedia_storage_analysis

@@ -4,7 +4,6 @@ from byoeb.application_logger.azure_app_insights import AppInsightsLogHandler
 import byoeb.utils.utils as utils
 import uuid
 import traceback
-import time
 from datetime import datetime
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode

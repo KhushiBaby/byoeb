@@ -1,7 +1,12 @@
 import asyncio
 import json
 import uuid
+from datetime import datetime, timedelta, timezone
 from random import sample
+from typing import Any, AsyncIterator, Iterable, List, Optional, Set, Tuple, TypeAlias
+import os
+import re
+
 from byoeb.application_logger.azure_app_insights import AppInsightsLogHandler
 from byoeb.background_jobs.did_you_know.config import bot_config
 from byoeb.models.dyk import DykLanguageEntry, DykRecord
@@ -14,14 +19,8 @@ from byoeb.services.chat import constants
 from byoeb_core.models.byoeb.message_context import ByoebMessageContext, MessageContext, MessageTypes
 from byoeb_core.models.byoeb.user import User
 from byoeb_integrations.channel.whatsapp.meta.async_whatsapp_client import StatusCode
-from byoeb.utils.utils import ensure_utc_dates
-from datetime import datetime, timedelta, timezone
-from typing import AsyncIterator, Iterable, List, Optional, Tuple, TypeAlias
-import os
-import re
 
-
-DykBatch: TypeAlias = Iterable[User]
+DykBatch: TypeAlias = Iterable[Tuple[User, Set[str]]]
 
 def clean_template_param(text: str) -> str:
     """Make template parameter safe for WhatsApp: no newlines/tabs, no 4+ spaces."""
@@ -52,14 +51,14 @@ async def pick_candidates(dyk_repo: DykRepository, user_repo: UserRepository, la
             potential_candidates = user_repo.find_test_users()
         else:
             run_logger.debug(f"{pick_candidates.__name__}: no user_types provided - selecting all users")
-            potential_candidates = user_repo.find_all({})
+            potential_candidates = user_repo.find_all_users()
     
     filtern_user_ids = set()
     async for record in dyk_repo.find_pending_of_langs(langs):
         filtern_user_ids.add(record.user_id)
     buffer: List[User] = []
     async for doc in potential_candidates:
-        user = User(**ensure_utc_dates(doc["User"]))
+        user = User(**doc["User"])
         if user.user_id in filtern_user_ids:
             continue
         buffer.append(user)
@@ -175,7 +174,7 @@ async def dispatch(dyk_repo: DykRepository, user_repo: UserRepository, channel: 
     pending = [p async for p in dyk_repo.find_pending_of_batches(langs, [batch_id])]
     users: dict[str, Optional[User]] = {p.user_id: None for p in pending}
     async for user_doc in user_repo.find_users_by_ids(list(users.keys())):
-        user = User(**ensure_utc_dates(user_doc["User"]))
+        user = User(**user_doc["User"])
         users[str(user.user_id)] = user
 
     ts = datetime.now(timezone.utc)

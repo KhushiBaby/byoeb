@@ -172,7 +172,7 @@ def test_whatsapp_onboarding_flow(language_display: str, user_type_choice: str, 
         if state == START:
             message_id = generate_message_id()
             timestamp = get_current_timestamp()
-            payload = _text_message_payload(message_id=message_id, timestamp=timestamp, text="hi")
+            payload = _text_message_payload(message_id=message_id, timestamp=timestamp, text="onboard-asha")
 
             requests.post(BASE_URL, json=payload, timeout=HTTP_REQUEST_TIMEOUT_S).raise_for_status()
             url = BASE_URL.replace("receive", "get_bot_messages?timestamp=") + str(timestamp)

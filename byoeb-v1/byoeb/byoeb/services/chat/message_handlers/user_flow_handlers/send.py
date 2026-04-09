@@ -3,12 +3,10 @@ import logging
 import byoeb.services.chat.constants as constants
 import byoeb.utils.utils as utils
 from byoeb.models.message_category import MessageCategory
-import time
 from datetime import datetime, timezone
 from byoeb.chat_app.configuration.config import app_config
 from byoeb.services.chat import utils as chat_utils
 from typing import Any, Dict, List
-from opentelemetry.trace import Status, StatusCode
 
 from byoeb_core.models.byoeb.message_context import ByoebMessageContext, MessageTypes
 from byoeb.services.channel.base import BaseChannelService, MessageReaction
@@ -16,7 +14,6 @@ from byoeb.services.databases.mongo_db import UserMongoDBService, MessageMongoDB
 from byoeb.services.chat.message_handlers.base import Handler
 from byoeb.services.channel.base import MessageReaction
 from byoeb.application_logger.azure_app_insights import AppInsightsLogHandler
-from byoeb.observability.tracing import get_conversation_tracer, SPAN_SEND_WORKFLOW
 
 class ByoebUserSendResponse(Handler):
     __max_last_active_duration_seconds: int = app_config["app"]["max_last_active_duration_seconds"]
@@ -30,7 +27,6 @@ class ByoebUserSendResponse(Handler):
         self._logger = logging.getLogger(self.__class__.__name__)
         self._user_db_service = user_db_service
         self._message_db_service = message_db_service
-        self._tracer = get_conversation_tracer()
 
     def get_channel_service(
         self,
@@ -259,13 +255,7 @@ class ByoebUserSendResponse(Handler):
         expert_task = self.__handle_expert(channel_service, byoeb_expert_message)
 
         self._logger.debug("[send] awaiting asyncio.gather for mark_read_task, user_task, expert_task")
-        with self._tracer.start_as_current_span(SPAN_SEND_WORKFLOW) as wf_span:
-            wf_span.set_attribute("message_id", msg_id)
-            wf_span.set_attribute("track_message_id", str(track_message_id or ""))
-            send_start = time.perf_counter()
-            _, user_responses, expert_responses = await asyncio.gather(mark_read_task, user_task, expert_task)
-            wf_span.set_attribute("duration_ms", int((time.perf_counter() - send_start) * 1000))
-            wf_span.set_status(Status(StatusCode.OK))
+        _, user_responses, expert_responses = await asyncio.gather(mark_read_task, user_task, expert_task)
         self._logger.info(
             "[send] gather done; user_responses_len=%s expert_responses_len=%s",
             len(user_responses) if user_responses else 0,

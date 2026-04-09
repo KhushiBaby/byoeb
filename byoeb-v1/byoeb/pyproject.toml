@@ -6,7 +6,7 @@ authors = ["Rahul Sharma <rahul5982439@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11,<3.15"
 fastapi = "^0.115.5"
 aiocache = "0.12.3"
 byoeb-integrations = {path = "../byoeb-integrations", develop = true}
@@ -28,6 +28,7 @@ mongomock-motor = "^0.0.36"
 pysqlite3-binary = {version = "^0.5.4", platform = "linux"}
 lancedb = "^0.26.0"
 grapheme = "^0.6.0"
+pandas = "^3.0.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.1"

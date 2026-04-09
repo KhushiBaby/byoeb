@@ -58,6 +58,11 @@ class UserRepository(BaseRepository, ABC):
         pass
 
     @abstractmethod
+    def find_all_users(self) -> AsyncIterator[Dict[str, Any]]:
+        """Find all users (UTC-normalised)."""
+        pass
+
+    @abstractmethod
     async def count_users_by_type(self, user_type: str) -> int:
         """Count users by type."""
         pass

@@ -1,15 +1,11 @@
 import asyncio
-import json
 import hashlib
-import traceback
 import logging
 import byoeb.services.chat.constants as constants
 import byoeb.utils.utils as utils
 from datetime import datetime, timezone
-from pydantic import BaseModel, ValidationError
-from typing import Optional, List, Dict
-from opentelemetry import context as otel_context
-from opentelemetry.trace import Status, StatusCode
+from pydantic import BaseModel
+from typing import Optional, List
 
 from byoeb.models.message_category import MessageCategory
 from byoeb.factory import ChannelClientFactory
@@ -20,12 +16,6 @@ from byoeb.services.databases.mongo_db import UserMongoDBService, MessageMongoDB
 from byoeb_core.models.byoeb.message_context import ByoebMessageContext
 from byoeb.application_logger.azure_app_insights import AppInsightsLogHandler
 from byoeb.services.user.onboarding import handle_unknown_user
-from byoeb.observability.tracing import (
-    get_conversation_tracer,
-    parse_queue_payload_and_extract_context,
-    SPAN_CONSUME_MESSAGE,
-    SPAN_CREATE_CONVERSATIONS,
-)
 
 class Conversation(BaseModel):
     user_message: Optional[ByoebMessageContext]
@@ -51,7 +41,6 @@ class MessageConsmerService:
         self._channel_client_factory = channel_client_factory
         self._regular_user_type = bot_config["regular"]["user_type"]
         self._expert_user_types = bot_config["expert"]
-        self._tracer = get_conversation_tracer()
 
     # TODO: Hash can be used or better way to get user by phone number
     def __get_user(
@@ -88,7 +77,7 @@ class MessageConsmerService:
     async def __create_conversations(
         self,
         messages: List[ByoebMessageContext]
-    ) -> List[ByoebMessageContext]:
+    ) -> tuple[list[ByoebMessageContext], list[ByoebMessageContext]]:
         self._logger.info("[__create_conversations] ▶ start")
         conversations = []
         onboard_convs = []
@@ -98,18 +87,37 @@ class MessageConsmerService:
         user_ids = list(set([hashlib.md5(number.encode()).hexdigest() for number in phone_numbers]))
         self._logger.debug("[__create_conversations] phone_numbers=%s user_ids_count=%s", phone_numbers, len(user_ids))
 
-        byoeb_users = await self._user_db_service.get_users(user_ids)
+        try:
+            byoeb_users = await self._user_db_service.get_users(user_ids)
+        except Exception as e:
+            self._logger.exception(
+                "[__create_conversations] user lookup failed: %s", e
+            )
+            byoeb_users = []  # treat all as unknown; onboarding guard below handles them
         self._logger.debug("[__create_conversations] fetched_users=%s", len(byoeb_users))
 
         for m in messages:
             user = self.__get_user(byoeb_users, m.user.phone_number_id)
             if user is None:
-                self._logger.info("[__create_conversations] user_not_found phone=%s -> onboard", m.user.phone_number_id)
+                self._logger.info("[__create_conversations] user_not_found phone=%s -> onboard", utils.mask_phone(getattr(m.user, "phone_number_id", "")))
+                try:
+                    AppInsightsLogHandler.getLogger("onboarding_routing").info(
+                        "routed_to_onboard: user_not_found",
+                        extra={
+                            AppInsightsLogHandler.DETAILS: {
+                                "reason": "user_not_found",
+                                "message_id": m.message_context.message_id,
+                                "phone_number_id": utils.mask_phone(getattr(m.user, "phone_number_id", "")),
+                            }
+                        },
+                    )
+                except Exception as e:
+                    self._logger.warning("[onboarding_routing] telemetry failed: %s", e)
                 onboard_convs.append(m)
                 continue
 
             # minimal peek
-            self._logger.info("[__create_conversations] user_found phone=%s user_type=%s reply_id=%s", m.user.phone_number_id, user.user_type, m.reply_context.reply_id)
+            self._logger.info("[__create_conversations] user_found phone=%s user_type=%s reply_id=%s", utils.mask_phone(getattr(m.user, "phone_number_id", "")), user.user_type, m.reply_context.reply_id)
 
             if self.__is_expert_user_type(user.user_type) and m.reply_context.reply_id is None:
                 # attach last bot message to reply
@@ -162,6 +170,21 @@ class MessageConsmerService:
                     else:
                         # New user needs onboarding
                         self._logger.info("[__create_conversations] no_bot_msg + needs_onboarding -> onboard (msg_id=%s)", m.message_context.message_id)
+                        try:
+                            AppInsightsLogHandler.getLogger("onboarding_routing").info(
+                                "routed_to_onboard: needs_onboarding_no_bot_msg",
+                                extra={
+                                    AppInsightsLogHandler.DETAILS: {
+                                        "reason": "needs_onboarding_no_bot_msg",
+                                        "message_id": m.message_context.message_id,
+                                        "phone_number_id": utils.mask_phone(getattr(m.user, "phone_number_id", "")),
+                                        "has_user_type": user.user_type is not None,
+                                        "has_user_language": user.user_language is not None,
+                                    }
+                                },
+                            )
+                        except Exception as e:
+                            self._logger.warning("[onboarding_routing] telemetry failed: %s", e)
                         onboard_convs.append(m)
                 else:
                     self._logger.info("[__create_conversations] no_bot_msg -> conversations (msg_id=%s)", m.message_context.message_id)
@@ -189,6 +212,7 @@ class MessageConsmerService:
 
             if (bot_message.message_category == constants.USER_TYPE
                 or bot_message.message_category == constants.LANGUAGE_SELECTION
+                or bot_message.message_category == constants.REGISTER_PROMPT
                 or bot_message.message_category == constants.CONSENT):
                 self._logger.info("[__create_conversations] onboarding_flow msg_id=%s bot_cat=%s -> onboard", m.message_context.message_id, bot_message.message_category)
                 onboard_convs.append(conversation)
@@ -203,6 +227,20 @@ class MessageConsmerService:
                 else:
                     # Missing user fields, needs onboarding
                     self._logger.info("[__create_conversations] missing_user_fields -> onboard (msg_id=%s)", m.message_context.message_id)
+                    try:
+                        AppInsightsLogHandler.getLogger("onboarding_routing").info(
+                            "routed_to_onboard: missing_user_fields",
+                            extra={
+                                AppInsightsLogHandler.DETAILS: {
+                                    "reason": "missing_user_fields",
+                                    "message_id": m.message_context.message_id,
+                                    "phone_number_id": utils.mask_phone(getattr(m.user, "phone_number_id", "")),
+                                    "user_id": getattr(user, "user_id", None),
+                                }
+                            },
+                        )
+                    except Exception as e:
+                        self._logger.warning("[onboarding_routing] telemetry failed: %s", e)
                     onboard_convs.append(m)
             else:
                 self._logger.info("[__create_conversations] regular_flow -> conversations (msg_id=%s)", m.message_context.message_id)
@@ -268,27 +306,18 @@ class MessageConsmerService:
     ) -> List[ByoebMessageContext]:
         self._logger.info(f"[consume] Processing {len(messages)} raw message(s)")
         byoeb_messages: List[ByoebMessageContext] = []
-        trace_context_by_message_id: Dict[str, otel_context.Context] = {}
 
         for raw in messages:
             try:
-                byoeb_message, extracted_ctx = parse_queue_payload_and_extract_context(raw)
-            except ValidationError as e:
-                self._logger.warning("[consume] payload validation failed, retrying raw: %s", e)
-                byoeb_message = ByoebMessageContext.model_validate(json.loads(raw))
-                extracted_ctx = None
-            byoeb_messages.append(byoeb_message)
-            if extracted_ctx is not None:
-                trace_context_by_message_id[byoeb_message.message_context.message_id] = extracted_ctx
+                byoeb_messages.append(ByoebMessageContext.model_validate_json(raw))
+            except Exception as e:
+                self._logger.error("[consume] Failed to parse queue message, skipping: %s | raw_preview=%s", e, raw[:200])
+                continue
             self._logger.debug("raw=%s", raw)
         self._logger.debug("byoeb_messages=%s", byoeb_messages)
 
         start_time = datetime.now(timezone.utc).timestamp()
-        with self._tracer.start_as_current_span(SPAN_CREATE_CONVERSATIONS) as create_span:
-            conversations, onboard_convs = await self.__create_conversations(byoeb_messages)
-            create_span.set_attribute("conversation_count", len(conversations))
-            create_span.set_attribute("onboard_count", len(onboard_convs))
-            create_span.set_status(Status(StatusCode.OK))
+        conversations, onboard_convs = await self.__create_conversations(byoeb_messages)
         end_time = datetime.now(timezone.utc).timestamp()
 
         self._logger.info("[consume] conversations=%s onboard=%s create_time=%.3fs", len(conversations), len(onboard_convs), end_time - start_time)
@@ -306,24 +335,16 @@ class MessageConsmerService:
             self._logger.info("[consume] ← handle_unknown_user done")
 
         # build tasks: run each conversation in its extracted trace context when available
-        async def process_one(conv):
+        async def process_one(conv: ByoebMessageContext):
             msg_id = conv.message_context.message_id
-            user_id = getattr(conv.user, "user_id", None) or ""
-            ctx = trace_context_by_message_id.get(msg_id)
-            with self._tracer.start_as_current_span(
-                SPAN_CONSUME_MESSAGE,
-                context=ctx,
-            ) as span:
-                span.set_attribute("message_id", msg_id)
-                span.set_attribute("user_id", str(user_id))
-                conv.user.activity_timestamp = datetime.now(timezone.utc)
-                if conv.user.user_type in self._regular_user_type:
-                    self._logger.debug("[consume] queue user_flow msg_id=%s", msg_id)
-                    return await self.__process_byoebuser_conversation(conv)
-                elif self.__is_expert_user_type(conv.user.user_type):
-                    self._logger.debug("[consume] queue expert_flow msg_id=%s", msg_id)
-                    return await self.__process_byoebexpert_conversation(conv)
-                return None, None, None
+            conv.user.activity_timestamp = datetime.now(timezone.utc)
+            if conv.user.user_type in self._regular_user_type:
+                self._logger.debug("[consume] queue user_flow msg_id=%s", msg_id)
+                return await self.__process_byoebuser_conversation(conv)
+            elif self.__is_expert_user_type(conv.user.user_type):
+                self._logger.debug("[consume] queue expert_flow msg_id=%s", msg_id)
+                return await self.__process_byoebexpert_conversation(conv)
+            return None, None, None
 
         tasks = [process_one(conv) for conv in conversations]
         results = await asyncio.gather(*tasks) if tasks else []

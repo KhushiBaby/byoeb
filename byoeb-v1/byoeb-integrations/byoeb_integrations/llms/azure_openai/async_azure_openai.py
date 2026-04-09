@@ -2,7 +2,7 @@ import threading
 import logging
 from typing import Any, Dict
 from enum import Enum
-from openai import OpenAI, AsyncAzureOpenAI
+from langfuse.openai import AsyncAzureOpenAI
 from byoeb_core.llms.base import BaseLLM
 
 logger = logging.getLogger(__name__)

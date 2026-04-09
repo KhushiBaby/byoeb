@@ -1,26 +1,41 @@
 from typing import AsyncIterator, Dict, Any, Optional, List
 from datetime import datetime
+import os
+
 from byoeb.repositories.mongodb_base_repository import MongoBaseRepository
 from byoeb.repositories.user_repository import UserRepository
-import os
+from byoeb.services.user.utils import ensure_utc_dates
 
 
 class MongoUserRepository(UserRepository, MongoBaseRepository):
 
+    async def _with_utc_user(self, docs: AsyncIterator[Dict[str, Any]]) -> AsyncIterator[Dict[str, Any]]:
+        async for doc in docs:
+            user_section = doc.get("User")
+            if user_section is not None:
+                doc = {**doc, "User": ensure_utc_dates(user_section)}
+            yield doc
+
     async def find_user_by_id(self, user_id: str) -> Optional[Dict[str, Any]]:
-        return await self.find_by_id(user_id)
+        doc = await self.find_by_id(user_id)
+        if doc is not None and "User" in doc:
+            doc = {**doc, "User": ensure_utc_dates(doc["User"])}
+        return doc
 
     async def find_user_by_phone_number(self, phone_number: str) -> Optional[Dict[str, Any]]:
         filter_dict = {"User.phone_number_id": phone_number}
-        return await self._collection.find_one(filter_dict)
+        doc = await self._collection.find_one(filter_dict)
+        if doc is not None and "User" in doc:
+            doc = {**doc, "User": ensure_utc_dates(doc["User"])}
+        return doc
 
     def find_users_by_type(self, user_type: str) -> AsyncIterator[Dict[str, Any]]:
         filter_dict = {"User.user_type": user_type}
-        return self.find_all(filter_dict)
+        return self._with_utc_user(self.find_all(filter_dict))
 
     def find_users_by_types(self, user_types: List[str]) -> AsyncIterator[Dict[str, Any]]:
         filter_dict = {"User.user_type": {"$in": user_types}}
-        return self.find_all(filter_dict)
+        return self._with_utc_user(self.find_all(filter_dict))
 
     def find_test_users_by_types(self, user_types: List[str]) -> AsyncIterator[Dict[str, Any]]:
         test_only = os.getenv("TEST_USERS_ONLY", "false").lower() == "true"
@@ -29,14 +44,14 @@ class MongoUserRepository(UserRepository, MongoBaseRepository):
         }
         if test_only:
             filter_dict["User.test_user"] = True
-        return self.find_all(filter_dict)
+        return self._with_utc_user(self.find_all(filter_dict))
 
     def find_users_by_district(self, district: str) -> AsyncIterator[Dict[str, Any]]:
         filter_dict = {"User.user_location.district": district}
-        return self.find_all(filter_dict)
+        return self._with_utc_user(self.find_all(filter_dict))
 
     def find_test_users(self) -> AsyncIterator[Dict[str, Any]]:
-        return self.find_all({"User.test_user": True})
+        return self._with_utc_user(self.find_all({"User.test_user": True}))
 
     def find_asha_and_test_users(self) -> AsyncIterator[Dict[str, Any]]:
         filter_dict = {
@@ -50,11 +65,14 @@ class MongoUserRepository(UserRepository, MongoBaseRepository):
 
     def find_users_by_phone_numbers(self, phone_numbers: List[str]) -> AsyncIterator[Dict[str, Any]]:
         filter_dict = {"User.phone_number_id": {"$in": phone_numbers}}
-        return self.find_all(filter_dict)
+        return self._with_utc_user(self.find_all(filter_dict))
 
     def find_users_by_ids(self, user_ids: List[str]) -> AsyncIterator[Dict[str, Any]]:
         filter_dict = {"User.user_id": {"$in": user_ids}}
-        return self.find_all(filter_dict)
+        return self._with_utc_user(self.find_all(filter_dict))
+
+    def find_all_users(self) -> AsyncIterator[Dict[str, Any]]:
+        return self._with_utc_user(self.find_all({}))
 
     async def count_users_by_type(self, user_type: str) -> int:
         filter_dict = {"User.user_type": user_type}
@@ -77,11 +95,11 @@ class MongoUserRepository(UserRepository, MongoBaseRepository):
                                        end_timestamp: datetime) -> AsyncIterator[Dict[str, Any]]:
         filter_dict = {
             "User.activity_timestamp": {
-                "$gte": start_timestamp, 
-                "$lte": end_timestamp
+                "$gte": start_timestamp,
+                "$lte": end_timestamp,
             }
         }
-        return self.find_all(filter_dict)
+        return self._with_utc_user(self.find_all(filter_dict))
 
     async def update_user_activity_timestamp(self, user_id: str, timestamp: datetime) -> bool:
         filter_dict = {"_id": user_id}

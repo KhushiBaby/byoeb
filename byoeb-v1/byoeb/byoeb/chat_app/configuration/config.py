@@ -32,6 +32,8 @@ else:
     logger.warning("Environment file not found at %s", environment_path)
 
 # Environment variables
+env_app = os.getenv("APP_ENV", "LOCAL").lower()
+
 # Whatsapp
 env_whatsapp_token = os.getenv("WHATSAPP_VERIFICATION_TOKEN")
 env_whatsapp_auth_token = os.getenv("WHATSAPP_AUTH_TOKEN")

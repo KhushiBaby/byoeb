@@ -120,7 +120,7 @@ def channel_response_factory():
         ("false", ["asha"], "find_users_by_types", (["asha"],)),
         ("true", ["asha"], "find_test_users_by_types", (["asha"],)),
         ("true", [], "find_test_users", ()),
-        ("false", [], "find_all", ({},)),
+        ("false", [], "find_all_users", ()),
     ],
 )
 async def test_pick_candidates_selects_expected_user_source(
@@ -139,7 +139,7 @@ async def test_pick_candidates_selects_expected_user_source(
     user_repo.find_users_by_types.return_value = aiter(docs)
     user_repo.find_test_users_by_types.return_value = aiter(docs)
     user_repo.find_test_users.return_value = aiter(docs)
-    user_repo.find_all.return_value = aiter(docs)
+    user_repo.find_all_users.return_value = aiter(docs)
 
     dyk_repo = MagicMock()
     dyk_repo.find_pending_of_langs.return_value = aiter([])
@@ -161,7 +161,7 @@ async def test_pick_candidates_selects_expected_user_source(
         "find_users_by_types": user_repo.find_users_by_types,
         "find_test_users_by_types": user_repo.find_test_users_by_types,
         "find_test_users": user_repo.find_test_users,
-        "find_all": user_repo.find_all,
+        "find_all_users": user_repo.find_all_users,
     }
     methods[expected_method].assert_called_once_with(*expected_args)
     for name, method in methods.items():
@@ -179,7 +179,7 @@ async def test_pick_candidates_filters_pending_users_and_yields_buffered_batches
     monkeypatch.setenv("TEST_USERS_ONLY", "false")
 
     user_repo = MagicMock()
-    user_repo.find_all.return_value = aiter(
+    user_repo.find_all_users.return_value = aiter(
         [
             user_doc_factory(user_id="u-1"),
             user_doc_factory(user_id="u-2"),

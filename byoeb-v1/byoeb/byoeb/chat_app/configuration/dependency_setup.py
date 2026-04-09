@@ -1,54 +1,21 @@
 import byoeb.chat_app.configuration.config as env_config
 from byoeb.chat_app.configuration.config import app_config
+from langfuse import Langfuse
 
-import time, json, traceback, uuid, asyncio
 import logging
 
 _logger = logging.getLogger("flow")
 
-def _safe_json(obj):
-    try:
-        return json.dumps(obj, ensure_ascii=False)[:50_000]  # cap size
-    except Exception:
-        return f"<non-serializable type={type(obj).__name__}>"
-
-def log_async_call(name):
-    def decorator(fn):
-        if asyncio.iscoroutinefunction(fn):
-            async def wrapper(*args, **kwargs):
-                rid = str(uuid.uuid4())[:8]  # request trace id
-                t0 = time.perf_counter()
-                _logger.info(f"[{rid}] ▶ {name} args={_safe_json(args)} kwargs={_safe_json(kwargs)}")
-                try:
-                    result = await fn(*args, **kwargs)
-                    dt = (time.perf_counter() - t0) * 1000
-                    _logger.info(f"[{rid}] ◀ {name} ok in {dt:.1f}ms result={_safe_json(getattr(result, '__dict__', result))}")
-                    return result
-                except Exception as e:
-                    dt = (time.perf_counter() - t0) * 1000
-                    _logger.exception(f"[{rid}] ✖ {name} failed in {dt:.1f}ms: {e}\n{traceback.format_exc()}")
-                    raise
-            return wrapper
-        else:
-            def wrapper(*args, **kwargs):
-                rid = str(uuid.uuid4())[:8]
-                t0 = time.perf_counter()
-                _logger.info(f"[{rid}] ▶ {name} args={_safe_json(args)} kwargs={_safe_json(kwargs)}")
-                try:
-                    result = fn(*args, **kwargs)
-                    dt = (time.perf_counter() - t0) * 1000
-                    _logger.info(f"[{rid}] ◀ {name} ok in {dt:.1f}ms result={_safe_json(getattr(result, '__dict__', result))}")
-                    return result
-                except Exception as e:
-                    dt = (time.perf_counter() - t0) * 1000
-                    _logger.exception(f"[{rid}] ✖ {name} failed in {dt:.1f}ms: {e}\n{traceback.format_exc()}")
-                    raise
-            return wrapper
-    return decorator
-
 
 # App logger (logger name is app identity, not environment-specific)
 AZURE_LOGGER_NAME = "khushi-baby-asha-logger"
+
+langfuse = Langfuse(environment=env_config.env_app, blocked_instrumentation_scopes=[
+    "azure.core.tracing.ext.opentelemetry_span",  # without this langfuse gets bombarded with 0-length azure queue poll responses
+    "byoeb.listener.message_consumer",  # our custom queue consumer traces are not relevant in langfuse's context, generic OTEL sufficiently exposes these
+    "opentelemetry.instrumentation.fastapi",  # incoming HTTP requests - just noise appearing in Langfuse when generic OTEL already logs these
+    "opentelemetry.instrumentation.requests",  # outgoing HTTP requests - same reason as above
+])
 
 if env_config.env_appinsights_connection_string:
     from azure.monitor.opentelemetry import configure_azure_monitor
@@ -61,11 +28,6 @@ if env_config.env_appinsights_connection_string:
 else:
     _logger.warning("App Insights connection string not set. Skipping Azure logging.")
 
-# Register Langfuse OTLP span exporter so conversation-flow OTEL spans
-# (process_workflow, query_rewrite, etc.) appear in Langfuse.
-# Must run after configure_azure_monitor because that sets the global TracerProvider.
-from byoeb.observability.langfuse_otel_export import setup_langfuse_otel_export
-setup_langfuse_otel_export()
 
 import byoeb.utils.utils as byoeb_utils
 from byoeb.factory import (

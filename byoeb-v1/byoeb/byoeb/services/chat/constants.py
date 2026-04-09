@@ -61,5 +61,6 @@ USER_DB_QUERIES = "user_db_queries"
 
 USER_TYPE = "user_type"
 LANGUAGE_SELECTION = "language_selection"
+REGISTER_PROMPT = "register_prompt"
 CONSENT = "consent"
 THANK_YOU = "thank_you"

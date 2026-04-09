@@ -1,6 +1,6 @@
 
 import io
-from openai import AsyncAzureOpenAI
+from langfuse.openai import AsyncAzureOpenAI
 from openai.lib.azure import AsyncAzureADTokenProvider
 from enum import Enum
 from byoeb_core.translators.speech.base import BaseSpeechTranslator

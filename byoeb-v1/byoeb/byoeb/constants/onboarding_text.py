@@ -103,35 +103,55 @@ THANK_YOU_DICT = {
     # Note: OTHERS user type uses ASHA messages (fallback handled in code)
 }
 
-ONBOARD_WELCOME_MESSAGE_DICT = {
+# Common onboarding phrases accepted in all languages (ASHA, ANM, Others variants).
+# Used together with language-specific phrases to avoid duplication.
+ONBOARD_GLOBAL_PHRASES = [
+    "onboard asha",
+    "onboard-asha",
+    "onboard anm",
+    "onboard-anm",
+    "onboard others",
+    "onboard-others",
+]
+
+# Language-specific onboarding phrases only (no English "onboard *" here; those are in ONBOARD_GLOBAL_PHRASES).
+ONBOARD_LANGUAGE_SPECIFIC_PHRASES = {
     LanguageCode.HINDI.value: [
         "में एक आशा हूँ और मुझे आशा सहेली बोट से जुड़ना है",
         "मैं आशा हूँ और मुझे आशा सहेली बोट से जुड़ना है",
         "आशा सहेली बोट से जुड़ना है",
         "आशा सहेली से जुड़ना है",
-        "onboard asha",  # Also accept English "onboard asha" for Hindi users
-        "onboard-asha"
     ],
-    LanguageCode.ENGLISH.value: ["onboard asha", "onboard-asha", "ONBOARD ASHA"],
+    LanguageCode.ENGLISH.value: [
+        "ONBOARD ASHA",
+        "ONBOARD ANM",
+        "ONBOARD OTHERS",
+    ],
     LanguageCode.MARATHI.value: [
-        "मी आशा आहे आणि मला आशा सहेली बॉटमध्ये सामील व्हायचे आहे",
         "मी आशा आहे आणि मला आशा सहेली बॉटमध्ये सामील व्हायचे आहे",
         "आशा सहेली बॉटमध्ये सामील व्हायचे आहे",
         "आशा सहेली बॉटमध्ये सामील",
         "आशा सहेली सामील व्हायचे आहे",
-        "onboard asha",  # Also accept English for Marathi users
-        "onboard-asha"
     ],
     LanguageCode.TELUGU.value: [
-        "నేను ఆశాను మరియు ఆశా సహేలి బాట్‌లో చేరాలనుకుంటున్నాను",
         "నేను ఆశాను మరియు ఆశా సహేలి బాట్‌లో చేరాలనుకుంటున్నాను",
         "ఆశా సహేలి బాట్‌లో చేరాలనుకుంటున్నాను",
         "ఆశా సహేలి బాట్‌లో చేరాలి",
         "ఆశా సహేలి చేరాలనుకుంటున్నాను",
-        "onboard asha",  # Also accept English for Telugu users
-        "onboard-asha"
     ],
 }
+
+# Phrases that indicate user wants to register (onboarding intent). Used by is_onboard() and the
+# language-selection guard. Each language: language-specific phrases + global phrases.
+ONBOARD_WELCOME_MESSAGE_DICT = {
+    lang: ONBOARD_LANGUAGE_SPECIFIC_PHRASES[lang] + ONBOARD_GLOBAL_PHRASES
+    for lang in ONBOARD_LANGUAGE_SPECIFIC_PHRASES
+}
+
+# Shown when user is in onboarding path but message is not onboarding-like. Role is not yet known.
+REGISTER_PROMPT_TEXT = (
+    "To register with ASHA Saheli, please send 'onboard asha', 'onboard anm', or 'onboard others'."
+)
 
 # Suggested questions list text + items
 RELATED_QUESTIONS = {

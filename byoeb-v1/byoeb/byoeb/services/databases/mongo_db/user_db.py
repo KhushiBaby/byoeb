@@ -10,7 +10,7 @@ from pymongo.errors import BulkWriteError
 from byoeb_core.models.byoeb.user import User
 from byoeb.factory import MongoDBFactory
 from byoeb.services.databases.mongo_db.base import BaseMongoDBService
-from byoeb.utils.utils import ensure_utc_dates
+from byoeb.services.user.utils import ensure_utc_dates
 
 
 class UserMongoDBService(BaseMongoDBService):
@@ -94,7 +94,7 @@ class UserMongoDBService(BaseMongoDBService):
         """Get the user's last activity timestamp with caching."""
         cached_data = await self.cache.get(user_id)
         if cached_data is not None and isinstance(cached_data, dict):
-            user = User(**ensure_utc_dates(cached_data))
+            user = User(**cached_data)
             activity_timestamp = user.activity_timestamp
             if activity_timestamp is None:
                 activity_timestamp = user.created_timestamp 
@@ -102,13 +102,12 @@ class UserMongoDBService(BaseMongoDBService):
 
         repository_factory = await self._get_repository_factory()
         user_repository = await repository_factory.get_user_repository()
-        user_obj = await user_repository.find_by_id(user_id)
+        user_obj = await user_repository.find_user_by_id(user_id)
 
         if user_obj is None:
             return None
 
-        user_data = ensure_utc_dates(user_obj["User"])
-        user = User(**user_data)
+        user = User(**user_obj["User"])
         activity_timestamp = user.activity_timestamp
         if activity_timestamp is None:
             activity_timestamp = user.created_timestamp
@@ -120,13 +119,17 @@ class UserMongoDBService(BaseMongoDBService):
         """Fetch multiple users from the database using repository."""
         repository_factory = await self._get_repository_factory()
         user_repository = await repository_factory.get_user_repository()
-        users_obj = [doc async for doc in user_repository.find_all({"_id": {"$in": user_ids}})]
+        users_obj = [doc async for doc in user_repository.find_users_by_ids(user_ids)]
         result = []
         for user_obj in users_obj:
             try:
-                user_data = ensure_utc_dates(user_obj["User"])
-                result.append(User(**user_data))
-            except Exception:
+                result.append(User(**user_obj["User"]))
+            except Exception as e:
+                self._logger.warning(
+                    "get_users: skipping malformed user document user_id=%s error=%s",
+                    user_obj.get("User", {}).get("user_id"),
+                    e,
+                )
                 continue
         return result
     
@@ -135,7 +138,19 @@ class UserMongoDBService(BaseMongoDBService):
         repository_factory = await self._get_repository_factory()
         user_repository = await repository_factory.get_user_repository()
         users_obj = user_repository.find_users_by_type(user_type)
-        return [User(**user_obj["User"]) async for user_obj in users_obj]
+        result: List[User] = []
+        async for user_obj in users_obj:
+            try:
+                result.append(User(**user_obj["User"]))
+            except Exception as e:
+                self._logger.warning(
+                    "get_users_by_type: skipping malformed user document user_type=%s user_id=%s error=%s",
+                    user_type,
+                    user_obj.get("User", {}).get("user_id"),
+                    e,
+                )
+                continue
+        return result
     
     def user_activity_update_query(self, user: User, qa: Optional[Dict[str, Any]] = None, skip_timestamp: bool = False):
         """Generate update query for user activity."""

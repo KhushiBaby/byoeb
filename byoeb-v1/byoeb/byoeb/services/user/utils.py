@@ -1,6 +1,19 @@
 import hashlib
-from byoeb_core.models.byoeb.user import User
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
+
+from byoeb_core.models.byoeb.user import User
+
+
+def ensure_utc_dates(obj: Any) -> Any:
+    """Recursively ensure datetime values are UTC-aware (used when hydrating User from MongoDB)."""
+    if isinstance(obj, datetime):
+        return obj.replace(tzinfo=timezone.utc) if obj.tzinfo is None else obj
+    if isinstance(obj, dict):
+        return {k: ensure_utc_dates(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [ensure_utc_dates(v) for v in obj]
+    return obj
 
 def get_experts_numbers(
     experts: Dict[str, List[str]]

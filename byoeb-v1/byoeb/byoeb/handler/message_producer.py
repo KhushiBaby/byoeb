@@ -1,6 +1,5 @@
 import json
 import logging
-import traceback
 import byoeb_integrations.channel.whatsapp.validate_message as wa_validator
 from byoeb.services.databases.mongo_db.message_db import MessageMongoDBService
 from typing import Any
@@ -8,11 +7,6 @@ from byoeb.factory import QueueProducerFactory
 from byoeb.services.chat.message_producer import MessageProducerService
 from byoeb_core.models.byoeb.response import ByoebResponseModel, ByoebStatusCodes
 from byoeb.application_logger.azure_app_insights import AppInsightsLogHandler
-from byoeb.observability.tracing import (
-    get_conversation_tracer,
-    SPAN_VALIDATE_CHANNEL,
-    SPAN_GET_PRODUCER,
-)
 
 class QueueProducerHandler:
     def __init__(
@@ -26,7 +20,6 @@ class QueueProducerHandler:
         self._queue_provider = config["app"]["queue_provider"]
         self.queue_producer_factory = queue_producer_factory
         self.message_db_service = message_db_service
-        self._tracer = get_conversation_tracer()
 
     async def __get_or_create_message_producer(
         self,
@@ -54,10 +47,7 @@ class QueueProducerHandler:
         self._logger.debug("[handle]   in message=%s", message)
 
         self._logger.debug("[handle] → __validate_channel_and_get_message_type")
-        with self._tracer.start_as_current_span(SPAN_VALIDATE_CHANNEL) as span:
-            channel, message_type = await self.__validate_channel_and_get_message_type(message)
-            span.set_attribute("channel", channel or "")
-            span.set_attribute("message_type", message_type or "")
+        channel, message_type = await self.__validate_channel_and_get_message_type(message)
         self._logger.debug("[handle] ← __validate... out channel=%s, message_type=%s", channel, message_type)
 
         if message_type is None:
@@ -86,10 +76,7 @@ class QueueProducerHandler:
             )
 
         try:
-            with self._tracer.start_as_current_span(SPAN_GET_PRODUCER):
-                self._logger.debug("[handle] → __get_or_create_message_producer(message_type=%s)", message_type)
-                message_producer_service = await self.__get_or_create_message_producer(message_type)
-                self._logger.debug("[handle] ← __get_or_create... out producer=%s", type(message_producer_service).__name__)
+            message_producer_service = await self.__get_or_create_message_producer(message_type)
         except Exception as e:
             self._logger.exception("[handle] ✖ producer init failed: %s", e)
             return ByoebResponseModel(

@@ -8,19 +8,20 @@ exclude = ["**/tests/**", "**/tests"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-openai = "1.58.1"
+openai = "2.30.0"
 chromadb = "0.5.23"
-llama-index-embeddings-azure-openai = "0.2.5"
+llama-index-embeddings-azure-openai = "0.5.2"
 azure-storage-queue = "12.12.0"
 azure-storage-blob = "12.24.0"
 azure-cognitiveservices-speech = "1.41.1"
 azure-ai-translation-text = "1.0.1"
 pymongo = "^4.15.2"
-llama-index-vector-stores-chroma = "0.3.0"
+llama-index-vector-stores-chroma = "0.5.5"
 azure-search-documents = "11.5.2"
 byoeb-core = {path = "../byoeb-core", develop = true}
 pytest-mock = "^3.14.1"
 grapheme = "^0.6.0"
+langfuse = "3.14.5"
 
 
 [tool.poetry.group.dev.dependencies]
