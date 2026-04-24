@@ -32,10 +32,9 @@ class ByoebUserSendResponse(Handler):
         self,
         channel_type
     ) -> BaseChannelService:
-        from byoeb.chat_app.configuration.dependency_setup import channel_client_factory
         if channel_type == "whatsapp":
-            from byoeb.services.channel.whatsapp import WhatsAppService
-            return WhatsAppService(channel_client_factory)
+            from byoeb.chat_app.configuration.dependency_setup import whatsapp_service
+            return whatsapp_service
         return None
 
     def __prepare_db_queries(
@@ -271,12 +270,12 @@ class ByoebUserSendResponse(Handler):
         self._logger.debug("[send] query_type=%s", query_type)
         self._logger.debug("[send] status=%s", status)
 
-        byoeb_user_message.message_context.additional_info = {
+        byoeb_user_message.message_context.additional_info.update({
             # verification_status: byoeb_user_verification_status,
             constants.RELATED_QUESTIONS: related_questions,
             constants.QUERY_TYPE: query_type,
             constants.STATUS: status
-        }
+        })
         self._logger.debug("[send] creating bot_to_user_convs via channel_service.create_conv")
         bot_to_user_convs = channel_service.create_conv(
             byoeb_user_message,

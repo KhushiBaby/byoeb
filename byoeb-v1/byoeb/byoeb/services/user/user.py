@@ -247,6 +247,7 @@ class UserService(BaseUserService):
                 audience=user.audience,
                 created_timestamp=datetime.now(timezone.utc),
                 additional_info=user.additional_info,
+                tenant_id=user.tenant_id,
             )
             byoeb_users.append(new_user)
         json_data_users = self.__prepare_user_insert_data(byoeb_users)
@@ -287,7 +288,7 @@ class UserService(BaseUserService):
     async def aget(
         self,
         phone_number_ids: List[str]
-    ) -> List[str]:
+    ) -> List[dict[str, Any]]:
         user_ids = user_utils.get_user_ids_from_phone_number_ids(phone_number_ids)
         users_data = await self.__get_users_data(user_ids)
         fetched_ids = [user.phone_number_id for user in users_data]

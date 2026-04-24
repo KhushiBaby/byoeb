@@ -48,9 +48,9 @@ class MongoDBFactory:
                 raise RuntimeError("Database name must be specified in the mongodb connection string")
             tls_enabled = _is_tls_enabled(connection_string)
             if tls_enabled:
-                self._client = AsyncMongoClient(connection_string, tlsCAFile=certifi.where())
+                self._client = AsyncMongoClient(connection_string, tlsCAFile=certifi.where(), uuidRepresentation="standard", tz_aware=True)
             else:
-                self._client = AsyncMongoClient(connection_string)
+                self._client = AsyncMongoClient(connection_string, uuidRepresentation="standard", tz_aware=True)
             self._db = self._client[db_name]
             return self._db
     

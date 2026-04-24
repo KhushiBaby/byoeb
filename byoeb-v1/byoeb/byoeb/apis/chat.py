@@ -1,8 +1,7 @@
 import base64
-from datetime import datetime, timezone
 import logging
-import json
 import uuid
+from datetime import datetime, timezone
 from typing import Any, List, Dict, Literal, Set
 import byoeb.chat_app.configuration.dependency_setup as dependency_setup
 from pydantic import BaseModel, Field, PositiveInt
@@ -14,9 +13,10 @@ from byoeb_core.models.byoeb.message_context import (
 )
 from byoeb.models.message_category import MessageCategory
 from byoeb.services.user.utils import get_user_ids_from_phone_number_ids
-from byoeb.utils.utils import mcp_get_phone_number
-from fastapi import APIRouter, Query, Body
+from fastapi import APIRouter, Query, Body, Depends
 from fastapi.responses import JSONResponse
+from byoeb.services.auth.dependencies import get_active_phone_id, require_permissions, verify_whatsapp_signature
+from byoeb.services.auth.models import AuthPermission, AshaTenantIntegration
 import byoeb.services.chat.constants as chat_constants
 import byoeb.utils.utils as utils
 
@@ -25,22 +25,38 @@ from byoeb_core.models.whatsapp.requests.media_request import MediaData
 # ---------------------------------------------------------
 # Setup
 # ---------------------------------------------------------
-
 CHAT_API_NAME = "chat_api"
 chat_apis_router = APIRouter(tags=["Chat"])
 _logger = logging.getLogger(CHAT_API_NAME)
 
+
+def _sanitize_wa_body(body: dict[str, Any]) -> dict[str, Any]:
+    try:
+        entry = body.get("entry", [{}])[0]
+        change = entry.get("changes", [{}])[0].get("value", {})
+        return {
+            "phone_number_id": change.get("metadata", {}).get("phone_number_id"),
+            "message_types": [message.get("type") for message in change.get("messages", [])],
+            "n_contacts": len(change.get("contacts", [])),
+        }
+    except Exception:
+        return {"raw": "[unparseable]"}
+
 # ---------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------
+
 @chat_apis_router.post("/receive", summary="Handle incoming WhatsApp messages")
-async def receive(body: Dict[str, Any] = Body(..., description="Raw WhatsApp webhook payload")) -> JSONResponse:
+async def receive(
+    body: Dict[str, Any] = Body(..., description="Raw WhatsApp webhook payload"),
+    integration: AshaTenantIntegration = Depends(verify_whatsapp_signature)
+) -> JSONResponse:
     """
     Handles an incoming WhatsApp message from a user.
     The message is processed by the message_producer_handler.
     """
-    _logger.info(f"Received WhatsApp request: {json.dumps(body, ensure_ascii=False)}")
-    response = await dependency_setup.message_producer_handler.handle(body)
+    _logger.info("Received WhatsApp request: %s", _sanitize_wa_body(body))
+    response = await dependency_setup.message_producer_handler.handle(body, str(integration.id))
     _logger.info(f"Handler response: {response}")
     return JSONResponse(
         status_code=response.status_code,
@@ -48,11 +64,8 @@ async def receive(body: Dict[str, Any] = Body(..., description="Raw WhatsApp web
     )
 
 
-@chat_apis_router.get("/get_bot_messages", summary="Fetch bot messages after a given timestamp")
-async def get_bot_messages(
-    timestamp: int = Query(..., description="Unix timestamp to fetch messages since"),
-    length: PositiveInt = 1000
-) -> List[ByoebMessageContext]:
+@chat_apis_router.get("/get_bot_messages", summary="Fetch bot messages after a given timestamp", dependencies=[Depends(require_permissions(AuthPermission.MESSAGES_READ))])
+async def get_bot_messages(timestamp: int = Query(..., description="Unix timestamp to fetch messages since"), length: PositiveInt = 1000) -> List[ByoebMessageContext]:
     """
     Retrieves all bot messages stored in the database
     after the specified timestamp.
@@ -107,7 +120,9 @@ def chat_mcps_router(mcp):
 
         def add_audio(self, features, info):
             if "audio" in features and "mime_type" in info and "data" in info:
-                self._items.append(("Audio", (info["mime_type"], base64.b64encode(info["data"]))))
+                data = info["data"]
+                audio_b64 = data if isinstance(data, str) else base64.b64encode(data).decode("utf-8")
+                self._items.append(("Audio", (info["mime_type"], audio_b64)))
             return self
 
         def build(self) -> list[tuple[str, Any]]:
@@ -118,8 +133,13 @@ def chat_mcps_router(mcp):
         """
         Ask any health-related query and get a response.
         """
-        phone_number = mcp_get_phone_number()
-        user_id = get_user_ids_from_phone_number_ids([phone_number])[0]
+        phone_number_id = get_active_phone_id()
+        if not phone_number_id:
+            return AshaChatResponse(category="unknown_user", text=(
+                "Before I can answer your question, you must register yourself as an ASHA user. "
+                "Shall I start with the registration?"
+            ))
+        user_id = get_user_ids_from_phone_number_ids([phone_number_id])[0]
         users = await dependency_setup.user_db_service.get_users([user_id])
 
         if len(users) == 0:

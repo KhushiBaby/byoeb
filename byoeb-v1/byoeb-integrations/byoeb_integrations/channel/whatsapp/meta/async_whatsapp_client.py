@@ -68,9 +68,9 @@ class AsyncWhatsAppClient(ABC):
         request_timeout = 20,
         keepalive_timeout = 60
     ):
-        self.phone_number_id = phone_number_id.strip()
+        self.phone_number_id = phone_number_id.strip().replace("\n", "").replace("\r", "")
         self._session = None
-        self._bearer_token = bearer_token.strip()
+        self._bearer_token = bearer_token.strip().replace("\n", "").replace("\r", "")
         self.root = f"{self.__BASE_URL}{self.phone_number_id}"
         self._reuse_client = reuse_client
         self._parallel_connection_count = parallel_connection_count

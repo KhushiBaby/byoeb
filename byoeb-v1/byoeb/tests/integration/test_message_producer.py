@@ -1,26 +1,15 @@
-import os
-import sys
 import time
 import uuid
-import requests
 
 
-BASE_URL = os.getenv("RECIEVE_URL")
-PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID")
-USER_NAME = os.getenv("USER_NAME", "byoeb-user")
-if BASE_URL is None or PHONE_NUMBER_ID is None or USER_NAME is None:
-    print("Environment variables are missing")
-    sys.exit(1)
-
-username_slug = USER_NAME.lower().replace(" ", "-")
-
-def _build_status_payload(errors=None):
+def _build_status_payload(*, bot_phone_number_id: str, username: str, phone_number_id: str, errors=None):
+    username_slug = username.lower().replace(" ", "-")
     current_timestamp = str(int(time.time()))
     status = {
         "id": f"wamid.{username_slug}.{uuid.uuid4().hex}",
         "status": "sent",
         "timestamp": current_timestamp,
-        "recipient_id": PHONE_NUMBER_ID,
+        "recipient_id": phone_number_id,
         "conversation": {
             "id": f"{username_slug}-conversation",
             "expiration_timestamp": current_timestamp,
@@ -45,11 +34,11 @@ def _build_status_payload(errors=None):
                     {
                         "value": {
                             "messaging_product": "whatsapp",
-                            "metadata": {
-                                "display_phone_number": PHONE_NUMBER_ID,
-                                "phone_number_id": PHONE_NUMBER_ID,
-                            },
                             "statuses": [status],
+                            "metadata": {
+                                "display_phone_number": bot_phone_number_id,
+                                "phone_number_id": bot_phone_number_id,
+                            },
                         },
                         "field": "messages",
                     }
@@ -59,20 +48,19 @@ def _build_status_payload(errors=None):
     }
 
 
-def test_status_payload_without_errors_returns_success():
-    payload = _build_status_payload()
-    response = requests.post(BASE_URL, json=payload, timeout=15)
+async def test_status_payload_without_errors_returns_success(envs, temp_user, whatsapp_webhook):
+    with temp_user() as user:
+        payload = _build_status_payload(bot_phone_number_id=envs.whatsapp_phone_number_id, username=user.user_name, phone_number_id=user.phone_number_id)
+        response = whatsapp_webhook(payload)
     assert response.status_code == 200
 
 
-def test_status_payload_with_errors_returns_success():
-    errors = [
-        {
+def test_status_payload_with_errors_returns_success(envs, temp_user, whatsapp_webhook):
+    with temp_user() as user:
+        payload = _build_status_payload(bot_phone_number_id=envs.whatsapp_phone_number_id, username=user.user_name, phone_number_id=user.phone_number_id, errors=[{
             "code": 131000,
             "title": "Temporarily Unavailable",
             "message": "Upstream provider was not reachable",
-        }
-    ]
-    payload = _build_status_payload(errors=errors)
-    response = requests.post(BASE_URL, json=payload, timeout=15)
+        }])
+        response = whatsapp_webhook(payload)
     assert response.status_code == 200

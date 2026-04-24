@@ -1,15 +1,12 @@
-import os
 import sys
 
 from openpyxl import Workbook, load_workbook
 import pytest
-import requests
 
 # Skip entire test module if onboarding can't be imported (e.g., Azure Monitor dependency issue)
 onboarding = pytest.importorskip("byoeb.scripts.onboarding", reason="onboarding module import failed (likely Azure Monitor dependency issue)")
 
 
-BASE_URL = os.getenv("RECIEVE_URL", "http://0.0.0.0:8000").replace("receive", "").rstrip("/")
 DUMMY_PHONE_NUMBERS = ["9990000000001", "9990000000002"]
 
 
@@ -54,18 +51,18 @@ def onboarding_excel(tmp_path) -> str:
 
 
 @pytest.fixture
-def cleanup_dummy_users():
-    requests.delete(f"{BASE_URL}/delete_users", headers={"Content-Type": "application/json", "Accept": "application/json"}, json=DUMMY_PHONE_NUMBERS)
+def cleanup_dummy_users(envs, auth_session):
+    auth_session.delete(f"{envs.base_url}/delete_users", json=DUMMY_PHONE_NUMBERS)
     yield DUMMY_PHONE_NUMBERS
-    requests.delete(f"{BASE_URL}/delete_users", headers={"Content-Type": "application/json", "Accept": "application/json"}, json=DUMMY_PHONE_NUMBERS)
+    auth_session.delete(f"{envs.base_url}/delete_users", json=DUMMY_PHONE_NUMBERS)
 
 
-def test_onboarding_registers_and_exports_users(monkeypatch, onboarding_excel, cleanup_dummy_users, tmp_path):
+def test_onboarding_registers_and_exports_users(monkeypatch, onboarding_excel, cleanup_dummy_users, tmp_path, envs, auth_session):
     output_sheet = tmp_path / "output.xlsx"
-    monkeypatch.setattr(sys, "argv", ["onboarding.py", "--file", onboarding_excel, "--url", BASE_URL, "--sheet", str(output_sheet)])
-    onboarding.main()
+    monkeypatch.setattr(sys, "argv", ["onboarding.py", "--file", onboarding_excel, "--url", str(envs.base_url), "--sheet", str(output_sheet)])
+    onboarding.main(session=auth_session)
 
-    get_response = requests.post(f"{BASE_URL}/get_users", headers={"Accept": "application/json", "Content-Type": "application/json"}, json=cleanup_dummy_users)
+    get_response = auth_session.post(f"{envs.base_url}/get_users", json=cleanup_dummy_users)
     get_response.raise_for_status()
     users = get_response.json()
 
@@ -87,11 +84,11 @@ def test_onboarding_registers_and_exports_users(monkeypatch, onboarding_excel, c
     assert all("district" in str(row.get("location", "")).lower() for row in exported_rows)
 
 
-def test_onboarding_updates_users(monkeypatch, onboarding_excel, cleanup_dummy_users):
-    monkeypatch.setattr(sys, "argv", ["onboarding.py", "--file", onboarding_excel, "--url", BASE_URL, "--update"])
-    onboarding.main()
+def test_onboarding_updates_users(monkeypatch, onboarding_excel, cleanup_dummy_users, envs, auth_session):
+    monkeypatch.setattr(sys, "argv", ["onboarding.py", "--file", onboarding_excel, "--url", str(envs.base_url), "--update"])
+    onboarding.main(session=auth_session)
 
-    get_response = requests.post(f"{BASE_URL}/get_users", headers={"Accept": "application/json", "Content-Type": "application/json"}, json=cleanup_dummy_users)
+    get_response = auth_session.post(f"{envs.base_url}/get_users", json=cleanup_dummy_users)
     get_response.raise_for_status()
     users = get_response.json()
     assert len(users) == len(cleanup_dummy_users)

@@ -1,4 +1,4 @@
-from .user_enums import UserType, LanguageCode
+from .user_enums import LanguageCode, UserType
 
 # Display names shown in the language selector list
 LANGUAGE_DISPLAY_NAMES = ["हिंदी", "मराठी", "English", "తెలుగు"]
@@ -23,7 +23,7 @@ MESSAGE_DICT = {
     },
     LanguageCode.MARATHI.value: {
         "text": "🙏🏽 नमस्कार! मी खुशी बेबी कडून आशा सहेली आहे. तुम्ही कोण आहात?",
-        "options": ["आशा", "नर्सदीदी / ए.एन.एम", "इतर"],
+        "options": ["आशा", "ए.एन.एम", "इतर"],
     },
     LanguageCode.TELUGU.value: {
         "text": "🙏🏽 నమస్తే! నేను ఖుషి బేబీ నుండి ఆశ సహेली. మీరు ఎవరు?",
@@ -45,8 +45,9 @@ Researchers will log and analyze your messages only for research purposes, and w
             "options": ["Yes", "No"],
         },
         LanguageCode.MARATHI.value: {
-            "text": """मी आशा सहेली आहे, खुशी बेबी कडून मोफत उपलब्ध असलेले 24x7 टूल. मी तुमच्या आशा कार्याशी संबंधित कोणत्याही प्रश्नाचे उत्तर देण्यासाठी येथे आहे.
-शोधक फक्त संशोधन उद्देशांसाठी तुमच्या संदेशांचे रेकॉर्ड आणि विश्लेषण करतील, आणि ते कोणत्याही एएनएम, सीएचओ किंवा सरकारी अधिकाऱ्यांबरोबर सामायिक करणार नाहीत. तुम्ही सहमत असाल तर कृपया 'होय' वर क्लिक करा किंवा मला संदेश पाठवणे सुरू ठेवा; अन्यथा, 'नाही' सांगा.""",
+            "text": """मी आशा सहेली आहे, तुमच्या शंकांचे निराकरण करण्यासाठी खुशी बेबी संस्थेने देऊ केलेले एक विनामूल्य, 24x7 कार्यरत साधन. तुमच्या कामाबद्दल तुमच्या कोणत्याही प्रश्नांची मी उत्तरे देऊ शकते.
+तुमचे मेसेज कोणत्याही सरकारी अधिकाऱ्यांशी शेअर केले जाणार नाहीत. ते केवळ संशोधनाच्या उद्देशाने वापरले जातील.
+तुम्ही सहमत असल्यास, कृपया 'होय' वर क्लिक करा; अन्यथा, "नाही" बटनावर क्लिक करा""",
             "options": ["होय", "नाही"],
         },
         LanguageCode.TELUGU.value: {
@@ -67,8 +68,9 @@ Researchers will log and analyze your messages only for research purposes, and w
             "options": ["Yes", "No"],
         },
         LanguageCode.MARATHI.value: {
-            "text": """मी आशा सहेली आहे, खुशी बेबी कडून मोफत उपलब्ध असलेला 24x7 टूल. मी आशांच्या कार्याशी संबंधित कोणत्याही प्रश्नाचे उत्तर देण्यासाठी येथे आहे. जेव्हा मला एखाद्या आशा च्या प्रश्नाचे उत्तर माहित नसते, तेव्हा मी तुमच्याकडून मदतीची विनंती करीन.
-शोधक फक्त संशोधन उद्देशांसाठी तुमच्या संदेशांचे रेकॉर्ड आणि विश्लेषण करतील, आणि ते कोणत्याही आशा, सीएचओ किंवा सरकारी अधिकाऱ्यांबरोबर सामायिक करणार नाहीत. तुम्ही सहमत असाल तर कृपया 'होय' वर क्लिक करा किंवा मला संदेश पाठवणे सुरू ठेवा; अन्यथा, 'नाही' सांगा.""",
+            "text": """मी आशा सहेली आहे, आशांच्या शंकांचे निराकरण करण्यासाठी खुशी बेबी संस्थेने देऊ केलेले एक विनामूल्य, 24x7 कार्यरत साधन. आशा कार्यकर्त्यांना त्यांच्या कामाबद्दल  काही प्रश्न असतील तर मी उत्तरे देऊ शकते. जेव्हा मला कोणत्या प्रश्नाचे उत्तर माहित नसेल, तेव्हा मी तुम्हाला उत्तरे देण्यासाठी मदतीची विनंती करेन.
+तुमचे मेसेज कोणत्याही सरकारी अधिकाऱ्यांशी शेअर केले जाणार नाहीत. ते केवळ संशोधनाच्या उद्देशाने वापरले जातील.
+तुम्ही सहमत असल्यास, कृपया 'होय' वर क्लिक करा; अन्यथा, "नाही" बटनावर क्लिक करा.""",
             "options": ["होय", "नाही"],
         },
         LanguageCode.TELUGU.value: {
@@ -83,7 +85,7 @@ Researchers will log and analyze your messages only for research purposes, and w
 ALREADY_REGISTERED_DICT = {
     LanguageCode.HINDI.value: "आप पहले से ही सिस्टम में पंजीकृत हैं।",
     LanguageCode.ENGLISH.value: "You are already registered with the system.",
-    LanguageCode.MARATHI.value: "तुम्ही आधीच सिस्टममध्ये नोंदणीकृत आहात.",
+    LanguageCode.MARATHI.value: "तुमची नोंदणी आधीच झाली आहे.",
     LanguageCode.TELUGU.value: "మీరు ఇప్పటికే సిస్టమ్‌లో నమోదు చేయబడ్డారు.",
 }
 
@@ -91,13 +93,13 @@ THANK_YOU_DICT = {
     UserType.ASHA.value: {
         LanguageCode.HINDI.value: "आप मुझसे गर्भावस्था, शिशु देखभाल और आशा के रूप में अपने काम के बारे में कोई भी प्रश्न 💬 लिख कर या🎙️वॉइस संदेश भेजकर पूछ सकते हैं। जैसे की:\nछाया टैबलेट कब लें?\nआभा आईडी क्या है?\n3 महीने के बच्चे को कौन से टीके दें?",
         LanguageCode.ENGLISH.value: "You can ask me any question about pregnancy, childcare, and your work as an ASHA, by typing 💬 or sending me a voice message 🎙️. Like this:\nWhen to take chhaya tablet?\nWhat is ABHA ID?\nWhat vaccines to give a 3-month-old?",
-        LanguageCode.MARATHI.value: "तुम्ही गर्भावस्था, शिशु देखभाल आणि आशा म्हणून तुमच्या कामाबद्दल कोणताही प्रश्न 💬 टाइप करून किंवा 🎙️ व्हॉइस संदेश पाठवून विचारू शकता. उदाहरणार्थ:\nछाया टॅबलेट कधी घ्यावे?\nआभा आयडी म्हणजे काय?\n3 महिन्याच्या बाळाला कोणते लसीकरण द्यावे?",
+        LanguageCode.MARATHI.value: "तुम्ही मला आरोग्य, पोषण आणि आशांच्या कामासंबंधित काहीही प्रश्न विचारू शकता. 💬 प्रश्न टाइप करून किंवा 🎙️ आवाजात पाठवू शकता. उदाहरण:\nछाया गोळी कधी घ्यावी?\nआभा आयडी काय आहे? \n३ महिन्यांच्या बाळाला कोणती लस द्यावी?",
         LanguageCode.TELUGU.value: "మీరు గర్భధారణ, శిశు సంరక్షణ మరియు ఆశగా మీ పని గురించి 💬 టైప్ చేసి లేదా 🎙️ వాయిస్ సందేశం పంపడం ద్వారా నన్ను ఏదైనా ప్రశ్న అడగవచ్చు. ఇలా:\nఛాయా టాబ్లెట్ ఎప్పుడు తీసుకోవాలి?\nఆభా ఐడి అంటే ఏమిటి?\n3 నెలల బిడ్డకు ఏ వ్యాక్సిన్లు ఇవ్వాలి?",
     },
     UserType.ANM.value: {
         LanguageCode.HINDI.value: "इस कार्यक्रम के बारे में अधिक जानकारी के लिए कृपया हमारे हेल्पडेस्क नंबर +91 77270 79678 पर कॉल करें। आपके समर्थन के लिए धन्यवाद 😊",
         LanguageCode.ENGLISH.value: "For more information about this program, please call our helpdesk number +91 77270 79678. Thank you for your support 😊",
-        LanguageCode.MARATHI.value: "या कार्यक्रमाबद्दल अधिक माहितीसाठी कृपया आमच्या हेल्पडेस्क नंबर +91 77270 79678 वर कॉल करा. तुमच्या समर्थनाबद्दल धन्यवाद 😊",
+        LanguageCode.MARATHI.value: "याबद्दल अधिक माहितीसाठी, कृपया आमच्या हेल्पडेस्क क्रमांकावर कॉल करा: +91 9251496193. तुमच्या सहकार्याबद्दल धन्यवाद 😊",
         LanguageCode.TELUGU.value: "ఈ ప్రోగ్రాం గురించి మరిన్ని సమాచారం కోసం దయచేసి మా హెల్ప్‌డెస్క్ నంబర్ +91 77270 79678 కి కాల్ చేయండి. మీ మద్దతుకు ధన్యవాదాలు 😊",
     },
     # Note: OTHERS user type uses ASHA messages (fallback handled in code)
@@ -128,10 +130,12 @@ ONBOARD_LANGUAGE_SPECIFIC_PHRASES = {
         "ONBOARD OTHERS",
     ],
     LanguageCode.MARATHI.value: [
+        "मी आशा आहे आणि मला आशा सहेली मध्ये सहभागी व्हायचे आहे",
+        "मला आशा सहेली मध्ये सहभागी व्हायचे आहे",
+        "आशा सहेली मध्ये सहभागी व्हा",
+        "मला आशा सहेलीमध्ये सहभागी व्हायचे आहे",
         "मी आशा आहे आणि मला आशा सहेली बॉटमध्ये सामील व्हायचे आहे",
-        "आशा सहेली बॉटमध्ये सामील व्हायचे आहे",
-        "आशा सहेली बॉटमध्ये सामील",
-        "आशा सहेली सामील व्हायचे आहे",
+        "मला आशा सहेली बॉटमध्ये सामील व्हायचे आहे",
     ],
     LanguageCode.TELUGU.value: [
         "నేను ఆశాను మరియు ఆశా సహేలి బాట్‌లో చేరాలనుకుంటున్నాను",
@@ -149,16 +153,14 @@ ONBOARD_WELCOME_MESSAGE_DICT = {
 }
 
 # Shown when user is in onboarding path but message is not onboarding-like. Role is not yet known.
-REGISTER_PROMPT_TEXT = (
-    "To register with ASHA Saheli, please send 'onboard asha', 'onboard anm', or 'onboard others'."
-)
+REGISTER_PROMPT_TEXT = "To register with ASHA Saheli, please send 'onboard asha', 'onboard anm', or 'onboard others'."
 
 # Suggested questions list text + items
 RELATED_QUESTIONS = {
     "description": {
         LanguageCode.ENGLISH.value: "Suggested Questions",
         LanguageCode.HINDI.value: "सुझाए गए प्रश्न",
-        LanguageCode.MARATHI.value: "सूचवलेले प्रश्न",
+        LanguageCode.MARATHI.value: "सुचवलेले प्रश्न",
         LanguageCode.TELUGU.value: "సూచించిన ప్రశ్నలు",
     },
     "questions": {
@@ -173,8 +175,8 @@ RELATED_QUESTIONS = {
             "अंतरा इंजेक्शन क्या है?",
         ],
         LanguageCode.MARATHI.value: [
-            "1 वर्षाचा मुलगा सामान्यतः किती वजनाचा असतो?",
-            "तंबाकूचे दीर्घकालीन परिणाम काय आहेत?",
+            "१ वर्षाच्या बाळाचे वजन साधारण किती असते?",
+            "तंबाखूमुळे होणारे दीर्घकालीन परिणाम कोणते आहेत?",
             "अंतरा इंजेक्शन म्हणजे काय?",
         ],
         LanguageCode.TELUGU.value: [
@@ -187,11 +189,11 @@ RELATED_QUESTIONS = {
 
 # Button text matchers for consent
 YES_SET = {"हाँ", "Yes", "होय", "అవును"}
-NO_SET  = {"नहीं", "No", "नाही", "కాదు"}
+NO_SET = {"नहीं", "No", "नाही", "కాదు"}
 
 # Strings users click for user-type selection, grouped by canonical user type
 USER_TYPE_OPTIONS = {
-    UserType.ASHA.value:    {"Asha", "आशा", "ఆశ"},
-    UserType.ANM.value:     {"ANM", "नर्सदीदी / ए.एन.एम", "నర్స్‌దీది / ఎ.ఎన్.ఎం"},
-    UserType.OTHERS.value:  {"Others", "अन्य", "इतर", "ఇతరులు"},
+    UserType.ASHA.value: {"Asha", "आशा", "ఆశ"},
+    UserType.ANM.value: {"ANM", "नर्सदीदी / ए.एन.एम", "ए.एन.एम", "నర్స్‌దీది / ఎ.ఎన్.ఎం"},
+    UserType.OTHERS.value: {"Others", "अन्य", "इतर", "ఇతరులు"},
 }

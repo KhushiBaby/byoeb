@@ -1,3 +1,4 @@
+INTEGRATION_ID = "integration_id"
 EMOJI = "emoji"
 VERIFICATION_STATUS = "verification_status"
 STATUS = "status"

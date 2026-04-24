@@ -7,14 +7,11 @@ any CI pipeline to fail the build. It always exits 0.
 
 Usage:
   From byoeb-v1/byoeb:
-    poetry run python tests/integration/run_release_qa_benchmark.py
-    poetry run python tests/integration/run_release_qa_benchmark.py --base-url http://127.0.0.1:8000
-    poetry run python tests/integration/run_release_qa_benchmark.py --output benchmark_results.json
+    poetry run python byoeb/scripts/run_release_qa_benchmark.py
+    poetry run python byoeb/scripts/run_release_qa_benchmark.py --base-url http://127.0.0.1:8000
+    poetry run python byoeb/scripts/run_release_qa_benchmark.py --output benchmark_results.json
 
-Requires:
-  - Chat app running on base-url
-  - Receive mode (default): message consumer running. MCP mode (--use-mcp): no consumer needed.
-  - Test user registered (PHONE_NUMBER_ID)
+Requires chat app running on base-url.
 """
 import argparse
 import asyncio
@@ -22,10 +19,13 @@ import json
 import os
 import re
 import sys
-import time
 from datetime import datetime
+from fastmcp import Client
+from fastmcp.client.client import CallToolResult
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Literal
+from typing import Any, AsyncIterator, Dict, List, Optional, Literal
+
+import requests
 
 from pydantic import BaseModel, TypeAdapter, ValidationError, field_validator
 
@@ -47,33 +47,8 @@ if _KEYS_ENV.exists():
 DEFAULT_SET_PATH = _CURRENT_DIR / "release_qa_regression_set.json"
 # Aligned with run_immunization_questions.py and test_already_onboarded.py:
 # - Base URL: RECIEVE_URL or http://127.0.0.1:8000 (immunization uses 127.0.0.1; test_already_onboarded uses localhost:8000/receive)
-# - Phone: PHONE_NUMBER_ID or 919000000001 (test_early_return_already_onboarded uses 917567071072)
-# - User name: USER_NAME or "Test User"
 DEFAULT_BASE_URL = "http://127.0.0.1:8000"
-DEFAULT_PHONE_NUMBER_ID = "919000000001"
-USER_NAME = os.getenv("USER_NAME", "Test User")
 
-# IDK detection: match both (1) template text and (2) app utils.is_idk() phrases
-# so we correctly classify "I do not know the answer to your question" etc.
-IDK_PHRASES = [
-    "outside the scope of my current knowledge",
-    "ask your ANM",
-    "Please wait, ask your ANM",
-    "i do not know the answer to your question",
-    "i don't know the answer",
-    "i do not know",
-    "i don't know",
-    "idk",
-]
-# Disambiguation: bot asks for clarification (not a full answer). Use API category and/or text fallback.
-DISAMBIGUATION_CATEGORIES = ("text_disambiguation", "audio_disambiguation")
-DISAMBIGUATION_PHRASES = [
-    "which one are you interested in",
-    "which one would",
-    "i found some information related to",
-    "i did not understand this question",
-    "please rephrase or ask again",
-]
 RESPONSE_SNIPPET_LEN = 300  # chars to show when printing responses
 
 
@@ -95,25 +70,6 @@ def load_benchmark_set(path: Path) -> List[Dict[str, Any]]:
     except ValidationError as e:
         raise ValueError(f"Benchmark set is invalid: {e}") from e
     return [item.model_dump() for item in items]
-
-
-def is_idk_response(response_text: str) -> bool:
-    """True if the response is the standard IDK (out of scope) message."""
-    if not response_text:
-        return False
-    normalized = " ".join(response_text.split()).lower()
-    return any(phrase.lower() in normalized for phrase in IDK_PHRASES)
-
-
-def is_disambiguation_response(response_text: str, message_category: Optional[str]) -> bool:
-    """True if the response is disambiguation (clarification request), not a full answer.
-    Uses message_category from API when present; falls back to text phrases."""
-    if message_category in DISAMBIGUATION_CATEGORIES:
-        return True
-    if not response_text:
-        return False
-    normalized = " ".join(response_text.split()).lower()
-    return any(phrase in normalized for phrase in DISAMBIGUATION_PHRASES)
 
 
 def snippet(text: str, max_len: int = RESPONSE_SNIPPET_LEN) -> str:
@@ -138,71 +94,54 @@ def mask_mongo_connection_string(conn_str: Optional[str]) -> str:
     return conn_str[:60] + "..."
 
 
-def run_one_question_mcp(
-    base_url: str,
-    question: str,
-    phone_number_id: str,
-    timeout: int = 60,
-) -> Dict[str, Any]:
-    """Run one question via MCP asha_chat tool; return same result shape as run_one_question."""
-    result = {
-        "question": question,
-        "response_text": "",
-        "is_idk": False,
-        "is_disambiguation": False,
-        "message_category": None,
-        "status": "unknown",
-        "error": None,
-    }
-    mcp_url = base_url.rstrip("/") + "/mcp?phone_number=" + str(phone_number_id)
+async def query(base_url: str, token: str, questions: list[str], timeout: int = 60, concurrency: int = 3) -> AsyncIterator[tuple[int, dict[str, Any]]]:
+    sem = asyncio.Semaphore(concurrency)
+    async def run_query(client: Client, query: str, index: int):
+        async with sem:
+            return index, await client.call_tool("asha_chat", {"message": query}, timeout=timeout, raise_on_error=False)
 
-    async def _call_mcp() -> Dict[str, Any]:
-        from fastmcp import Client
-        async with Client(mcp_url) as client:
-            r = await client.call_tool("asha_chat", {"message": question})
-            return r
+    def transform(question: str, response: CallToolResult):
+        if response.is_error:
+            return {
+                "question": question,
+                "response_text": None,
+                "is_idk": False,
+                "is_disambiguation": False,
+                "message_category": None,
+                "status": "mcp_error",
+                "error": response.content,
+            }
 
-    async def _run_with_timeout():
-        return await asyncio.wait_for(_call_mcp(), timeout=timeout)
+        is_disambiguation = response.data.category in ("text_disambiguation", "audio_disambiguation")
+        is_idk = response.data.category in ("text_idk", "audio_idk", "audio_idk_reconfirmation")
+        if not response.data.text:
+            status = "no_response"
+        elif is_disambiguation:
+            status = "disambiguation"
+        elif is_idk:
+            status = "idk"
+        else:
+            status = "answered"
+        return {
+            "question": question,
+            "response_text": response.data.text,
+            "is_idk": is_idk,
+            "is_disambiguation": is_disambiguation,
+            "message_category": response.data.category,
+            "status": status,
+            "error": None,
+        }
 
-    try:
-        r = asyncio.run(_run_with_timeout())
-    except asyncio.TimeoutError:
-        result["status"] = "mcp_error"
-        result["error"] = f"MCP call timed out after {timeout}s"
-        return result
-    except Exception as e:
-        result["status"] = "mcp_error"
-        result["error"] = str(e)
-        return result
-
-    data = r.data if hasattr(r, "data") else r
-    if isinstance(data, dict):
-        category = data.get("category")
-        response_text = data.get("text") or ""
-    else:
-        category = getattr(data, "category", None)
-        response_text = getattr(data, "text", "") or ""
-
-    result["response_text"] = (response_text or "")[:2000]
-    result["message_category"] = category
-    result["is_disambiguation"] = category in DISAMBIGUATION_CATEGORIES or is_disambiguation_response(response_text, category)
-    result["is_idk"] = (
-        not result["is_disambiguation"]
-        and (category in ("text_idk", "audio_idk", "audio_idk_reconfirmation") or is_idk_response(response_text))
-    )
-    if not response_text:
-        result["status"] = "no_response"
-    elif result["is_disambiguation"]:
-        result["status"] = "disambiguation"
-    elif result["is_idk"]:
-        result["status"] = "idk"
-    else:
-        result["status"] = "answered"
-    return result
+    async with Client(base_url.rstrip("/") + "/mcp", auth=token) as client:
+        await client.call_tool("asha_register_user", {"data": {"name": "Release QA User", "language": "en", "state": "Karnataka"}}, raise_on_error=False)
+        tasks = [run_query(client, q, i) for i, q in enumerate(questions)]
+        for coro in asyncio.as_completed(tasks):
+            index, response = await coro
+            assert isinstance(response, CallToolResult)
+            yield index, transform(questions[index], response)
 
 
-def main() -> int:
+async def main() -> int:
     parser = argparse.ArgumentParser(
         description="Run release QA benchmark: curated positive/negative questions, report metrics (always exit 0)."
     )
@@ -214,13 +153,23 @@ def main() -> int:
     )
     parser.add_argument(
         "--base-url",
-        default=os.getenv("RECIEVE_URL", DEFAULT_BASE_URL).replace("/receive", "").rstrip("/") or DEFAULT_BASE_URL,
+        default=DEFAULT_BASE_URL,
         help="Base URL (e.g. http://127.0.0.1:8000)",
     )
     parser.add_argument(
-        "--phone",
-        default=os.getenv("PHONE_NUMBER_ID", DEFAULT_PHONE_NUMBER_ID),
-        help="Phone number ID for test user",
+        "--tenant-id",
+        required=True,
+        help="Tenant ID of an authenticated user",
+    )
+    parser.add_argument(
+        "--username",
+        required=True,
+        help="Username of an authenticated user",
+    )
+    parser.add_argument(
+        "--password",
+        required=True,
+        help="Password of an authenticated user",
     )
     parser.add_argument(
         "--output", "-o",
@@ -229,10 +178,10 @@ def main() -> int:
         help="Write results to JSON (optional; can include timestamp in filename)",
     )
     parser.add_argument(
-        "--delay",
-        type=float,
-        default=1.0,
-        help="Seconds between questions (default: 1.0)",
+        "--concurrency",
+        type=int,
+        default=3,
+        help="Number of concurrently running queries (default: 3)",
     )
     parser.add_argument(
         "--limit",
@@ -256,12 +205,6 @@ def main() -> int:
         default=90,
         help="Timeout in seconds for each MCP call (default: 90)",
     )
-    # --use-mcp: accepted for CI compatibility; script always uses MCP mode.
-    parser.add_argument(
-        "--use-mcp",
-        action="store_true",
-        help="Use MCP asha_chat tool (default and only mode; flag accepted for CI compatibility)",
-    )
     # --mcp-timeout: CI-friendly alias for --timeout.
     parser.add_argument(
         "--mcp-timeout",
@@ -271,6 +214,7 @@ def main() -> int:
         help="Timeout in seconds for each MCP call; overrides --timeout when provided",
     )
     args = parser.parse_args()
+
     # Let --mcp-timeout override --timeout if explicitly supplied
     if args.mcp_timeout is not None:
         args.timeout = args.mcp_timeout
@@ -278,8 +222,6 @@ def main() -> int:
     base_url = args.base_url
     if not base_url.startswith("http"):
         base_url = "http://" + base_url
-    if base_url.endswith("/receive"):
-        base_url = base_url.replace("/receive", "").rstrip("/")
 
     if not args.set_path.is_file():
         print(f"Benchmark set not found: {args.set_path}", file=sys.stderr)
@@ -304,19 +246,20 @@ def main() -> int:
         print(f"Mode:        {mode}")
         print(f"Loaded {len(items)} items ({len(positive_items)} positive, {len(negative_items)} negative)")
         print(f"Base URL:    {base_url}")
-        print(f"PHONE_NUMBER_ID: {args.phone}")
-        print(f"User name:   {USER_NAME}")
         db_conn = os.getenv("MONGO_DB_CONNECTION_STRING")
         print(f"Database (MONGO_DB_CONNECTION_STRING): {mask_mongo_connection_string(db_conn)}")
         print()
 
+    headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Tenant-ID": str(args.tenant_id)}
+    response = requests.post(f"{base_url}/auth/token/issue", headers=headers, data={"username": args.username, "password": args.password})
+    response.raise_for_status()
+    token = response.cookies.get("asha_auth_token")
+
     results: List[Dict[str, Any]] = []
-    for i, item in enumerate(items, 1):
+    async for i, res in query(base_url, token, [i["question"] for i in items], timeout=args.timeout, concurrency=args.concurrency):
+        item = items[i]
         q = item["question"]
         expected = item["expected"]
-        if not args.quiet:
-            print(f"[{i}/{len(items)}] {q[:70]}{'...' if len(q) > 70 else ''}")
-        res = run_one_question_mcp(base_url, q, args.phone, timeout=args.timeout)
         res["expected"] = expected
         res["category"] = item.get("category", "")
         res["passed"] = (
@@ -325,13 +268,13 @@ def main() -> int:
         )
         results.append(res)
         if not args.quiet:
+            print(f"[{len(results)}/{len(items)}] {q[:70]}{'...' if len(q) > 70 else ''}")
+        if not args.quiet:
             actual = res["status"]
             mark = "✓" if res["passed"] else "✗"
             print(f"  -> {mark} expected={expected}, actual={actual}")
             if args.show_responses or True:
                 print(f"     Bot: {snippet(res.get('response_text') or '')}")
-        if i < len(items):
-            time.sleep(args.delay)
 
     # Benchmark metrics
     pos_results = [r for r in results if r["expected"] == "answered"]
@@ -408,4 +351,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(asyncio.run(main()))

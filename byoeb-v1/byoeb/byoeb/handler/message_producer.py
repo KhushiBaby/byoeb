@@ -42,7 +42,7 @@ class QueueProducerHandler:
         return False, None
             
         
-    async def handle(self, message):
+    async def handle(self, message, integration_id: str | None = None):
         self._logger.info("[handle] ▶ start")
         self._logger.debug("[handle]   in message=%s", message)
 
@@ -84,8 +84,8 @@ class QueueProducerHandler:
                 message=f"Invalid producer type: {str(e)}"
             )
 
-        self._logger.info("[handle] → apublish_message(message, channel)")
-        response, err = await message_producer_service.apublish_message(message, channel)
+        self._logger.info("[handle] → apublish_message(message, channel, integration_id=%s)", integration_id)
+        response, err = await message_producer_service.apublish_message(message, channel, integration_id=integration_id)
         self._logger.info("[handle] ← apublish_message out response=%s err=%s", response, err)
 
         if err is not None:

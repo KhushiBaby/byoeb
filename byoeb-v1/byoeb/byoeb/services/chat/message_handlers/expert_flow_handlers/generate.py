@@ -1,3 +1,4 @@
+import base64
 import re
 import json
 import logging
@@ -142,7 +143,7 @@ class ByoebExpertGenerateResponse(Handler):
                 test_user=user.test_user
             )
             media_additiona_info = {
-                constants.DATA: translated_audio_message,
+                constants.DATA: base64.b64encode(translated_audio_message).decode("utf-8"),
                 constants.MIME_TYPE: "audio/wav"
             }
             message_reaction_additional_info = {

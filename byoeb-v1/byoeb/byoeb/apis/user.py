@@ -1,13 +1,15 @@
 from typing import Any, List, Optional, Dict
+from uuid import UUID
 from byoeb_core.models.byoeb.user import PhoneNumberId, User
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body, HTTPException, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from byoeb_core.models.byoeb.response import ByoebStatusCodes
 import byoeb.chat_app.configuration.dependency_setup as dependency_setup
 from byoeb.constants.user_enums import LanguageCode, UserType
 from byoeb.services.user.utils import get_user_ids_from_phone_number_ids
-from byoeb.utils.utils import mcp_get_phone_number
+from fastmcp.server.dependencies import get_access_token
+from byoeb.services.auth.dependencies import require_mcp_tenant_header
 
 USER_API_NAME = "user_api"
 user_apis_router = APIRouter(tags=["Users"])
@@ -31,6 +33,7 @@ class UserRegister(BaseModel):
     user_language: LanguageCode = Field(..., description="Language code (hi, en, te, etc.)")
     user_name: Optional[str] = Field(default=None, description="Name of the user", examples=["Sita Devi"])
     test_user: Optional[bool] = Field(default=False, description="Flag to mark test users")
+    tenant_id: Optional[UUID] = Field(default=None, description="Tenant ID that the user belongs to", examples=[None])
 
 
 class UserUpdate(BaseModel):
@@ -41,6 +44,7 @@ class UserUpdate(BaseModel):
     user_type: Optional[UserType] = Field(default=None, description="Updated type of user")
     user_name: Optional[str] = Field(default=None, description="Name of the user", examples=["Sita Devi"])
     test_user: Optional[bool] = Field(default=None, description="Flag to mark test users")
+    tenant_id: Optional[UUID] = Field(default=None, description="Tenant ID that the user belongs to", examples=[None])
 
 
 # -----------------------------
@@ -49,7 +53,7 @@ class UserUpdate(BaseModel):
 
 @user_apis_router.post("/register_users", summary="Register one or more users")
 async def register_users(
-    users: List[UserRegister] = Body(..., description="List of users to register. Mandatory fields: `user_type`, `user_location` and `phone_number_id`. `district` inside `user_location` is mandatory.")
+    users: List[UserRegister] = Body(..., description="List of users to register.")
 ) -> List[User]:
     """
     Registers one or more users.
@@ -122,15 +126,30 @@ def user_mcps_router(mcp):
         """
         Register a new Asha user.
         """
-        phone_number = mcp_get_phone_number()
+        require_mcp_tenant_header()
+        access_token = get_access_token()
+        if access_token is None:
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not authenticated")
+        phone_number_id = (access_token.claims or {}).get("phone_number_id")
+        if not phone_number_id:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                "Missing phone_number_id for MCP request",
+            )
+        if len((await dependency_setup.users_handler.aget([phone_number_id])).message) > 0:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                "You are already registered.",
+            )
         response = await dependency_setup.users_handler.aregister([
-            dict(
-                user_id=get_user_ids_from_phone_number_ids([phone_number])[0],
+            User(
+                user_id=get_user_ids_from_phone_number_ids([phone_number_id])[0],
                 user_name=data.name,
                 user_location=dict(country="IN", region=data.state),
                 user_language=data.language.value,
                 user_type=UserType.ASHA.value,
-                phone_number_id=phone_number,
-            )
+                phone_number_id=phone_number_id,
+                tenant_id=UUID(access_token.claims.get("tenant_id"))
+            ).model_dump()
         ])
         return response

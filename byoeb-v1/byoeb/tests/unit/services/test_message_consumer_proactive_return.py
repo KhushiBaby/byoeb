@@ -24,9 +24,33 @@ from byoeb_core.models.byoeb.message_context import (
     ReplyContext,
     MessageTypes,
 )
+from byoeb.services.channel.base import BaseChannelService
 from byoeb.services.chat.message_consumer import MessageConsmerService
 from byoeb.services.databases.mongo_db import UserMongoDBService, MessageMongoDBService
 import byoeb.services.chat.constants as constants
+
+class DummyChannelService(BaseChannelService):
+    def __init__(self):
+        self._prepared = None
+        self._sent = None
+
+    def prepare_requests(self, byoeb_message):
+        return [{}]
+
+    def prepare_reaction_requests(self, message_reactions):
+        return []
+
+    async def send_requests(self, requests):
+        return ["RESP"], ["MSG-ID-1"]
+
+    def create_conv(self, byoeb_user_message, responses):
+        return [ByoebMessageContext(channel_type="whatsapp")]
+
+    def create_cross_conv(self, byoeb_user_message, byoeb_expert_message, user_responses, expert_responses):
+        return []
+
+    async def amark_read(self, messages):
+        return []
 
 
 def make_user(
@@ -89,11 +113,6 @@ def make_bot_message(message_category: str, message_id: str = "bot-1") -> ByoebM
 
 
 @pytest.fixture
-def mock_config():
-    return MagicMock()
-
-
-@pytest.fixture
 def mock_user_db():
     db = MagicMock(spec=UserMongoDBService)
     db.get_users = AsyncMock(return_value=[])
@@ -108,17 +127,12 @@ def mock_message_db():
 
 
 @pytest.fixture
-def mock_channel_factory():
-    return MagicMock()
-
-
-@pytest.fixture
-def service(mock_config, mock_user_db, mock_message_db, mock_channel_factory):
+def service(mock_user_db, mock_message_db):
     return MessageConsmerService(
-        config=mock_config,
+        config=MagicMock(),
         user_db_service=mock_user_db,
         message_db_service=mock_message_db,
-        channel_client_factory=mock_channel_factory,
+        channel_service=DummyChannelService(),
     )
 
 

@@ -1,6 +1,7 @@
 from typing import Annotated, List, Optional, Dict, Any
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 from datetime import datetime, timezone
+from uuid import UUID
 
 PhoneNumberId = Annotated[str, StringConstraints(pattern=r"^\d{11,13}$")]
 
@@ -18,6 +19,7 @@ def _require_utc_or_none(value: Optional[datetime]) -> Optional[datetime]:
 
 class User(BaseModel):
     user_id: Optional[str] = Field(default=None, description="Unique identifier for the user", examples=["12345"])
+    tenant_id: Optional[UUID] = Field(default=None, description="Tenant ID of the user")
     user_name: Optional[str] = Field(default=None, description="Name of the user", examples=["John Doe"])
     user_location: Optional[Dict] = Field(default={}, description="Region of the user", examples=["US"])
     user_language: Optional[str] = Field(default=None, description="Language preference of the user", examples=["en"])

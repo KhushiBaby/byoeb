@@ -1,7 +1,8 @@
 import json
 import uuid
 import byoeb_core.models.whatsapp.incoming as incoming_message
-from typing import List
+
+from typing import List, Optional
 from byoeb_core.models.byoeb.message_context import (
     ByoebMessageContext,
     MessageContext,

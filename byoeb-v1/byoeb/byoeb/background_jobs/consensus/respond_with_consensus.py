@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import re
 import os
 import sys
@@ -110,7 +111,7 @@ async def create_user_message(
             additional_info={
                 constants.DESCRIPTION: description,
                 constants.ROW_TEXTS: related_questions,
-                constants.DATA: translated_audio_message,
+                constants.DATA: base64.b64encode(translated_audio_message).decode("utf-8"),
                 constants.MIME_TYPE: "audio/ogg",
             }
         ),
@@ -269,7 +270,8 @@ async def main():
     from byoeb.chat_app.configuration.dependency_setup import (
         channel_client_factory,
         message_db_service,
-        user_db_service
+        user_db_service,
+        whatsapp_service
     )
     logger.info("main started thread_id=%s pid=%s", threading.get_ident(), os.getpid())
     whatsapp_service = WhatsAppService(channel_client_factory)

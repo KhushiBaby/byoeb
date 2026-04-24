@@ -32,12 +32,7 @@ else:
     logger.warning("Environment file not found at %s", environment_path)
 
 # Environment variables
-env_app = os.getenv("APP_ENV", "LOCAL").lower()
-
-# Whatsapp
-env_whatsapp_token = os.getenv("WHATSAPP_VERIFICATION_TOKEN")
-env_whatsapp_auth_token = os.getenv("WHATSAPP_AUTH_TOKEN")
-env_whatsapp_phone_number_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
+env_app = os.getenv("APP_ENV", "LOCAL")  # "PROD" in production
 
 # OpenAI
 env_openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -118,3 +113,14 @@ for entry in (env_ashabot_feature_flags or "").split(","):
         feature_flags.add(FeatureFlag(entry))
     except ValueError:
         raise RuntimeError("Unexpected feature flag: " + entry)
+
+# Auth
+env_auth_token_secret = os.getenv("AUTH_TOKEN_SECRET")
+env_auth_token_ttl_seconds = os.getenv("AUTH_TOKEN_TTL_SECONDS")
+env_auth_token_algorithm = os.getenv("AUTH_TOKEN_ALGORITHM")
+env_auth_token_issuer = os.getenv("AUTH_TOKEN_ISSUER")
+env_auth_token_audience = os.getenv("AUTH_TOKEN_AUDIENCE")
+env_auth_token_leeway_seconds = os.getenv("AUTH_TOKEN_LEEWAY_SECONDS")
+
+# Public base URL
+env_public_base_url = os.getenv("PUBLIC_BASE_URL")

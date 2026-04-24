@@ -36,7 +36,7 @@ class MongoBaseRepository(BaseRepository, ABC):
     @final
     async def update_one(self, filter_dict: Dict[str, Any], update_dict: Dict[str, Any]) -> bool:
         result = await self._collection.update_one(filter_dict, update_dict)
-        return result.modified_count > 0
+        return result.matched_count > 0
 
     @final
     async def update_many(self, filter_dict: Dict[str, Any], update_dict: Dict[str, Any]) -> int:
@@ -60,3 +60,4 @@ class MongoBaseRepository(BaseRepository, ABC):
         operations = [UpdateOne(filter=query, update=update) for query, update in bulk_queries]
         result = await self._collection.bulk_write(operations)
         return result.modified_count
+

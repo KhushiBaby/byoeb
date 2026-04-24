@@ -3,6 +3,9 @@ import ast
 import asyncio
 import logging
 import re
+
+from byoeb.services.auth.models import AuthPermission
+from byoeb.utils.utils import auth_session
 import pandas as pd
 import requests
 from datetime import datetime, timezone, date
@@ -157,8 +160,7 @@ async def send_welcome_message(
 
 async def send_welcome_messages_to_users(
     registered_users: List[dict],
-    original_users_data: List[dict],
-    url: str
+    original_users_data: List[dict]
 ) -> None:
     """
     Send welcome template messages to all registered users.
@@ -180,7 +182,7 @@ async def send_welcome_messages_to_users(
             original_data_map[phone] = orig_user
     
     # Initialize WhatsApp service
-    whatsapp_service = WhatsAppService(channel_client_factory)
+    from byoeb.chat_app.configuration.dependency_setup import whatsapp_service
     
     success_count = 0
     failure_count = 0
@@ -260,15 +262,17 @@ async def send_welcome_messages_to_users(
     logger.info("Welcome message summary: Success=%s Failed=%s Total=%s", success_count, failure_count, len(registered_users))
 
 
-def main():
+def main(session: Optional[requests.Session] = None):
     parser = argparse.ArgumentParser(description="Upload users from Excel files.")
     parser.add_argument("--file", required=True, help="Input Excel file path.")
-    parser.add_argument("--url", default="http://0.0.0.0:8000", help="API endpoint URL")
+    parser.add_argument("--url", default="http://127.0.0.1:8000", help="API endpoint URL")
     parser.add_argument("--update", action="store_true", help="If set, update users using the API endpoint")
     parser.add_argument("--sheet", help="output sheet name")
     parser.add_argument("--skip-welcome", action="store_true", help="Skip sending welcome messages after registration")
 
     args = parser.parse_args()
+    if session is None:
+        session = auth_session(args.url, scopes=[AuthPermission.USERS_MANAGE])
 
     file_path = args.file
     df = pd.read_excel(file_path, header=0)
@@ -318,7 +322,7 @@ def main():
         
         phone_numbers.append(row["phone_number_id"])
 
-    response = requests.post(args.url + "/register_users", headers={"Content-Type": "application/json"}, json=users_onboarded)
+    response = session.post(args.url + "/register_users", json=users_onboarded)
     if response.status_code != 200:
         logger.error("Registration failed with status %s", response.status_code)
         logger.error("Response: %s", response.text)
@@ -343,17 +347,17 @@ def main():
     if not args.skip_welcome and registered_users:
         try:
             # Pass original users_onboarded data to preserve language/type from Excel
-            asyncio.run(send_welcome_messages_to_users(registered_users, users_onboarded, args.url))
+            asyncio.run(send_welcome_messages_to_users(registered_users, users_onboarded))
         except Exception as e:
             logger.warning("Error sending welcome messages: %s. Continuing with other operations...", e)
 
     if args.update:
-        update_response = requests.post(args.url + "/update_users", headers={"Content-Type": "application/json"}, json=users_onboarded)
+        update_response = session.post(args.url + "/update_users", json=users_onboarded)
         update_response.raise_for_status()
         logger.info("Successfully updated")
 
     if args.sheet:
-        response = requests.post(args.url + "/get_users", headers={"Accept": "application/json", "Content-Type": "application/json"}, json=phone_numbers)
+        response = session.post(args.url + "/get_users", json=phone_numbers)
         response.raise_for_status()
         users = response.json()
         logger.info("Successfully extracted")

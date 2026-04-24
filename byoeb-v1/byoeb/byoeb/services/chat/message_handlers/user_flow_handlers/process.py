@@ -1,5 +1,6 @@
 import logging
 import re
+from byoeb.constants.user_enums import LanguageCode
 import byoeb.utils.utils as utils
 import byoeb.services.chat.constants as constants
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -205,11 +206,20 @@ class ByoebUserProcess(Handler):
     ) -> Dict[str, Any]:
         with langfuse.start_as_current_observation(name="ASHABot", trace_context={"trace_id": langfuse.create_trace_id()}) as span:
             message = await self.handle_process_message_workflow(messages)
-            span.update(input=message.message_context.message_source_text, metadata={
-                "message_id": message.message_context.message_id,
-                "user_language": message.user.user_language,
-                "user_type": message.user.user_type,
-            })
-            span.update_trace(user_id=message.user.user_id)
+            assert message.message_context is not None
+            assert message.user is not None
+            span.update(input=message.message_context.message_source_text, metadata={"message_id": message.message_context.message_id})
+
+            tags = []
+            try:
+                tags.append(LanguageCode(message.user.user_language).name.lower())
+            except ValueError:
+                pass
+            if message.user.user_type: tags.append(message.user.user_type)
+            if message.message_context.message_type: tags.append(message.message_context.message_type)
+            if message.message_context.additional_info:
+                if constants.QUERY_TYPE in message.message_context.additional_info: tags.append(message.message_context.additional_info[constants.QUERY_TYPE])
+            span.update_trace(user_id=message.user.user_id, tags=tags)
+
             if self._successor:
                 return await self._successor.handle([message])

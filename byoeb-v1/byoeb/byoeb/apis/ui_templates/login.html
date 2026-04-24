@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>ASHABot Login</title>
+    <link rel="icon" type="image/webp" href="data:image/webp;base64,UklGRioEAABXRUJQVlA4WAoAAAAQAAAALgAALgAAQUxQSDABAAABgKpt+/rk3SHg7u7unIC7+9riIg5pLtCIy7hDozr8ryWie3b5fehfviOIiAmA8jD91PzuFV3tzk/pw6B1ic1L8r3WIi1ytknN1Xy14ucEqStmElVpeST1HytUMArS8sOoROcmrd06eRbS3iKriTi2ySh5YvGU80/4A/E8j/hribgu/ZFBbEXOryU+tASgnBiLHMDCiSzACSsJycRahBp5kcHDzLPFbEtiJt0yu31h9nLL7FZiJm0xW/IwmzYwM4QKViIEEqsdwMJqAihmVQxgidESAGR9sPlI/wUPm2n8GfvM5DnwL3Qz6cb/AywGIHeSwSRk64aFRmJMJw+oe9TkqRrKc640OM2Cmr7WF5Ve7D5QOXZelcVoaFhk9So4MhVB6zD91PzuFV3tzk/pg6AcVlA4INQCAADwDwCdASovAC8APpU8mEgTF1GY7M4AWAlEtgBUk3/+V9c8wSjP1f8P8DAVCur6gNsB/LfQB+vfrgegr/MeoB/d/7B1gHoAeWr7GX7fek5//7pB4FnzpwK4dVRN4IFHZBb7lyvDeCLpXCykWBAc0P/8coWWbyibI+KAppGzjrkv2aJ/aAGFfJaAAP7xr/C7h/+hzCIrjtUHLR5RnAG9j//g8HtoTxXX0X4POB0ebeVtG0vMiV0/Ya97raRzq48eH4hLtBNl/aMxuQfxNRLTlnKB801HO5OQ7Lv/Hb6rflW4kQXhOUvk7iHR2LyTB/+6GGFs4tbUH9H2GJOubGqdl4e8H74jGfqN0/B52dnAquFG8N4PqxLnw9ud1zI7nKjbZeenh9MuVDYuDzs/qpKteSchHTD7Vx2t8Hi2grluLTha51mvD54idTvgzk4KY28eusOUXJA400RC+FIK6Mw+IL435TfjGDk3oJ56KblMyP9fi74/OuBjWAcSl6rv+fnVG+HAqSTbo3H6H8EOxqbYY5Lc32E+ygulnym9hCINyxxvBRG0QsNiovQUDhc1KDmHJ5DKMw4/+RCOES+24fMnf9szq+78W3CO8EbkNZbVgSjLPYRsLxzvzEfmbNOkieMnuVT8u8cOp97Pc9GnQtiGDrzcFVzUY+jgEp1TE7xW4KO5tr0Fyzp2Ogla5kUXeSo1r+/pkx6v4hk+6pB6xGQZ8KL/tARdJLenlHx4xxo1pihC/r6uJx3UIgtC16HFS5RDQW++Bxa9KijTuJSXGgnOPFni6AD+I8t183AeQ0RQHpdJe02XbyybOxYz/Qpnld+hW/bAweEmHeRkyvCAwCMMfF73ZRaleejfE+ZQlX9NfC4IQT6jDsvQIrVKXKrvFMiyqI8LrxZc+auNDIuKLwaTTo4Z8XHasr0yX/fKfikHdWJ1PMou8scwcOzmkvMTxui6n8PnMeAA">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        :root {
+            --bg-deep: #f3f2f1;
+            --bg-wash: #faf9f8;
+            --ink: #161514;
+            --muted: #605e5c;
+            --brand: #0078d4;
+            --brand-2: #106ebe;
+            --card: #ffffff;
+            --border: #e1dfdd;
+            --shadow: 0 3.2px 7.2px rgba(0, 0, 0, 0.132);
+            --radius: 6px;
+            --logo-image: url("data:image/webp;base64,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");
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            font-family: "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg-wash);
+            color: var(--ink);
+        }
+        .page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: var(--bg-wash);
+        }
+        .card {
+            width: 100%;
+            max-width: 420px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+        }
+        .brand {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .brand-logo {
+            width: 52px;
+            height: 52px;
+            border-radius: 8px;
+            background: var(--logo-image) center/cover no-repeat;
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        h1 {
+            margin: 2px 0 4px 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+        .panel {
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            padding: 16px;
+            background: #fff;
+        }
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .input-wrapper {
+            position: relative;
+        }
+        .input-wrapper i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 14px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px 10px 8px 32px;
+            border: 1px solid #b3b0ad;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            background: #fff;
+            color: var(--ink);
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--brand);
+            box-shadow: 0 0 0 1px var(--brand);
+        }
+        .field {
+            margin-bottom: 16px;
+        }
+        button {
+            padding: 10px 16px;
+            border: 1px solid var(--brand);
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.1s ease-in-out;
+            background: var(--brand);
+            color: #fff;
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        button:hover {
+            background: var(--brand-2);
+            border-color: var(--brand-2);
+        }
+        .status {
+            margin-top: 14px;
+            font-size: 12px;
+            color: var(--muted);
+            min-height: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .status::before {
+            content: "\f05a";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            color: var(--brand);
+        }
+        .status:empty {
+            display: none;
+        }
+        .tenant-section {
+            margin-top: 12px;
+            display: none;
+            border-top: 1px dashed var(--border);
+            padding-top: 12px;
+        }
+        .tenant-section.active {
+            display: block;
+        }
+        .tenant-roles {
+            margin-top: 6px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+            font-size: 11px;
+            color: var(--muted);
+        }
+        .tenant-roles-label {
+            font-weight: 600;
+            color: var(--ink);
+        }
+        .tenant-role {
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: var(--bg-deep);
+            border: 1px solid var(--border);
+            color: var(--ink);
+            font-size: 11px;
+        }
+        .tenant-actions {
+            margin-top: 8px;
+        }
+        @media (max-width: 520px) {
+            .card {
+                padding: 22px;
+            }
+            .brand-logo {
+                width: 48px;
+                height: 48px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="card">
+            <div class="brand">
+                <div class="brand-logo" role="img" aria-label="Khushi Baby ASHABot logo"></div>
+                <div>
+                    <h1>Khushi Baby ASHABot</h1>
+                    <p>Sign in to continue.</p>
+                </div>
+            </div>
+            <div class="panel">
+                <form id="login-form">
+                    <div class="field">
+                        <label for="username">Username</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-user"></i>
+                            <input id="username" name="username" type="text" autocomplete="username" required>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="password">Password</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock"></i>
+                            <input id="password" name="password" type="password" autocomplete="current-password" required>
+                        </div>
+                    </div>
+                    <button id="login-btn" type="submit"><i class="fa-solid fa-right-to-bracket"></i> Sign In</button>
+                </form>
+                <div id="tenant-section" class="tenant-section">
+                    <div class="field">
+                        <label for="tenant-select">Choose Tenant</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-building"></i>
+                            <select id="tenant-select"></select>
+                        </div>
+                        <div id="tenant-roles" class="tenant-roles"></div>
+                    </div>
+                    <div class="tenant-actions">
+                        <button id="tenant-btn" type="button"><i class="fa-solid fa-arrow-right"></i> Continue</button>
+                    </div>
+                </div>
+                <div id="status" class="status"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TENANT_KEY = 'asha_tenant_id';
+        const form = document.getElementById('login-form');
+        const statusEl = document.getElementById('status');
+        const tenantSection = document.getElementById('tenant-section');
+        const tenantSelect = document.getElementById('tenant-select');
+        const tenantRoles = document.getElementById('tenant-roles');
+        const tenantBtn = document.getElementById('tenant-btn');
+        const loginBtn = document.getElementById('login-btn');
+
+        let cachedUsername = '';
+        let cachedPassword = '';
+        let redirectTo = '/asha_logs';
+        let oauthMode = false;
+        let oauthParams = {};
+        let tenantRoleMap = {};
+
+        function setStatus(message) {
+            statusEl.textContent = message;
+        }
+
+        function renderTenantRoles(tenantId) {
+            const roles = tenantRoleMap[tenantId] || [];
+            if (!roles.length) {
+                tenantRoles.innerHTML = '<span class="tenant-roles-label">Roles:</span><span>No roles assigned</span>';
+                return;
+            }
+            tenantRoles.innerHTML = `<span class="tenant-roles-label">Roles:</span>${roles.map(r => `<span class="tenant-role">${r}</span>`).join('')}`;
+        }
+
+        function setRedirectTarget() {
+            const params = new URLSearchParams(window.location.search);
+            redirectTo = params.get('redirect') || '/asha_logs';
+            const paramKeys = ['response_type', 'client_id', 'redirect_uri', 'state', 'scope', 'code_challenge', 'code_challenge_method', 'resource', 'auth_path'];
+            oauthParams = {};
+            paramKeys.forEach(key => {
+                const value = params.get(key);
+                if (value) {
+                    oauthParams[key] = value;
+                }
+            });
+            oauthMode = !!oauthParams.client_id;
+        }
+
+        function storeTenant(tenantId) {
+            localStorage.setItem(TENANT_KEY, tenantId);
+        }
+
+        function redirect() {
+            window.location.href = redirectTo;
+        }
+
+        async function fetchToken(username, password, tenantId) {
+            const body = new URLSearchParams({ username, password });
+            const headers = { "Content-Type": "application/x-www-form-urlencoded" };
+            if (tenantId) {
+                headers["X-Tenant-ID"] = tenantId;
+            }
+            const response = await fetch('/auth/token/issue', { method: 'POST', headers, body, credentials: 'include' });
+            return response.ok;
+        }
+
+        async function fetchTenants() {
+            const response = await fetch('/auth/tenants', { credentials: 'include' });
+            if (!response.ok) {
+                return [];
+            }
+            return await response.json();
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            tenantSection.classList.remove('active');
+            setStatus('Signing in...');
+            loginBtn.disabled = true;
+            cachedUsername = document.getElementById('username').value.trim();
+            cachedPassword = document.getElementById('password').value;
+
+            const issued = await fetchToken(cachedUsername, cachedPassword, null);
+            if (!issued) {
+                setStatus('Login failed. Check username/password.');
+                loginBtn.disabled = false;
+                return;
+            }
+            const tenants = await fetchTenants();
+            if (!tenants.length) {
+                setStatus('No tenants found for this user.');
+                loginBtn.disabled = false;
+                return;
+            }
+            if (tenants.length === 1) {
+                if (oauthMode) {
+                    await finalizeOAuth(tenants[0].tenant_id);
+                } else {
+                    storeTenant(tenants[0].tenant_id);
+                    redirect();
+                }
+                return;
+            }
+            tenantRoleMap = Object.fromEntries(tenants.map(t => [t.tenant_id, t.roles || []]));
+            tenantSelect.innerHTML = tenants.map(t => {
+                const label = t.name || t.tenant_id;
+                return `<option value="${t.tenant_id}">${label}</option>`;
+            }).join('');
+            renderTenantRoles(tenantSelect.value);
+            tenantSection.classList.add('active');
+            setStatus('Select a tenant to continue.');
+        }
+
+        async function handleTenantSelect() {
+            const tenantId = tenantSelect.value;
+            if (!tenantId) {
+                setStatus('Please select a tenant.');
+                return;
+            }
+            setStatus('Signing in...');
+            const issued = await fetchToken(cachedUsername, cachedPassword, tenantId);
+            if (!issued) {
+                setStatus('Login failed. Check username/password.');
+                return;
+            }
+            if (oauthMode) {
+                await finalizeOAuth(tenantId);
+            } else {
+                storeTenant(tenantId);
+                redirect();
+            }
+        }
+
+        function setHiddenField(name, value) {
+            let input = form.querySelector(`input[name=\"${name}\"]`);
+            if (!input) {
+                input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                form.appendChild(input);
+            }
+            input.value = value;
+        }
+
+        async function finalizeOAuth(tenantId) {
+            setStatus('Completing authorization...');
+            const rawAuthPath = oauthParams.auth_path;
+            const safeAuthPath = (rawAuthPath && rawAuthPath.startsWith('/') && !rawAuthPath.startsWith('//')) ? rawAuthPath : '/authorize';
+            form.action = safeAuthPath;
+            form.method = 'POST';
+            setHiddenField('tenant_id', tenantId);
+            Object.entries(oauthParams).forEach(([key, value]) => setHiddenField(key, value));
+            form.submit();
+        }
+
+        form.addEventListener('submit', handleLogin);
+        tenantBtn.addEventListener('click', handleTenantSelect);
+        tenantSelect.addEventListener('change', () => renderTenantRoles(tenantSelect.value));
+        window.addEventListener('DOMContentLoaded', setRedirectTarget);
+    </script>
+</body>
+</html>

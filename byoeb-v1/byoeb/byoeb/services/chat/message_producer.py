@@ -69,10 +69,11 @@ class MessageProducerService:
     async def apublish_message(
         self,
         message,
-        channel
+        channel,
+        integration_id: str | None = None,
     ):
         self._logger.info("[apublish_message] ▶ start")
-        self._logger.info("[apublish_message]   in  channel=%s", channel)
+        self._logger.info("[apublish_message]   in  channel=%s integration_id=%s", channel, integration_id)
 
         byoeb_message: ByoebMessageContext = None
         n = 5
@@ -80,6 +81,10 @@ class MessageProducerService:
         if channel == "whatsapp":
             self._logger.debug("[apublish_message] → __convert_whatsapp_to_byoeb_message")
             byoeb_message = self.__convert_whatsapp_to_byoeb_message(message)
+            if integration_id and byoeb_message and byoeb_message.message_context:
+                if byoeb_message.message_context.additional_info is None:
+                    byoeb_message.message_context.additional_info = {}
+                byoeb_message.message_context.additional_info[constants.INTEGRATION_ID] = integration_id
             mid_conv = getattr(getattr(byoeb_message, "message_context", None), "message_id", None)
             self._logger.debug(
                 "[apublish_message] ← converted message_id=%s incoming_ts=%s byoeb_message=%s",

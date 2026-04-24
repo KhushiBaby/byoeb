@@ -380,8 +380,7 @@ class MessageMongoDBService(BaseMongoDBService):
                     )
 
                     # Get WhatsApp service and send the message
-                    from byoeb.services.channel.whatsapp import WhatsAppService
-                    whatsapp_service = WhatsAppService(channel_client_factory)
+                    from byoeb.chat_app.configuration.dependency_setup import whatsapp_service
                     requests = whatsapp_service.prepare_requests(byoeb_message)
 
                     if requests:

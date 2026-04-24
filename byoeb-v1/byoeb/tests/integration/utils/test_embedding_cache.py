@@ -1,24 +1,10 @@
+from pydantic import AnyHttpUrl
 from typing import Any, AsyncIterator, List, Literal, Set
-from byoeb.constants.user_enums import LanguageCode
-from fastmcp import Client
-import os
+
 import pytest
-import requests
+from fastmcp import Client
 
-
-BASE_URL = os.getenv("RECIEVE_URL")
-PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID")
-USER_NAME = os.getenv("USER_NAME", "byoeb-user")
-if BASE_URL is None:
-    raise RuntimeError("Environment variable (BASE_URL) is missing")
-if PHONE_NUMBER_ID is None:
-    raise RuntimeError("Environment variable (PHONE_NUMBER_ID) is missing")
-
-BASE_URL = BASE_URL.replace("receive", "")
-MCP_URL = BASE_URL + "mcp?phone_number=" + PHONE_NUMBER_ID
-PURGE_URL = BASE_URL + "purge_request_cache"
-REGISTER_URL = BASE_URL + "register_users"
-DELETE_URL = BASE_URL + "delete_users"
+from byoeb.constants.user_enums import LanguageCode, UserType
 
 # Timeout for HTTP calls (integration server may be slow)
 HTTP_TIMEOUT_S = 60
@@ -29,18 +15,22 @@ def get_cache_hit(resp: Any) -> bool:
 def has_devanagari(text: str) -> bool:
     return any("\u0900" <= ch <= "\u097f" for ch in text)
 
-async def run_queries(queries: List[str], features: Set[Literal["audio", "history"]] = set()) -> AsyncIterator[Any]:
-    async with Client(MCP_URL) as client:
+async def run_queries(base_url: AnyHttpUrl, access_token: str, queries: List[str], features: List[Literal["audio", "history"]] | None = None) -> AsyncIterator[Any]:
+    if features is None:
+        features = []
+    async with Client(f"{base_url}/mcp", auth=access_token) as client:
         for q in queries:
             r = await client.call_tool("asha_chat", {"message": q, "features": features})
             yield r.data
 
 @pytest.mark.asyncio
-async def test_repeated_query_hits_cache():
-    requests.post(PURGE_URL, timeout=HTTP_TIMEOUT_S).raise_for_status()
-    queries = ["what is antara injection?"] * 2
+async def test_repeated_query_hits_cache(envs, auth_access_token, auth_session, temp_user):
+    auth_session.post(f"{envs.base_url}/purge_request_cache").raise_for_status()
 
-    responses = [resp async for resp in run_queries(queries)]
+    queries = ["what is antara injection?"] * 2
+    with temp_user(user_type=UserType.ASHA, lang=LanguageCode.ENGLISH, test_user=True):
+        responses = [resp async for resp in run_queries(envs.base_url, auth_access_token, queries)]
+
     assert not get_cache_hit(responses[0])
     assert get_cache_hit(responses[1])
 
@@ -52,26 +42,14 @@ async def test_repeated_query_hits_cache():
     (LanguageCode.ENGLISH, "what is antara injection", ["hit"]),
     (LanguageCode.HINDI, "antara injection kya hai", ["devanagari", "hit"]),
 ])
-async def test_cached_response_respects_lang(lang: LanguageCode, query: str, features: set[str]):
+async def test_cached_response_respects_lang(lang: LanguageCode, query: str, features: set[str], envs, auth_access_token, auth_session, temp_user):
     if "purge" in features:
-        requests.post(PURGE_URL, timeout=HTTP_TIMEOUT_S).raise_for_status()
+        auth_session.post(f"{envs.base_url}/purge_request_cache").raise_for_status()
 
-    requests.delete(DELETE_URL, json=[PHONE_NUMBER_ID], timeout=HTTP_TIMEOUT_S).raise_for_status()
+    with temp_user(user_type=UserType.ASHA, lang=lang, test_user=True):
+        responses = [resp async for resp in run_queries(envs.base_url, auth_access_token, [query])]
 
-    user = {
-        "phone_number_id": PHONE_NUMBER_ID,
-        "user_location": {"district": "Test District"},
-        "user_type": "asha",
-        "user_language": lang.value,
-        "user_name": USER_NAME,
-        "test_user": True,
-    }
-
-    requests.post(REGISTER_URL, json=[user], timeout=HTTP_TIMEOUT_S).raise_for_status()
-
-    responses = [resp async for resp in run_queries([query])]
     assert responses
     resp = responses[0]
-
     assert get_cache_hit(resp) == ("hit" in features)
     assert has_devanagari(resp.text) == ("devanagari" in features)

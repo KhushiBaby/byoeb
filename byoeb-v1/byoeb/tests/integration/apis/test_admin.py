@@ -1,23 +1,14 @@
 import csv
 import io
-import os
 from datetime import datetime, timedelta, timezone
 
 import pytest
-import requests
 
 
-BASE_URL = os.getenv("RECIEVE_URL")
-if not BASE_URL:
-    raise RuntimeError("Environment variable (RECIEVE_URL) is missing")
-BASE_URL = BASE_URL.replace('/receive', '')
-ASHA_LOGS_URL = f"{BASE_URL}/asha_logs"
-
-
-def test_post_asha_logs_streams_csv_with_attachment_header():
+def test_post_asha_logs_streams_csv_with_attachment_header(envs, auth_session):
     now = datetime.now(timezone.utc)
     start = now - timedelta(minutes=30)
-    response = requests.post(ASHA_LOGS_URL, data={"start": start.isoformat(), "end": now.isoformat()})
+    response = auth_session.post(f"{envs.base_url}/asha_logs", data={"start": start.isoformat(), "end": now.isoformat()})
     response.raise_for_status()
     assert response.headers.get("content-type", "").startswith("text/csv")
     content_disposition = response.headers.get("content-disposition", "")
@@ -25,33 +16,33 @@ def test_post_asha_logs_streams_csv_with_attachment_header():
     assert "asha-logs" in content_disposition
 
 
-def test_post_asha_logs_requires_end_datetime():
+def test_post_asha_logs_requires_end_datetime(envs, auth_session):
     now = datetime.now(timezone.utc)
-    response = requests.post(ASHA_LOGS_URL, data={"start": (now - timedelta(minutes=15)).isoformat()})
+    response = auth_session.post(f"{envs.base_url}/asha_logs", data={"start": (now - timedelta(minutes=15)).isoformat()})
     assert response.status_code == 422
     detail = response.json().get("detail", [])
     assert any(item.get("loc", [None])[-1] == "end" for item in detail)
 
 
-def test_post_asha_logs_requires_start_datetime():
+def test_post_asha_logs_requires_start_datetime(envs, auth_session):
     now = datetime.now(timezone.utc)
-    response = requests.post(ASHA_LOGS_URL, data={"end": now.isoformat()})
+    response = auth_session.post(f"{envs.base_url}/asha_logs", data={"end": now.isoformat()})
     assert response.status_code == 422
     detail = response.json().get("detail", [])
     assert any(item.get("loc", [None])[-1] == "start" for item in detail)
 
 
-def test_post_asha_logs_rejects_invalid_datetime_format():
+def test_post_asha_logs_rejects_invalid_datetime_format(envs, auth_session):
     now = datetime.now(timezone.utc)
-    response = requests.post(ASHA_LOGS_URL, data={"start": "not-a-date", "end": now.isoformat()})
+    response = auth_session.post(f"{envs.base_url}/asha_logs", data={"start": "not-a-date", "end": now.isoformat()})
     assert response.status_code == 422
     detail = response.json().get("detail", [])
     assert any(item.get("loc", [None])[-1] == "start" for item in detail)
 
 
-def test_post_asha_logs_stream_is_parsable_and_sorted():
-    bot_messages_url = f"{BASE_URL}/get_bot_messages"
-    bot_response = requests.get(bot_messages_url, params={"timestamp": 0, "length": 100})
+def test_post_asha_logs_stream_is_parsable_and_sorted(envs, auth_session):
+    bot_messages_url = f"{envs.base_url}/get_bot_messages"
+    bot_response = auth_session.get(bot_messages_url, params={"timestamp": 0, "length": 100})
     bot_response.raise_for_status()
     bot_messages = bot_response.json()
     if not bot_messages:
@@ -76,7 +67,7 @@ def test_post_asha_logs_stream_is_parsable_and_sorted():
         datetime.now(timezone.utc) - timedelta(seconds=1)
     )
 
-    response = requests.post(ASHA_LOGS_URL, data={"start": start.isoformat(), "end": end.isoformat()})
+    response = auth_session.post(f"{envs.base_url}/asha_logs", data={"start": start.isoformat(), "end": end.isoformat()})
     response.raise_for_status()
 
     reader = csv.DictReader(io.StringIO(response.content.decode()))

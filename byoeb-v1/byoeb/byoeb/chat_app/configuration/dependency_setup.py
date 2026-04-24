@@ -51,6 +51,10 @@ channel_register_factory = ChannelRegisterFactory()
 channel_client_factory = ChannelClientFactory(config=app_config)
 channel_register_handler = ChannelRegisterHandler(channel_register_factory)
 
+# WhatsApp service
+from byoeb.services.channel.whatsapp import WhatsAppService
+whatsapp_service = WhatsAppService(channel_client_factory)
+
 # mongo db
 mongo_db_factory = MongoDBFactory(
     config=app_config,
@@ -107,7 +111,7 @@ message_consumer = QueueConsumer(
     consuemr_type=app_config["app"]["queue_provider"],
     user_db_service=user_db_service,
     message_db_service=message_db_service,
-    channel_client_factory=channel_client_factory
+    channel_service=whatsapp_service
 )
 
 # user handler

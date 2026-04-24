@@ -184,11 +184,11 @@ async def main():
     from byoeb.chat_app.configuration.dependency_setup import (
         channel_client_factory,
         user_db_service,
-        message_db_service
+        message_db_service,
+        whatsapp_service
     )
     print(threading.get_ident())
     print("PID:", os.getpid())
-    whatsapp_service = WhatsAppService(channel_client_factory)
     await send_pending_queries_to_expert(user_db_service, message_db_service, whatsapp_service)
     await channel_client_factory.close()
 

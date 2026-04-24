@@ -523,14 +523,11 @@ async def send_leaderboard_template_messages(
 
     Template uses 4 parameters: {{1}}, {{2}}, {{3}} = up to 3 lines; {{4}} = type (Block/Districts).
     """
-    from byoeb.chat_app.configuration.dependency_setup import channel_client_factory
-    from byoeb.services.channel.whatsapp import WhatsAppService
+    import hashlib
+    from byoeb.chat_app.configuration.dependency_setup import whatsapp_service
     from byoeb_core.models.byoeb.message_context import ByoebMessageContext, MessageContext, ReplyContext, MessageTypes
     from byoeb_core.models.byoeb.user import User
     from byoeb.services.chat import constants
-    import hashlib
-    
-    whatsapp_service = WhatsAppService(channel_client_factory)
     
     # Get user information for all phone numbers
     user_ids = [hashlib.md5(phone.encode()).hexdigest() for phone in phone_numbers]

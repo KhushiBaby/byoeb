@@ -6,14 +6,21 @@ import os
 import re
 from typing import Any, Iterable, List, TypeVar
 from urllib.parse import unquote
+import requests
+import webbrowser
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import threading
+from authlib.integrations.requests_client import OAuth2Session
+from authlib.common.security import generate_token
 
 from byoeb.constants.onboarding_text import ONBOARD_WELCOME_MESSAGE_DICT
 
 logger = logging.getLogger(__name__)
 from byoeb.constants.user_enums import LanguageCode
+from byoeb.services.auth.models import AuthPermission
 from byoeb_core.models.byoeb.user import PhoneNumberId
 from fastmcp.server.dependencies import get_http_request
-from pydantic import TypeAdapter, ValidationError
+from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -186,3 +193,70 @@ def ensure_utc_dates(obj: Any) -> Any:
     if isinstance(obj, list):
         return [ensure_utc_dates(v) for v in obj]
     return obj
+
+def auth_session(base_url: AnyHttpUrl, scopes: list[AuthPermission] | None = None, callback_port: int | None = None) -> requests.Session:
+    scopes = scopes or []
+    base_url_oauth = str(base_url) + "/oauth"
+
+    scope_str = " ".join(scope.value for scope in scopes)
+    callback_url = None
+    code_from_callback = None
+    state_from_callback = None
+    callback_event = threading.Event()
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            nonlocal callback_url, code_from_callback, state_from_callback
+            callback_url = f"http://localhost:{resolved_callback_port}{self.path}"
+            from urllib.parse import parse_qs, urlparse
+            qs = parse_qs(urlparse(self.path).query)
+            code_from_callback = qs.get('code', [None])[0]
+            state_from_callback = qs.get('state', [None])[0]
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'Done')
+            callback_event.set()
+        def log_message(self, *args): pass
+
+    server = HTTPServer(('localhost', callback_port or 0), Handler)
+    resolved_callback_port = server.server_address[1]
+    redirect_uri = f"http://localhost:{resolved_callback_port}/callback"
+
+    reg_resp = requests.post(f"{base_url_oauth}/register", json={
+        "redirect_uris": [redirect_uri],
+        "grant_types": ["authorization_code", "refresh_token"],
+        "response_types": ["code"],
+        "token_endpoint_auth_method": "none",
+        "scope": scope_str
+    }, timeout=30)
+    reg_resp.raise_for_status()
+    reg = reg_resp.json()
+
+    server_thread = threading.Thread(target=server.handle_request, daemon=True)
+    server_thread.start()
+
+    client = OAuth2Session(reg['client_id'], scope=scope_str, redirect_uri=redirect_uri,
+                          code_challenge_method='S256', token_endpoint_auth_method='none')
+    code_verifier = generate_token(48)
+    uri, expected_state = client.create_authorization_url(f"{base_url_oauth}/authorize", resource=base_url_oauth, code_verifier=code_verifier)
+
+    webbrowser.open(uri)
+    if not callback_event.wait(timeout=60):
+        server.server_close()
+        raise TimeoutError("OAuth callback not received within 60 seconds")
+    server.server_close()
+    if state_from_callback != expected_state:
+        raise ValueError("OAuth state mismatch — possible authorization code injection")
+    
+    session = requests.Session()
+    token_resp = session.post(f"{base_url_oauth}/token", data={
+        'grant_type': 'authorization_code',
+        'code': code_from_callback,
+        'redirect_uri': redirect_uri,
+        'client_id': reg['client_id'],
+        'code_verifier': code_verifier
+    }, timeout=30)
+    token_resp.raise_for_status()
+    token = token_resp.json()
+    session.headers["Authorization"] = f"{token['token_type']} {token['access_token']}"
+    return session

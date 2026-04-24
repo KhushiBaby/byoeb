@@ -59,9 +59,46 @@
   <div class="output" id="output"></div>
 
   <script>
+    const TENANT_KEY = 'asha_tenant_id';
     const generateBtn = document.getElementById('generate-btn');
     const clearBtn = document.getElementById('clear-btn');
     const statusDiv = document.getElementById('status');
+
+    function getCookie(name) {
+      const entry = document.cookie.split('; ').find(row => row.startsWith(`${name}=`));
+      return entry ? decodeURIComponent(entry.split('=').slice(1).join('=')) : '';
+    }
+
+    function getAuthHeaders() {
+      const tenantId = localStorage.getItem(TENANT_KEY);
+      const csrfToken = getCookie('csrf_token');
+      if (!csrfToken) {
+        return null;
+      }
+      return { "X-CSRF-Token": csrfToken };
+    }
+
+    async function verifySession() {
+      const headers = getAuthHeaders();
+      if (!headers) {
+        return false;
+      }
+      const response = await fetch('/auth/me', { headers, credentials: 'include' });
+      if (!response.ok) {
+        localStorage.removeItem(TENANT_KEY);
+        return false;
+      }
+      return true;
+    }
+
+    function ensureAuth() {
+      const headers = getAuthHeaders();
+      if (!headers) {
+        window.location.href = `/login?redirect=${encodeURIComponent('/experiment')}`;
+        return null;
+      }
+      return headers;
+    }
 
     function setButtonsDisabled(state) {
       generateBtn.disabled = state;
@@ -70,6 +107,8 @@
 
     document.getElementById('qa-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const authHeaders = ensureAuth();
+      if (!authHeaders) return;
       setButtonsDisabled(true);
       statusDiv.textContent = "Generating response...";
 
@@ -92,10 +131,16 @@
       try {
         const response = await fetch('/experiment', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          headers: { 'Content-Type': 'application/json', ...authHeaders },
+          body: JSON.stringify(payload),
+          credentials: 'include'
         });
 
+        if (response.status === 401) {
+          localStorage.removeItem(TENANT_KEY);
+          window.location.href = `/login?redirect=${encodeURIComponent('/experiment')}`;
+          return;
+        }
         const data = await response.json();
 
         document.getElementById('output').innerHTML = `
@@ -126,6 +171,8 @@
     });
 
     clearBtn.addEventListener('click', async () => {
+      const authHeaders = ensureAuth();
+      if (!authHeaders) return;
       setButtonsDisabled(true);
       statusDiv.textContent = "Clearing history...";
 
@@ -135,10 +182,16 @@
       try {
         const response = await fetch('/clear_history', { 
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          headers: { 'Content-Type': 'application/json', ...authHeaders },
+          body: JSON.stringify(payload),
+          credentials: 'include'
         });
 
+        if (response.status === 401) {
+          localStorage.removeItem(TENANT_KEY);
+          window.location.href = `/login?redirect=${encodeURIComponent('/experiment')}`;
+          return;
+        }
         if (response.ok) {
           statusDiv.textContent = "History cleared.";
         } else {
@@ -150,6 +203,15 @@
       }
 
       setButtonsDisabled(false);
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      verifySession().then(isValid => {
+        if (isValid) {
+          return;
+        }
+        window.location.href = `/login?redirect=${encodeURIComponent('/experiment')}`;
+      });
     });
   </script>
 </body>

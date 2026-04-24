@@ -12,9 +12,9 @@
     "districts_plural": "जिले"
   },
   "mr": {
-    "block_singular": "ब्लॉक ",
+    "block_singular": "तालूका ",
     "district_singular": "जिल्हा ",
-    "blocks_plural": "ब्लॉक",
+    "blocks_plural": "तालूके",
     "districts_plural": "जिल्हे"
   },
   "te": {
@@ -24,4 +24,3 @@
     "districts_plural": "జిల్లాలు"
   }
 }
-

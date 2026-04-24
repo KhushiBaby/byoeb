@@ -1,5 +1,6 @@
 import asyncio
 import time
+import base64
 import hashlib
 import logging
 from byoeb.constants.feature_enums import FeatureFlag
@@ -322,7 +323,7 @@ class ByoebUserGenerateResponse(Handler):
             )
             span.update(output=LangfuseMedia(content_bytes=translated_audio_message, content_type=MediaContentType.AUDIO_OGG))
         return {
-            constants.DATA: translated_audio_message,
+            constants.DATA: base64.b64encode(translated_audio_message).decode("utf-8"),
             constants.MIME_TYPE: "audio/ogg",
         }
     
@@ -602,17 +603,21 @@ class ByoebUserGenerateResponse(Handler):
         query_type: str,
         vector_search_queries: list[tuple[str | None, str, int]] | None = None
     ) -> tuple[str, str, dict[str, int], list[Chunk]]:
-        def parse_response_xml(xml_string: str):
-            # Patterns for extracting response_en and response_hi
+        def parse_response_xml(xml_string: str) -> tuple[str, str]:
+            # "If ANY of the following conditions are true, respond with <response_idk>I do not know the answer to your question.</response_idk> in these exact words"
+            if (match := re.search(r"<response_idk\s*>(.*?)</response_idk\s*>", xml_string, re.DOTALL | re.IGNORECASE)) is not None:
+                response = match.group(1).strip()
+                return response, response
+
             patterns = {
                 "response_en": r"<response_en\s*>(.*?)</response_en\s*>",
                 "response_src": r"<response_src\s*>(.*?)</response_src\s*>",
             }
-
             extracted_data = {}
             for key, pattern in patterns.items():
                 match = re.search(pattern, xml_string, re.DOTALL | re.IGNORECASE)  # Supports multiline and case-insensitive matches
-                extracted_data[key] = match.group(1).strip() if match else None  # Strip removes extra spaces and newlines
+                if match is None or not match.group(1).strip(): raise ValueError("Parsing failed, did not match pattern '%s' (%s) in output" % (pattern, key))
+                extracted_data[key] = match.group(1).strip()  # Strip removes extra spaces and newlines
 
             return extracted_data["response_en"], extracted_data["response_src"]
 
@@ -655,11 +660,6 @@ class ByoebUserGenerateResponse(Handler):
         logger.debug("[agenerate_answer] Generated answer_en: %s...", response_en[:100] if response_en else 'None')
         logger.debug("[agenerate_answer] Generated answer_source (for language %s): %s...", user_language, response_source[:100] if response_source else 'None')
         logger.debug("[agenerate_answer] Query type: %s", query_type)
-        if response_en is None or query_type is None:
-            raise ValueError("Parsing failed, response or query_type is None.")
-        # Log warning if response_source is None or empty for non-English languages
-        if (response_source is None or not response_source.strip()) and user_language not in ["en", "hi"]:
-            logger.warning("[agenerate_answer] WARNING: response_source is None or empty for language %s. Will fall back to translation from English.", user_language)
         return response_en, response_source, tokens, list(retrieved_chunks.values())
 
     async def needs_clarification(self, query: str, query_type: str, user_language: str, retrieved_chunks: list[Chunk]) -> Optional[tuple[str, str, dict[str, int]]]:
@@ -874,6 +874,8 @@ class ByoebUserGenerateResponse(Handler):
             
             user_language = message.user.user_language
             query_type = message.message_context.additional_info.get(constants.QUERY_TYPE)
+            if query_type is None:
+                raise ValueError("query_type must not be None")
             
             default_message_category = None
             cache_hit = False

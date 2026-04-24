@@ -18,6 +18,8 @@ REGISTER_API_NAME = 'background_api'
 TIMEZONE = ZoneInfo("Asia/Kolkata")
 
 background_apis_router = APIRouter(tags=["Background Jobs"])
+background_apis_router_deprecated = APIRouter(tags=["Background Jobs"])
+
 _logger = AppInsightsLogHandler.getLogger(REGISTER_API_NAME)
 
 # ---------------------------------------------------------
@@ -146,7 +148,7 @@ def setup_scheduled_jobs():
 # ---------------------------------------------------------
 # API Endpoints
 # ---------------------------------------------------------
-@background_apis_router.post("/schedule", deprecated=True)
+@background_apis_router_deprecated.post("/schedule", deprecated=True)
 async def __schedule() -> JSONResponse:
     return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "This endpoint has been deprecated, use POST /jobs/{job_id} instead."})
 

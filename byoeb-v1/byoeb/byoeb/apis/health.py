@@ -1,5 +1,6 @@
 import logging
 from fastapi import APIRouter
+from byoeb.services.auth.dependencies import require_mcp_tenant_header
 from fastapi.responses import JSONResponse
 
 HEALTH_API_NAME = 'health_api'
@@ -21,4 +22,5 @@ def health_mcps_router(mcp):
         """
         Health check route to confirm the bot is running.
         """
+        require_mcp_tenant_header()
         return "Chat bot is running"

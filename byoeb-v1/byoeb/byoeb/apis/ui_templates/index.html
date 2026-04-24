@@ -66,6 +66,7 @@
         const tableBody = document.getElementById('table-body');
         const downloadBtn = document.getElementById('download-btn');
         const generateBtn = document.getElementById('generate-btn');
+        const TENANT_KEY = 'asha_tenant_id';
 
         let headerRow = [];
         let dataRows = [];
@@ -124,17 +125,59 @@
             tableBody.appendChild(tr);
         }
 
+        function getCookie(name) {
+            const entry = document.cookie.split('; ').find(row => row.startsWith(`${name}=`));
+            return entry ? decodeURIComponent(entry.split('=').slice(1).join('=')) : '';
+        }
+
+        function getAuthHeaders() {
+            const tenantId = localStorage.getItem(TENANT_KEY);
+            const csrfToken = getCookie('csrf_token');
+            if (!csrfToken) {
+                return null;
+            }
+            return {
+                "X-CSRF-Token": csrfToken
+            };
+        }
+
+        async function verifySession() {
+            const headers = getAuthHeaders();
+            if (!headers) {
+                return false;
+            }
+            const response = await fetch('/auth/me', { headers, credentials: 'include' });
+            if (!response.ok) {
+                localStorage.removeItem(TENANT_KEY);
+                return false;
+            }
+            return true;
+        }
+
         async function fetchLogs(formData) {
             resetState();
             statusEl.textContent = 'Fetching logs...';
             toggleLoading(true);
+            const headers = getAuthHeaders();
+            if (!headers) {
+                window.location.href = `/login?redirect=${encodeURIComponent('/asha_logs')}`;
+                toggleLoading(false);
+                return;
+            }
 
             const response = await fetch('/asha_logs', {
                 method: 'POST',
-                body: formData
+                headers,
+                body: formData,
+                credentials: 'include'
             });
 
             if (!response.ok || !response.body) {
+                if (response.status === 401) {
+                    localStorage.removeItem(TENANT_KEY);
+                    window.location.href = `/login?redirect=${encodeURIComponent('/asha_logs')}`;
+                    return;
+                }
                 statusEl.textContent = 'Failed to fetch logs.';
                 toggleLoading(false);
                 return;
@@ -199,7 +242,16 @@
         });
 
         downloadBtn.addEventListener('click', downloadXlsx);
-        window.addEventListener('DOMContentLoaded', setDateBounds);
+
+        window.addEventListener('DOMContentLoaded', () => {
+            setDateBounds();
+            verifySession().then(isValid => {
+                if (isValid) {
+                    return;
+                }
+                window.location.href = `/login?redirect=${encodeURIComponent('/asha_logs')}`;
+            });
+        });
     </script>
 </body>
 </html>

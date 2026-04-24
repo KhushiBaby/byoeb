@@ -74,6 +74,12 @@ def make_reply_context(from_message: ByoebMessageContext, where: str) -> ReplyCo
     _log_reply_context(rc, where)
     return rc
 
+def _get_integration_id(message: ByoebMessageContext):
+    if message.message_context and message.message_context.additional_info:
+        return message.message_context.additional_info.get(chat_const.INTEGRATION_ID)
+    return None
+
+
 def create_user_selection_message(
     message: ByoebMessageContext,
     user_lang: str = None
@@ -85,6 +91,8 @@ def create_user_selection_message(
     button_additional_info = {
         chat_const.BUTTON_TITLES: text_options,
     }
+    if integration_id := _get_integration_id(message):
+        button_additional_info[chat_const.INTEGRATION_ID] = integration_id
     return ByoebMessageContext(
         channel_type=message.channel_type,
         message_category=user_const.USER_TYPE,
@@ -97,6 +105,7 @@ def create_user_selection_message(
         reply_context=make_reply_context(message, "create_user_selection_message"),
     )
 
+
 def create_language_selection_message(
     message: ByoebMessageContext
 ) -> ByoebMessageContext:
@@ -106,6 +115,8 @@ def create_language_selection_message(
         chat_const.DESCRIPTION: "भाषा चुनें:",
         chat_const.ROW_TEXTS: LANGUAGE_DISPLAY_NAMES,
     }
+    if integration_id := _get_integration_id(message):
+        interactive_list_additional_info[chat_const.INTEGRATION_ID] = integration_id
     message_type = MessageTypes.INTERACTIVE_LIST.value
     return ByoebMessageContext(
         channel_type=message.channel_type,
@@ -122,6 +133,9 @@ def create_language_selection_message(
 
 def create_register_prompt_message(message: ByoebMessageContext) -> ByoebMessageContext:
     """Simple text reply asking user to send onboarding phrase to start registration."""
+    additional_info = {}
+    if integration_id := _get_integration_id(message):
+        additional_info[chat_const.INTEGRATION_ID] = integration_id
     return ByoebMessageContext(
         channel_type=message.channel_type,
         # Distinct from LANGUAGE_SELECTION so quoted replies are not parsed as language names.
@@ -130,7 +144,7 @@ def create_register_prompt_message(message: ByoebMessageContext) -> ByoebMessage
         message_context=MessageContext(
             message_type=MessageTypes.REGULAR_TEXT.value,
             message_source_text=REGISTER_PROMPT_TEXT,
-            additional_info={},
+            additional_info=additional_info,
         ),
         reply_context=None,
     )
@@ -155,6 +169,8 @@ def create_consent_message(
     button_additional_info = {
         chat_const.BUTTON_TITLES: text_options,
     }
+    if integration_id := _get_integration_id(message):
+        button_additional_info[chat_const.INTEGRATION_ID] = integration_id
     return ByoebMessageContext(
         channel_type=message.channel_type,
         message_category=user_const.CONSENT,
@@ -190,8 +206,15 @@ def create_initial_message(
     user_lang = message.user.user_language
     audio_bytes, audio_type = create_audio(user_lang, mapped_user_type)
     text_message = THANK_YOU_DICT[mapped_user_type][user_lang]
+    integration_id = _get_integration_id(message)
     if mapped_user_type == UserType.ANM.value:
         message_type = MessageTypes.REGULAR_TEXT.value
+        anm_info = {
+            chat_const.DATA: audio_bytes,
+            chat_const.MIME_TYPE: audio_type,
+        }
+        if integration_id:
+            anm_info[chat_const.INTEGRATION_ID] = integration_id
         return ByoebMessageContext(
             channel_type=message.channel_type,
             message_category=user_const.THANK_YOU,
@@ -199,13 +222,18 @@ def create_initial_message(
             message_context=MessageContext(
                 message_type=message_type,
                 message_source_text=text_message,
-                additional_info = {
-                    chat_const.DATA: audio_bytes,
-                    chat_const.MIME_TYPE: audio_type,
-                }
+                additional_info=anm_info,
             ),
             reply_context=make_reply_context(message, "create_initial_message[ANM]"),
         )
+    non_anm_info = {
+        chat_const.DESCRIPTION: RELATED_QUESTIONS["description"][user_lang],
+        chat_const.ROW_TEXTS: RELATED_QUESTIONS["questions"][user_lang],
+        chat_const.DATA: audio_bytes,
+        chat_const.MIME_TYPE: audio_type,
+    }
+    if integration_id:
+        non_anm_info[chat_const.INTEGRATION_ID] = integration_id
     return ByoebMessageContext(
         channel_type=message.channel_type,
         message_category=user_const.THANK_YOU,
@@ -213,12 +241,7 @@ def create_initial_message(
         message_context=MessageContext(
             message_type=MessageTypes.INTERACTIVE_LIST.value,
             message_source_text=text_message,
-            additional_info = {
-                chat_const.DESCRIPTION: RELATED_QUESTIONS["description"][user_lang],
-                chat_const.ROW_TEXTS: RELATED_QUESTIONS["questions"][user_lang],
-                chat_const.DATA: audio_bytes,
-                chat_const.MIME_TYPE: audio_type,
-            }
+            additional_info=non_anm_info,
         ),
         reply_context=make_reply_context(message, "create_initial_message[non-ANM]"),
     )
@@ -228,10 +251,12 @@ def create_user(
     language: str = None,
     user_type: str = None,
     consent: bool = None,
+    tenant_id: str = None,
 ) -> User:
     return User(
         user_id=hashlib.md5(phone_number_id.encode()).hexdigest(),
         phone_number_id=phone_number_id,
+        tenant_id=tenant_id,
         user_language=language,
         user_type=user_type,
         additional_info={
@@ -244,14 +269,29 @@ def create_user(
         activity_timestamp=datetime.now(timezone.utc),
     )
     
+async def _resolve_tenant_id(integration_id: str) -> Optional[str]:
+    try:
+        from byoeb.services.auth.auth_service import get_auth_service
+        auth_service = await get_auth_service()
+        integrations = await auth_service.fetch_integrations([integration_id])
+        if integrations:
+            return str(integrations[0].tenant_id)
+    except Exception as e:
+        logger.warning("Could not resolve tenant_id for integration %s: %s", integration_id, e)
+    return None
+
+
 async def handle_unknown_user(
     messages: List[ByoebMessageContext],
     message_db_service: MessageMongoDBService,
     user_db_service: UserMongoDBService,
-    channel_factory: ChannelClientFactory,
+    channel_factory,
 ):
     logger.info("handle_unknown_user start messages=%s", len(messages))
-    channel_service = WhatsAppService(channel_client_factory=channel_factory)
+    if isinstance(channel_factory, WhatsAppService):
+        channel_service = channel_factory
+    else:
+        channel_service = WhatsAppService(channel_client_factory=channel_factory)
     if not isinstance(channel_service, WhatsAppService):
         raise ValueError("Invalid channel service type")
     for message in messages:
@@ -261,6 +301,8 @@ async def handle_unknown_user(
             msg_text = (message.message_context and message.message_context.message_source_text) or ""
             user_lang = getattr(message.user, "user_language", None)
             is_onboarding_intent = utils.is_onboard(msg_text, user_lang)
+            integration_id = _get_integration_id(message)
+            tenant_id = await _resolve_tenant_id(integration_id) if integration_id else None
 
             # Main guard: only send language selection when the first message is clearly onboarding-like.
             if (message.reply_context is None or message.reply_context.reply_id is None) and is_onboarding_intent:
@@ -285,7 +327,7 @@ async def handle_unknown_user(
                     timeout=ONBOARDING_SEND_REQUESTS_TIMEOUT_SECONDS,
                 )
                 convs = channel_service.create_conv(byoeb_message, responses)
-                new_user = create_user(phone_number_id=message.user.phone_number_id)
+                new_user = create_user(phone_number_id=message.user.phone_number_id, tenant_id=tenant_id)
                 logger.info("Created new user %s", new_user.user_id)
                 message_db_queries = {
                     chat_const.CREATE: message_db_service.message_create_queries(convs)
@@ -352,7 +394,7 @@ async def handle_unknown_user(
                         timeout=ONBOARDING_SEND_REQUESTS_TIMEOUT_SECONDS,
                     )
                     convs = channel_service.create_conv(byoeb_message, responses)
-                    new_user = create_user(phone_number_id=message.user.phone_number_id)
+                    new_user = create_user(phone_number_id=message.user.phone_number_id, tenant_id=tenant_id)
                     logger.info("Created new user %s", new_user.user_id)
                     message_db_queries = {
                         chat_const.CREATE: message_db_service.message_create_queries(convs)
@@ -394,6 +436,7 @@ async def handle_unknown_user(
                 update_user = create_user(
                     phone_number_id=message.user.phone_number_id,
                     language=code,
+                    tenant_id=tenant_id,
                 )
                 user_db_queries = {
                     chat_const.UPDATE: [user_db_service.user_update_query(update_user)]
@@ -415,6 +458,7 @@ async def handle_unknown_user(
                     phone_number_id=message.user.phone_number_id,
                     language=message.user.user_language,
                     user_type=user_type,
+                    tenant_id=tenant_id,
                 )
                 user_db_queries = {
                     chat_const.UPDATE: [user_db_service.user_update_query(update_user)]
@@ -437,7 +481,8 @@ async def handle_unknown_user(
                     phone_number_id=message.user.phone_number_id,
                     user_type=message.user.user_type,
                     language=message.user.user_language,
-                    consent=consent
+                    consent=consent,
+                    tenant_id=tenant_id,
                 )
                 user_db_queries = {
                     chat_const.UPDATE: [user_db_service.user_update_query(update_user)]
@@ -484,7 +529,7 @@ async def handle_unknown_user(
                     requests = channel_service.prepare_requests(byoeb_message)
                     responses, message_ids = await asyncio.wait_for(channel_service.send_requests(requests), timeout=ONBOARDING_SEND_REQUESTS_TIMEOUT_SECONDS)
                     convs = channel_service.create_conv(byoeb_message, responses)
-                    new_user = create_user(phone_number_id=message.user.phone_number_id)
+                    new_user = create_user(phone_number_id=message.user.phone_number_id, tenant_id=tenant_id)
                     message_db_queries = {
                         chat_const.CREATE: message_db_service.message_create_queries(convs)
                     }

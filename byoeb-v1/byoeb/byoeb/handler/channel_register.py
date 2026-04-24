@@ -1,5 +1,5 @@
 import logging
-from fastapi import Request
+from fastapi import HTTPException, Request, status
 from byoeb.factory import ChannelRegisterFactory
 
 class ChannelRegisterHandler:
@@ -15,6 +15,12 @@ class ChannelRegisterHandler:
         self,
         request: Request
     ):
-        return await self.__registrer_factory.get(
-            channel_type="whatsapp"
-        ).register(request.query_params._dict)
+        verify_token = request.query_params.get("hub.verify_token")
+        if not verify_token:
+            self.__logger.warning("Webhook verification attempt with missing hub.verify_token")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing hub.verify_token"
+            )
+        register = await self.__registrer_factory.get(channel_type="whatsapp", verify_token=verify_token)
+        return await register.register(request.query_params._dict)
