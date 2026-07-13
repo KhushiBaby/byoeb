@@ -111,7 +111,7 @@ async def fetch_and_process_user_messages(start_timestamp: int, end_timestamp: i
         "message_data.incoming_timestamp": {"$gte": start_timestamp, "$lte": end_timestamp},
         "message_data.message_category": {"$in": message_category}
     }
-    cursor = message_collection.find(query, _PROJECTION).batch_size(5000)
+    cursor = message_collection.find(query, _PROJECTION)
     user_info_dict = {}
     while True:
         batch = await cursor.to_list(length=5000)
