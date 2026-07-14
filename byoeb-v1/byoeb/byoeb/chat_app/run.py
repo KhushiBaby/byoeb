@@ -130,10 +130,21 @@ async def lifespan(app: FastAPI):
             channel_client_factory,
             message_consumer,
             queue_producer_factory,
-            text_translator
+            text_translator,
+            mongo_db_factory,
         )
+        from byoeb.chat_app.configuration.config import app_config
         from byoeb.apis.background_jobs import setup_scheduled_jobs
         from byoeb.chat_app.configuration.dependency_setup import start_scheduler, stop_scheduler
+
+        # Eagerly establish the Motor async connection so the first /asha_logs
+        # request doesn't pay the TLS handshake cost.
+        try:
+            db_provider = app_config["app"]["db_provider"]
+            await mongo_db_factory.get(db_provider)
+            logger.info("MongoDB async connection warmed up successfully")
+        except Exception as e:
+            logger.warning("MongoDB async connection warmup failed (will retry on first request): %s", e)
 
         try:
             await message_consumer.initialize()

@@ -1,8 +1,20 @@
+import asyncio
 from typing import Dict, Any, Optional, AsyncIterator, List, Tuple
 from byoeb.repositories.message_repository import MessageRepository
 from byoeb.repositories.mongodb_base_repository import MongoBaseRepository
 
 class MongoMessageRepository(MessageRepository, MongoBaseRepository):
+
+    def __init__(self, collection):
+        super().__init__(collection)
+        self._indexes_ready = asyncio.create_task(self._ensure_indexes())
+
+    async def _ensure_indexes(self) -> None:
+        await asyncio.gather(
+            self._collection.create_index(
+                [("message_data.incoming_timestamp", 1), ("message_data.message_category", 1)]
+            ),
+        )
 
     async def find_messages_by_time_range(self, 
                                         start_timestamp: int, 

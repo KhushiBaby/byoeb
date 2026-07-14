@@ -44,12 +44,13 @@ async def asha_logs_form(
     _: AuthUser = Depends(require_permissions(AuthPermission.ADMIN_ACCESS)),
     __: None = Depends(require_csrf_token),
 ) -> StreamingResponse:
-    start_unix = str(start.timestamp())
-    end_unix = str(end.timestamp())
+    start_unix = int(start.timestamp())
+    end_unix = int(end.timestamp())
 
     async def stream_csv() -> AsyncIterator[bytes]:
         buffer = io.StringIO()
         writer = None
+        chunk_rows = 0
 
         async for row in fetch_daily_logs(start_unix, end_unix):
             if writer is None:
@@ -57,12 +58,21 @@ async def asha_logs_form(
                 writer.writeheader()
 
             writer.writerow(row)
+            chunk_rows += 1
 
-            chunk = buffer.getvalue()
-            buffer.seek(0)
-            buffer.truncate(0)
+            # Flush every 100 rows to avoid holding everything in memory
+            # while still reducing per-row HTTP chunk overhead.
+            if chunk_rows >= 100:
+                chunk = buffer.getvalue()
+                buffer.seek(0)
+                buffer.truncate(0)
+                chunk_rows = 0
+                yield chunk.encode("utf-8")
 
-            yield chunk.encode("utf-8")
+        # Flush remaining rows
+        remaining = buffer.getvalue()
+        if remaining:
+            yield remaining.encode("utf-8")
 
     return StreamingResponse(stream_csv(), media_type="text/csv", headers={
         "Content-Disposition": f"attachment; filename=asha-logs-{start.isoformat()}-{end.isoformat()}.csv"
